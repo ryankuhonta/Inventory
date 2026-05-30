@@ -1,5 +1,5 @@
 ---
-stepsCompleted: [1, 2, 3, 4, 5, 6]
+stepsCompleted: [1, 2, 3, 4, 5, 6, 7, 8]
 inputDocuments:
   - _bmad-output/planning-artifacts/prds/prd-Inventory-2026-05-28/prd.md
   - _bmad-output/planning-artifacts/prds/prd-Inventory-2026-05-28/addendum.md
@@ -10,7 +10,9 @@ workflowType: 'architecture'
 project_name: 'Inventory'
 user_name: 'Phg00311'
 date: '2026-05-28'
-status: 'initialized'
+lastStep: 8
+status: 'complete'
+completedAt: '2026-05-30'
 ---
 
 # Architecture Decision Document
@@ -1246,3 +1248,277 @@ Before implementation work is accepted:
 - Are MVP exclusions still absent from the tree?
 - Do tests mirror the `lib/` path?
 - Are test helpers used for clock, ID generation, and in-memory database setup?
+
+## Architecture Validation Results
+
+### Coherence Validation
+
+**Decision Compatibility:**
+The architecture decisions are coherent and compatible.
+
+- Flutter + Riverpod + go_router + Drift/SQLite work together cleanly for an Android-first offline app.
+- Clean Architecture and feature-first folders align with the selected starter: `flutter create --empty --platforms android --org com.rkuhonta tindatrack`.
+- Drift supports the required local persistence, transactions, migrations, indexed search, and reactive queries.
+- Riverpod supports feature-local state, controller workflows, and testable dependency injection.
+- No backend, login, scanner, or cloud dependency conflicts with the MVP's offline-first scope.
+
+**Pattern Consistency:**
+The implementation patterns support the architecture decisions.
+
+- Stock movement as source of truth is reinforced by non-negotiable transaction rules.
+- Archive-not-delete is consistently reflected in data rules, UX copy, history behavior, and project structure.
+- ULID IDs, injectable clock, typed failures, UTC timestamps, lowercase enum strings, and migration tests are implementation-ready.
+- Database columns use `snake_case`; Dart model/entity fields may use `camelCase`. Step 5 and Step 6 naming rules are authoritative.
+
+**Structure Alignment:**
+The project structure supports the architecture.
+
+- `lib/app` owns app shell, routing, navigation, theme, and app-level providers.
+- `lib/core` owns database, shared errors, validation, time, IDs, UI constants, formatters, and reusable widgets.
+- `lib/features` cleanly separates dashboard, products, stock, history, and settings.
+- Stock mutation boundaries are explicit: quantity changes route through `features/stock`.
+- Dashboard and history are read-only, which prevents accidental business-rule drift.
+
+### Requirements Coverage Validation
+
+**Feature Coverage:**
+All MVP feature areas are supported:
+
+- Dashboard: supported by `features/dashboard`, aggregate queries, and recent activity.
+- Product CRUD/archive/search: supported by `features/products`, `products` table, archive rules, and active product filtering.
+- Stock In/Out: supported by `features/stock`, stock movement use cases, and atomic Drift transactions.
+- Inventory history: supported by `features/history`, `stock_movements`, archived product readability, and movement snapshots.
+- Low-stock alerts: supported by product threshold fields, dashboard summaries, and product list indicators.
+- Settings: supported by `features/settings` and `app_settings`.
+
+**Functional Requirements Coverage:**
+FR-001 through FR-040 are architecturally supported.
+
+- Product creation/edit/archive/search are covered.
+- Stock movement creation, validation, and atomic product quantity update are covered.
+- History sorting and movement detail display are covered.
+- Settings, PHP currency context, app version, and backup/export placeholder are supported.
+- `cost_price` is explicitly deferred post-MVP. MVP tracks quantity and movement history, not margin, profit, accounting, or inventory valuation. Future reporting/profit features may add `cost_price` through a Drift migration when that feature enters scope.
+
+**Non-Functional Requirements Coverage:**
+NFRs are covered by architectural decisions.
+
+- Offline-first and local persistence: Drift/SQLite local database.
+- Low-end Android performance: lazy lists, debounced search, indexes, aggregate queries.
+- Reliability: transaction-only stock movement rule and rollback tests.
+- Security/privacy: no raw DB errors, no sensitive inventory logs, no required auth.
+- Accessibility: readable typography, 48dp tap targets, non-color-only warnings from context and UX docs.
+- Future sync readiness: ULID IDs, movement history source of truth, nullable barcode.
+
+### Implementation Readiness Validation
+
+**Decision Completeness:**
+Critical decisions are documented with current verified versions where relevant:
+
+- Flutter `3.44.0`
+- Dart `3.12.0`
+- Drift `2.33.0`
+- Riverpod `3.2.1`
+- go_router `17.2.3`
+- flutter_secure_storage `10.3.1` reserved for future secrets
+
+**Structure Completeness:**
+The project structure is specific enough for implementation agents.
+
+- Complete root, `lib`, feature, core, and test directories are defined.
+- Boundary ownership is clear.
+- MVP exclusions are explicitly blocked by structure.
+- First implementation priority is clear: create Flutter starter, add dependencies/linting/tests, scaffold database and vertical slice.
+
+**Pattern Completeness:**
+The major AI-agent conflict points are addressed:
+
+- Naming conventions
+- Feature folders
+- Database boundaries
+- Repository return style
+- Transaction ownership
+- Error handling
+- Loading/empty/success states
+- Test placement
+- Migration discipline
+- MVP scope exclusions
+
+### Gap Analysis Results
+
+**Critical Gaps:**
+None found.
+
+**Important Gaps:**
+None blocking implementation.
+
+**Schema Decisions Before Implementation:**
+- Include `product_name_snapshot` and `unit_snapshot` in `stock_movements`.
+- Use integer stock quantities with explicit practical bounds.
+- Keep `cost_price` out of the MVP schema; do not add a nullable placeholder just in case.
+
+Rationale: movement history must remain understandable after product rename/archive. Integer bounded quantities prevent decimal/overflow ambiguity. Deferring `cost_price` keeps MVP focused on stock quantity and history rather than profit/accounting.
+
+**Resolved During Validation:**
+- `cost_price` is deferred post-MVP. MVP tracks quantity and movement history, not margin/profit/accounting.
+- Blank barcode input is normalized to `null`.
+- Barcode uniqueness applies across active and archived products in MVP.
+- Database columns use `snake_case`; Dart fields may use `camelCase`.
+- App version display should use `pubspec.yaml` as the canonical source.
+- UI copy direction is simple English with Filipino-friendly phrasing.
+- Release channel is treated as release planning, not architecture readiness.
+
+**Minor / Nice-To-Have Gaps:**
+- Confirm final user-facing archive label during UX copy pass: "Archive," "Hide product," or "Stop selling."
+- Confirm release channel later: private APK, Play Store internal testing, or another path.
+
+### Validation Issues Addressed
+
+No critical validation issues were found.
+
+The only notable inconsistency is that early data architecture examples used Dart-style names like `lowStockThreshold` and `createdAt`, while later implementation rules require database `snake_case`. Resolution: Step 5 and Step 6 are authoritative for implementation. Database columns must use `snake_case`; Dart entities may use `camelCase`.
+
+Pre-mortem risk addressed: implementation could drift into POS/accounting/cloud/scanner scope or bypass stock movement boundaries. Resolution: MVP exclusions, stock mutation ownership, `cost_price` deferral, and required stock transaction tests are explicitly documented as handoff guardrails.
+
+Boundary sweep decisions:
+- Blank barcode input must be trimmed and stored as `null`, not an empty string.
+- Barcode uniqueness applies across active and archived products in MVP.
+- Archived products cannot receive Stock In/Out unless restored first.
+- Initial quantity may be set during product creation; after creation, all quantity changes must go through stock movements.
+- Zero stock is valid and visible as out-of-stock.
+- Quantities and thresholds must be non-negative integers within a practical configured maximum.
+- Stock In uses movement type `stock_in` and optional note; MVP does not require a separate Stock In reason enum.
+
+Schema readability issue addressed: stock movement history can become confusing if products are renamed or archived. Resolution: include `product_name_snapshot` and `unit_snapshot` in `stock_movements` unless explicitly rejected before schema implementation.
+
+### Architecture Completeness Checklist
+
+**Requirements Analysis**
+
+- [x] Project context thoroughly analyzed
+- [x] Scale and complexity assessed
+- [x] Technical constraints identified
+- [x] Cross-cutting concerns mapped
+
+**Architectural Decisions**
+
+- [x] Critical decisions documented with versions
+- [x] Technology stack fully specified
+- [x] Integration patterns defined
+- [x] Performance considerations addressed
+
+**Implementation Patterns**
+
+- [x] Naming conventions established
+- [x] Structure patterns defined
+- [x] Communication patterns specified
+- [x] Process patterns documented
+
+**Project Structure**
+
+- [x] Complete directory structure defined
+- [x] Component boundaries established
+- [x] Integration points mapped
+- [x] Requirements to structure mapping complete
+
+### Architecture Readiness Assessment
+
+**Overall Status:** READY FOR IMPLEMENTATION
+
+**Confidence Level:** high
+
+**Key Strengths:**
+- Strong offline-first architecture matched to real sari-sari store usage.
+- Clear stock movement invariants protect the most important business rule: walang negative stock at walang partial save.
+- Feature-first Clean Architecture gives future AI agents a clear work map.
+- Drift/SQLite choice is well matched to local reliability, history queries, migrations, and transactions.
+- MVP exclusions are explicit, reducing scope creep into login, POS, cloud sync, and scanner work.
+- Test and migration gates are strong enough to protect the core inventory loop.
+
+**Areas for Future Enhancement:**
+- Local export/backup path to reduce data-loss anxiety while preserving offline-first MVP behavior.
+- Cloud backup/sync architecture.
+- Optional authentication and staff roles.
+- Barcode scanner flow.
+- Export/backup implementation.
+- Future reporting/profit stories may introduce `cost_price` through a Drift migration.
+- Supplier, POS, and reporting modules.
+- Crash reporting/privacy posture if the app goes public.
+
+### Product Handoff Notes
+
+- MVP supports the core loop: check stock, find product, adjust stock, confirm, view updated quantity/history.
+- MVP excludes sales/POS, accounts/login, cloud sync, barcode scanning UI, supplier management, accounting, and profit reporting unless separately scoped.
+- MVP should avoid drifting into "inventory plus POS-lite."
+- MVP tracks quantity and history, not margin/profit/accounting.
+- Product edit must not directly change stock quantity after creation. All post-creation quantity changes must route through `features/stock`.
+- MVP Add Product should stay lightweight. Required setup should prioritize product name, unit, quantity, low-stock threshold, and selling price; future accounting fields must not block first use.
+- Future-ready means data-ready, not UI-ready. Nullable `barcode` is allowed in the schema, but scanner UI, scanner route, scanner permission, and scanner dependency remain out of MVP.
+- Use clear sari-sari-friendly copy for stock actions and archived/inactive products.
+
+### UX Copy And Flow Notes
+
+- Use simple English with Filipino-friendly phrasing, not heavy Taglish.
+- Architecture may use Stock In/Stock Out naming, but UI labels may use clearer local phrasing such as "Add Stock," "Remove Stock," "Dagdag Stock," or "Bawas Stock" after UX copy pass.
+- Domain language remains `archive`; UI may use "Archive," "Hide product," or another friendly label as long as copy explains that history remains available.
+- Stock confirmation messages should include product name, action, quantity changed, and new stock count.
+- Example: "Added 10 pcs to Coke 1L. New stock: 24 pcs."
+- Use "Archive," not "Delete," with reassuring copy like "You can still see this in history."
+- For archived products, make the state visible wherever relevant with an "Archived" label.
+- For barcode errors, use plain copy such as "Barcode already used by another product."
+- For blank barcode, do not show an error. Treat it as "No barcode," quietly normalized to `null`.
+- For quantity limits, show friendly validation such as "Quantity cannot be below 0." or "Enter a valid quantity."
+- Empty and error states should include a next step.
+- Local save/confirm actions should use button-level loading such as "Saving..."
+
+### Required Implementation Test Checklist
+
+Before feature implementation is considered complete, tests must cover:
+
+- Stock Out cannot make quantity negative.
+- Stock In increases quantity and creates a movement.
+- Stock Out decreases quantity and creates a movement.
+- Movement insert and product quantity update happen in one transaction.
+- Failed stock mutation inserts no movement and changes no product quantity.
+- All stock mutations are transactional: product quantity update and movement history insert succeed or fail together.
+- Multiple null barcodes are allowed.
+- Blank barcode input is normalized to `null`.
+- Duplicate non-null barcode is rejected.
+- Barcode uniqueness applies across active and archived products.
+- Archive marks product inactive/archived without physical deletion.
+- Archived products are hidden from default product list.
+- Archived products cannot receive Stock In/Out unless restored first.
+- Movement history remains readable after product archive.
+- Movement history remains understandable after product rename/archive using `product_name_snapshot` and `unit_snapshot`.
+- Zero-stock products remain visible and block Stock Out.
+- Quantity and threshold values reject negative and impractically large numbers.
+- Timestamps use injected UTC clock, not direct `DateTime.now()`.
+- IDs are generated through the ULID generator at creation boundaries.
+- Drift/database errors map to typed failures.
+- UI never depends on raw SQL/Drift exceptions.
+- Migration tests confirm schema changes and data preservation.
+- App version display reads from `pubspec.yaml`, not hardcoded copy.
+
+### Implementation Handoff
+
+**AI Agent Guidelines:**
+- Follow all architectural decisions exactly as documented.
+- Use implementation patterns consistently across all components.
+- Respect project structure and boundaries.
+- Route all post-creation quantity changes through stock movement use cases.
+- Use typed failures and friendly UI messages.
+- Keep MVP exclusions out of the codebase until intentionally scoped.
+- Refer to this document for all architectural questions.
+
+**First Implementation Priority:**
+Initialize the Flutter project and scaffold the architecture foundation:
+
+```bash
+flutter create --empty --platforms android --org com.rkuhonta tindatrack
+```
+
+Then add dependencies, linting, test harness, feature-first folders, Drift database scaffold, and the first vertical slice:
+
+```text
+Product model + local DB + repository + provider + product list/add product UI
+```
