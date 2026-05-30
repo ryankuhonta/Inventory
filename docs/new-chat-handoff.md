@@ -8,19 +8,25 @@ Act as Codex using the BMAD Method for this project.
 Workspace:
 `\\wsl.localhost\Ubuntu\home\rkuhonta\Inventory`
 
+Repository:
+`https://github.com/ryankuhonta/Inventory.git`
+
 Project:
 Android-first Flutter Inventory Tracker app for Philippine sari-sari stores and small businesses.
 
 Current BMAD status:
-- BMAD installed.
+- BMAD installed and committed.
 - Analysis completed.
 - PRD completed and finalized.
 - UX completed and finalized.
-- Architecture workflow is in progress.
-- Architecture Step 1 completed: workspace initialized.
-- Architecture Step 2 completed: project context analysis saved.
-- Architecture Step 3 completed: starter template evaluation saved.
-- We are currently at Architecture Step 4: Core Architectural Decisions.
+- Architecture workflow completed and saved.
+- Architecture frontmatter now has:
+  `stepsCompleted: [1, 2, 3, 4, 5, 6, 7, 8]`
+  `status: 'complete'`
+  `completedAt: '2026-05-30'`
+- Latest pushed commits:
+  - `8eafa1f Add BMAD planning and architecture docs`
+  - `0c46118 Complete BMAD architecture workflow`
 
 Important files:
 - Main planning document:
@@ -33,7 +39,7 @@ Important files:
   `_bmad-output/planning-artifacts/ux-designs/ux-Inventory-2026-05-28/DESIGN.md`
 - UX experience:
   `_bmad-output/planning-artifacts/ux-designs/ux-Inventory-2026-05-28/EXPERIENCE.md`
-- Architecture document:
+- Completed architecture document:
   `_bmad-output/planning-artifacts/architecture.md`
 
 Key product decisions:
@@ -42,21 +48,38 @@ Key product decisions:
 - MVP core loop:
   `Check stock -> Search/select product -> Stock in/out -> Confirm -> See updated quantity/history`
 - MVP includes product CRUD, stock in/out, inventory history, low-stock alerts, dashboard, settings.
-- MVP excludes POS, cloud sync, login requirement, supplier management, accounting, barcode scanning.
-- Barcode scanning is planned for next release only.
-- Add nullable `barcode` field now for future readiness, but no scanner UI in MVP.
+- MVP excludes POS, cloud sync, login requirement, supplier management, accounting/profit reports, barcode scanning UI.
+- Barcode scanning is post-MVP only.
+- Add nullable `barcode` field now for future readiness, but no scanner UI, route, permission, service, or dependency in MVP.
 - No fake login screen in MVP.
 - No ads in Add Product, Edit Product, Stock In, Stock Out, or save/confirm flows.
+- `cost_price` is deferred post-MVP. MVP tracks stock quantity and movement history, not margin/profit/accounting.
 
-Key architecture decisions already saved:
-- Starter: `flutter create --empty --platforms android --org com.rkuhonta tindatrack`
-- Stack: Flutter, Riverpod, Drift over SQLite, Clean Architecture.
-- Structure: feature-first folders.
-- IDs: use UUIDs or ULIDs for products and transactions.
-- Product deletion should be avoided; archive internally.
-- User-facing archive wording may be “Hide product” or “Stop selling.”
-- Stock movement is the source of truth after product creation.
-- Stock In/Out must be atomic database transactions.
+Key architecture decisions:
+- Starter command:
+  `flutter create --empty --platforms android --org com.rkuhonta tindatrack`
+- Stack:
+  Flutter, Riverpod, Drift over SQLite, Clean Architecture, go_router.
+- Structure:
+  feature-first folders under `lib/features`, with shared infrastructure under `lib/core` and app shell under `lib/app`.
+- IDs:
+  use ULID string IDs project-wide.
+- Time:
+  store timestamps in UTC and use an injectable clock; no direct `DateTime.now()` in domain/data code.
+- Database naming:
+  database tables/columns use `snake_case`; Dart model/entity fields may use `camelCase`.
+- Product deletion:
+  archive products, do not hard-delete.
+- Stock movement:
+  source of truth for quantity changes after product creation.
+- Stock In/Out:
+  must insert stock movement and update product quantity in one Drift transaction.
+- Stock movement history:
+  include `product_name_snapshot` and `unit_snapshot` in `stock_movements` unless explicitly rejected before schema implementation.
+- Barcode:
+  blank barcode input normalizes to `null`; multiple null barcodes allowed; duplicate non-null barcode rejected; uniqueness applies across active and archived products.
+- Quantity:
+  use integer stock quantities with explicit practical bounds.
 
 Architecture invariants:
 - `INV-001`: Product quantity must never be negative.
@@ -74,26 +97,19 @@ Stock Out reason enum:
 - `personal_use`
 - `correction`
 
-Next task:
-Continue BMAD Architecture Step 4: Core Architectural Decisions.
+Recommended next BMAD step:
+Start **Create Epics and Stories** using the `bmad-create-epics-and-stories` skill.
 
 Read:
-`.agents/skills/bmad-create-architecture/steps/step-04-decisions.md`
+`.agents/skills/bmad-create-epics-and-stories/SKILL.md`
 
-Then draft the Step 4 content for:
-1. Data Architecture
-2. Authentication & Security
-3. API & Communication Patterns
-4. Frontend Architecture
-5. Infrastructure & Deployment
+Then proceed with its workflow, starting with:
+`.agents/skills/bmad-create-epics-and-stories/steps/step-01-validate-prerequisites.md`
 
-Follow BMAD strictly:
+Expected goal:
+- Convert the finalized PRD, UX, and completed architecture into implementation epics and user stories.
 - Do not jump to coding yet.
-- Present the Step 4 draft first.
-- Then offer:
-  **A** - Advanced Elicitation
-  **P** - Party Mode
-  **C** - Continue/save to architecture.md
-
-Use Taglish/Filipino-friendly explanations when talking to me.
+- Follow BMAD strictly.
+- Present drafts before saving.
+- Use Taglish/Filipino-friendly explanations when talking to me.
 ```
