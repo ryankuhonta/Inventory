@@ -21,6 +21,8 @@ final clockProvider = Provider<Clock>(
   (ref) => const SystemClock(),
 );
 
+final _databaseClosures = Expando<Future<void>>();
+
 /// Creates a database whose lifecycle is owned by [ref].
 ///
 /// Keeping this small composition helper public lets tests inject an in-memory
@@ -30,6 +32,11 @@ AppDatabase createManagedDatabase(
   AppDatabase Function() create,
 ) {
   final database = create();
-  ref.onDispose(() => unawaited(database.close()));
+  ref.onDispose(() => unawaited(closeManagedDatabase(database)));
   return database;
+}
+
+/// Closes [database] once and shares completion with every lifecycle caller.
+Future<void> closeManagedDatabase(AppDatabase database) {
+  return _databaseClosures[database] ??= database.close();
 }

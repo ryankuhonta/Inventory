@@ -15,4 +15,9 @@ class AppDatabase extends _$AppDatabase {
 
   @override
   int get schemaVersion => 1;
+
+  /// Opens the underlying SQLite connection and verifies it can answer queries.
+  Future<void> ensureReady() async {
+    await customSelect('SELECT 1').getSingle();
+  }
 }

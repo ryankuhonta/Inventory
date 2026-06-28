@@ -1,5 +1,5 @@
 # generated: 2026-06-01
-# last_updated: 2026-06-20
+# last_updated: 2026-06-28
 # project: Inventory
 # project_key: NOKEY
 # tracking_system: file-system
@@ -35,7 +35,7 @@
 # - Dev moves story to 'review', then runs code-review (fresh context, different LLM recommended)
 
 generated: 2026-06-01
-last_updated: 2026-06-20
+last_updated: 2026-06-28
 project: Inventory
 project_key: NOKEY
 tracking_system: file-system
@@ -45,10 +45,10 @@ development_status:
   epic-1: in-progress
   1-1-set-up-initial-project-from-flutter-empty-starter-template: done
   1-2-establish-app-architecture-and-local-core-services: done
-  1-3-provide-offline-app-launch-and-splash-initialization: backlog
-  1-4-add-main-navigation-shell: backlog
-  1-5-apply-mvp-theme-and-base-ui-states: backlog
-  epic-1-retrospective: optional
+  1-3-provide-offline-app-launch-and-splash-initialization: done
+  1-4-add-main-navigation-shell: done
+  1-5-apply-mvp-theme-and-base-ui-states: done
+  epic-1-retrospective: done
 
   epic-2: backlog
   2-1-create-product-catalog-data-model-and-repository: backlog

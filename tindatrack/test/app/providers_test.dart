@@ -48,6 +48,17 @@ void main() {
       expect(database.wasClosed, isTrue);
     },
   );
+
+  test('managed database close is shared across lifecycle callers', () async {
+    final database = _TrackingDatabase();
+
+    await Future.wait([
+      closeManagedDatabase(database),
+      closeManagedDatabase(database),
+    ]);
+
+    expect(database.closeCalls, 1);
+  });
 }
 
 final class _FakeIdGenerator implements IdGenerator {
@@ -70,12 +81,14 @@ final class _TrackingDatabase extends AppDatabase {
   _TrackingDatabase() : super(NativeDatabase.memory());
 
   bool wasClosed = false;
+  int closeCalls = 0;
   final _closed = Completer<void>();
 
   Future<void> get closed => _closed.future;
 
   @override
   Future<void> close() async {
+    closeCalls++;
     await super.close();
     wasClosed = true;
     _closed.complete();

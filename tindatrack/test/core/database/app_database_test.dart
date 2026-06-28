@@ -27,4 +27,8 @@ ORDER BY name
 
     expect(names, isEmpty);
   });
+
+  test('readiness probe opens and queries the database', () async {
+    await expectLater(database.ensureReady(), completes);
+  });
 }
