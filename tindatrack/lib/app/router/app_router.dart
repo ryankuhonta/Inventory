@@ -5,6 +5,7 @@ import 'package:tindatrack/app/navigation/app_shell.dart';
 import 'package:tindatrack/app/router/app_routes.dart';
 import 'package:tindatrack/features/dashboard/presentation/screens/dashboard_screen.dart';
 import 'package:tindatrack/features/history/presentation/screens/movement_history_screen.dart';
+import 'package:tindatrack/features/products/presentation/screens/add_product_screen.dart';
 import 'package:tindatrack/features/products/presentation/screens/product_list_screen.dart';
 import 'package:tindatrack/features/settings/presentation/screens/settings_screen.dart';
 
@@ -27,6 +28,7 @@ GoRouter createAppRouter({
   String? initialLocation,
   AppRouteBuilder dashboardBuilder = _buildDashboard,
   AppRouteBuilder productsBuilder = _buildProducts,
+  AppRouteBuilder addProductBuilder = _buildAddProduct,
   AppRouteBuilder historyBuilder = _buildHistory,
   AppRouteBuilder settingsBuilder = _buildSettings,
 }) {
@@ -54,6 +56,13 @@ GoRouter createAppRouter({
             route: AppRoute.products,
             navigatorKey: branchNavigatorKeys[1],
             builder: productsBuilder,
+            childRoutes: [
+              GoRoute(
+                path: ProductRoute.addProduct.segment,
+                name: ProductRoute.addProduct.name,
+                builder: addProductBuilder,
+              ),
+            ],
           ),
           _branch(
             route: AppRoute.history,
@@ -75,6 +84,7 @@ StatefulShellBranch _branch({
   required AppRoute route,
   required GlobalKey<NavigatorState> navigatorKey,
   required AppRouteBuilder builder,
+  List<RouteBase> childRoutes = const <RouteBase>[],
 }) {
   return StatefulShellBranch(
     navigatorKey: navigatorKey,
@@ -83,6 +93,7 @@ StatefulShellBranch _branch({
         path: route.path,
         name: route.name,
         builder: builder,
+        routes: childRoutes,
       ),
     ],
   );
@@ -94,6 +105,10 @@ Widget _buildDashboard(BuildContext context, GoRouterState state) {
 
 Widget _buildProducts(BuildContext context, GoRouterState state) {
   return const ProductListScreen();
+}
+
+Widget _buildAddProduct(BuildContext context, GoRouterState state) {
+  return const AddProductScreen();
 }
 
 Widget _buildHistory(BuildContext context, GoRouterState state) {

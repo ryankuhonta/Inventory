@@ -7,7 +7,11 @@ void main() {
   testWidgets('shows and navigates the four canonical destinations', (
     tester,
   ) async {
-    final router = createAppRouter();
+    final router = createAppRouter(
+      productsBuilder: (_, _) {
+        return const Scaffold(key: Key('products-screen'));
+      },
+    );
     addTearDown(router.dispose);
 
     await tester.pumpWidget(MaterialApp.router(routerConfig: router));
@@ -55,7 +59,11 @@ void main() {
   testWidgets('reselecting the active destination stays at its root', (
     tester,
   ) async {
-    final router = createAppRouter();
+    final router = createAppRouter(
+      productsBuilder: (_, _) {
+        return const Scaffold(key: Key('products-screen'));
+      },
+    );
     addTearDown(router.dispose);
 
     await tester.pumpWidget(MaterialApp.router(routerConfig: router));

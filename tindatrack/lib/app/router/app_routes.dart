@@ -20,3 +20,28 @@ enum AppRoute {
   /// User-visible navigation label.
   final String label;
 }
+
+/// Secondary routes owned by the Products branch.
+enum ProductRoute {
+  /// Add Product form.
+  addProduct(
+    path: '/products/add',
+    segment: 'add',
+    label: 'Add Product',
+  );
+
+  const ProductRoute({
+    required this.path,
+    required this.segment,
+    required this.label,
+  });
+
+  /// Absolute path for direct navigation and deep links.
+  final String path;
+
+  /// Relative child segment under the Products branch.
+  final String segment;
+
+  /// User-visible screen label.
+  final String label;
+}

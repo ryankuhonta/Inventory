@@ -75,10 +75,11 @@ final class _LaunchGateState extends ConsumerState<_LaunchGate> {
     if (_isRetrying) return;
 
     setState(() => _isRetrying = true);
-    final database = ref.read(databaseProvider);
     try {
-      await closeManagedDatabase(database);
-    } on Exception {
+      final database = ref.read(databaseProvider);
+      final closeDatabase = ref.read(databaseCloserProvider);
+      await closeDatabase(database);
+    } on Object {
       if (mounted) setState(() => _isRetrying = false);
       return;
     }

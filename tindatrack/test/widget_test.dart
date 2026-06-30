@@ -15,6 +15,7 @@ import 'package:tindatrack/core/errors/app_failure.dart';
 import 'package:tindatrack/core/errors/result.dart';
 import 'package:tindatrack/core/widgets/app_error_view.dart';
 import 'package:tindatrack/core/widgets/app_loading_view.dart';
+import 'package:tindatrack/features/products/presentation/providers/product_providers.dart';
 
 void main() {
   testWidgets('shows the lightweight splash while bootstrap is pending', (
@@ -238,6 +239,9 @@ void main() {
             await ref.read(databaseProvider).ensureReady();
             return const Success<void>(null);
           }),
+          activeProductsProvider.overrideWith(
+            (ref) => Stream.value(const []),
+          ),
         ],
         child: const MainApp(),
       ),
@@ -289,6 +293,9 @@ void main() {
               await ref.read(databaseProvider).ensureReady();
               return const Success<void>(null);
             }),
+            activeProductsProvider.overrideWith(
+              (ref) => Stream.value(const []),
+            ),
           ],
           child: const MainApp(),
         ),
@@ -396,6 +403,9 @@ void main() {
         overrides: [
           bootstrapProvider.overrideWith(
             (ref) async => const Success<void>(null),
+          ),
+          activeProductsProvider.overrideWith(
+            (ref) => Stream.value(const []),
           ),
         ],
         child: const MainApp(),

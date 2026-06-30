@@ -19,3 +19,7 @@
 - A database close that never completes can strand Retry (	indatrack/lib/app/app.dart:79).
 - A rejected cached close future blocks later retries (	indatrack/lib/app/providers.dart:40).
 - Provider disposal can surface an unhandled asynchronous close error (	indatrack/lib/app/providers.dart:34).
+
+## Deferred from: code review of 2-3-view-active-product-list-with-empty-state.md (2026-06-30)
+
+- Guard against duplicate Add Product routes from rapid repeated taps. The existing Story 2.2 FAB navigation behavior predates Story 2.3; address route de-duplication as a focused navigation hardening change.

@@ -1,5 +1,5 @@
 # generated: 2026-06-01
-# last_updated: 2026-06-28
+# last_updated: 2026-06-30
 # project: Inventory
 # project_key: NOKEY
 # tracking_system: file-system
@@ -35,14 +35,14 @@
 # - Dev moves story to 'review', then runs code-review (fresh context, different LLM recommended)
 
 generated: 2026-06-01
-last_updated: 2026-06-28
+last_updated: 2026-06-30
 project: Inventory
 project_key: NOKEY
 tracking_system: file-system
 story_location: \\wsl.localhost\Ubuntu\home\rkuhonta\Inventory\_bmad-output\implementation-artifacts
 
 development_status:
-  epic-1: in-progress
+  epic-1: done
   1-1-set-up-initial-project-from-flutter-empty-starter-template: done
   1-2-establish-app-architecture-and-local-core-services: done
   1-3-provide-offline-app-launch-and-splash-initialization: done
@@ -50,11 +50,11 @@ development_status:
   1-5-apply-mvp-theme-and-base-ui-states: done
   epic-1-retrospective: done
 
-  epic-2: backlog
-  2-1-create-product-catalog-data-model-and-repository: backlog
-  2-2-add-product-with-validation: backlog
-  2-3-view-active-product-list-with-empty-state: backlog
-  2-4-search-and-filter-products: backlog
+  epic-2: in-progress
+  2-1-create-product-catalog-data-model-and-repository: done
+  2-2-add-product-with-validation: done
+  2-3-view-active-product-list-with-empty-state: done
+  2-4-search-and-filter-products: ready-for-dev
   2-5-show-low-stock-and-out-of-stock-product-status: backlog
   2-6-edit-product-details-without-direct-stock-adjustment: backlog
   2-7-archive-product-without-deleting-history: backlog

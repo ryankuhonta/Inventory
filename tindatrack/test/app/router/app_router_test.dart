@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:go_router/go_router.dart';
@@ -17,11 +19,48 @@ void main() {
     );
   });
 
+  test('declares Add Product as a secondary Products route', () {
+    expect(ProductRoute.addProduct.name, 'addProduct');
+    expect(ProductRoute.addProduct.path, '/products/add');
+    expect(ProductRoute.addProduct.segment, 'add');
+    expect(AppRoute.values, hasLength(4));
+  });
+
+  testWidgets('maps Add Product under the Products branch', (tester) async {
+    final router = createAppRouter(
+      initialLocation: ProductRoute.addProduct.path,
+      productsBuilder: (_, _) {
+        return const Scaffold(key: Key('products-screen'));
+      },
+      addProductBuilder: (_, _) {
+        return const Scaffold(key: Key('add-product-test-screen'));
+      },
+    );
+    addTearDown(router.dispose);
+
+    await tester.pumpWidget(_RouterTestApp(router: router));
+    await tester.pumpAndSettle();
+
+    expect(find.byKey(const Key('add-product-test-screen')), findsOneWidget);
+    expect(
+      tester.widget<NavigationBar>(find.byType(NavigationBar)).selectedIndex,
+      1,
+    );
+    expect(
+      router.namedLocation(ProductRoute.addProduct.name),
+      ProductRoute.addProduct.path,
+    );
+  });
   testWidgets('maps each direct root location to its matching branch', (
     tester,
   ) async {
     for (final (index, route) in AppRoute.values.indexed) {
-      final router = createAppRouter(initialLocation: route.path);
+      final router = createAppRouter(
+        initialLocation: route.path,
+        productsBuilder: (_, _) {
+          return const Scaffold(key: Key('products-screen'));
+        },
+      );
       addTearDown(router.dispose);
 
       await tester.pumpWidget(_RouterTestApp(router: router));
@@ -65,6 +104,36 @@ void main() {
     await tester.pumpAndSettle();
     expect(find.text('Dashboard count: 1'), findsOneWidget);
     expect(find.text('Products count: 1'), findsNothing);
+  });
+
+  testWidgets('Add Product back navigation returns to Products', (
+    tester,
+  ) async {
+    final router = createAppRouter(
+      initialLocation: AppRoute.products.path,
+      productsBuilder: (_, _) {
+        return const Scaffold(key: Key('products-route-test-screen'));
+      },
+      addProductBuilder: (_, _) {
+        return const Scaffold(key: Key('add-product-route-test-screen'));
+      },
+    );
+    addTearDown(router.dispose);
+
+    await tester.pumpWidget(_RouterTestApp(router: router));
+    await tester.pumpAndSettle();
+
+    unawaited(router.pushNamed(ProductRoute.addProduct.name));
+    await tester.pumpAndSettle();
+    expect(
+      find.byKey(const Key('add-product-route-test-screen')),
+      findsOneWidget,
+    );
+
+    router.pop();
+    await tester.pumpAndSettle();
+    expect(find.byKey(const Key('products-route-test-screen')), findsOneWidget);
+    expect(router.routeInformationProvider.value.uri.path, '/products');
   });
 }
 
