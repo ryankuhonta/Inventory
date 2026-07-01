@@ -1,6 +1,10 @@
+---
+baseline_commit: c2515545179a0b198ba64a57149baf739e351c49
+---
+
 # Story 2.4: Search And Filter Products
 
-Status: ready-for-dev
+Status: done
 
 <!-- Note: Validation is optional. Run validate-create-story for quality check before dev-story. -->
 
@@ -75,58 +79,66 @@ so that I can act on the right item during busy selling hours.
 
 ## Tasks / Subtasks
 
-- [ ] Task 1: Define the product-list query and stock-filter contract (AC: 1–4)
-  - [ ] Add an immutable domain query value under `features/products/domain/entities` with normalized search text and `ProductStockFilter.all`, `.lowStock`, and `.outOfStock`.
-  - [ ] Keep Low Stock and Out of Stock mutually exclusive: zero is Out of Stock; only positive quantity at or below threshold is Low Stock.
-  - [ ] Make equality/hash behavior stable so identical effective queries do not recreate streams unnecessarily.
-  - [ ] Add focused domain tests for trim/blank normalization, stable equality, and filter identity; keep quantity/threshold predicate proofs at the real SQLite query boundary.
-  - [ ] Do not add visible badges, badge copy, badge colors, or row actions; Story 2.5 owns status presentation.
+- [x] Task 1: Define the product-list query and stock-filter contract (AC: 1–4)
+  - [x] Add an immutable domain query value under `features/products/domain/entities` with normalized search text and `ProductStockFilter.all`, `.lowStock`, and `.outOfStock`.
+  - [x] Keep Low Stock and Out of Stock mutually exclusive: zero is Out of Stock; only positive quantity at or below threshold is Low Stock.
+  - [x] Make equality/hash behavior stable so identical effective queries do not recreate streams unnecessarily.
+  - [x] Add focused domain tests for trim/blank normalization, stable equality, and filter identity; keep quantity/threshold predicate proofs at the real SQLite query boundary.
+  - [x] Do not add visible badges, badge copy, badge colors, or row actions; Story 2.5 owns status presentation.
 
-- [ ] Task 2: Parameterize the watched repository/DAO query (AC: 2–4, 6)
-  - [ ] Evolve `ProductRepository.watchActiveProducts` to accept the query while preserving one canonical repository and existing create behavior.
-  - [ ] Map the domain query to persistence-only DAO parameters/types; the core database layer must not import feature domain types.
-  - [ ] In `ProductsDao`, always apply `is_archived = false`, optional literal case-insensitive name/category matching, the selected stock predicate, and `name ASC`.
-  - [ ] Escape LIKE metacharacters explicitly with Drift's `like(..., escapeChar: ...)`; do not pass raw user text to `%term%` or claim `contains()` escapes wildcards.
-  - [ ] Keep category matching null-safe and search/filter composition grouped correctly as `(name OR category) AND stock AND active`.
-  - [ ] Preserve reactive `watch()` behavior and immutable domain mapping in `DriftProductsRepository`.
-  - [ ] Add real in-memory SQLite tests for active-only behavior, case-insensitive name/category matches, literal `%`/`_`/escape text, blank search, all stock boundaries, combined criteria, name order, and live re-emission.
+- [x] Task 2: Parameterize the watched repository/DAO query (AC: 2–4, 6)
+  - [x] Evolve `ProductRepository.watchActiveProducts` to accept the query while preserving one canonical repository and existing create behavior.
+  - [x] Map the domain query to persistence-only DAO parameters/types; the core database layer must not import feature domain types.
+  - [x] In `ProductsDao`, always apply `is_archived = false`, optional literal case-insensitive name/category matching, the selected stock predicate, and `name ASC`.
+  - [x] Escape LIKE metacharacters explicitly with Drift's `like(..., escapeChar: ...)`; do not pass raw user text to `%term%` or claim `contains()` escapes wildcards.
+  - [x] Keep category matching null-safe and search/filter composition grouped correctly as `(name OR category) AND stock AND active`.
+  - [x] Preserve reactive `watch()` behavior and immutable domain mapping in `DriftProductsRepository`.
+  - [x] Add real in-memory SQLite tests for active-only behavior, case-insensitive name/category matches, literal `%`/`_`/escape text, blank search, all stock boundaries, combined criteria, name order, and live re-emission.
 
-- [ ] Task 3: Add presentation-owned debounced query state (AC: 1, 3–5)
-  - [ ] Add a feature controller/notifier under `features/products/presentation/controllers`; use existing Riverpod 3 APIs without code generation or a new package.
-  - [ ] Debounce text changes by exactly 300 ms, replace the prior pending timer, apply only the latest term, and cancel safely on disposal.
-  - [ ] Apply stock-filter changes immediately with the currently applied search; a pending text callback must read the current filter when it fires and must never restore a captured stale filter.
-  - [ ] Keep query state alive for the app session so it survives indexed-stack tab switches and can accept a future dashboard-selected filter; cancel pending timers when the provider container is disposed, not merely when Products becomes offstage.
-  - [ ] Apply a blank/cleared query immediately and expose one reset operation that restores empty search plus `All`.
-  - [ ] Make `activeProductsProvider` watch the applied query and call the existing repository provider; do not construct another DAO/repository.
-  - [ ] Keep stream errors in `AsyncValue`; retry must invalidate only the query-aware product stream.
-  - [ ] Add deterministic controller/provider tests using controlled Flutter test time or explicit completers—never wall-clock sleeps.
+- [x] Task 3: Add presentation-owned debounced query state (AC: 1, 3–5)
+  - [x] Add a feature controller/notifier under `features/products/presentation/controllers`; use existing Riverpod 3 APIs without code generation or a new package.
+  - [x] Debounce text changes by exactly 300 ms, replace the prior pending timer, apply only the latest term, and cancel safely on disposal.
+  - [x] Apply stock-filter changes immediately with the currently applied search; a pending text callback must read the current filter when it fires and must never restore a captured stale filter.
+  - [x] Keep query state alive for the app session so it survives indexed-stack tab switches and can accept a future dashboard-selected filter; cancel pending timers when the provider container is disposed, not merely when Products becomes offstage.
+  - [x] Apply a blank/cleared query immediately and expose one reset operation that restores empty search plus `All`.
+  - [x] Make `activeProductsProvider` watch the applied query and call the existing repository provider; do not construct another DAO/repository.
+  - [x] Keep stream errors in `AsyncValue`; retry must invalidate only the query-aware product stream.
+  - [x] Add deterministic controller/provider tests using controlled Flutter test time or explicit completers—never wall-clock sleeps.
 
-- [ ] Task 4: Add accessible search, filters, and no-match UX (AC: 1, 3, 5, 6)
-  - [ ] Convert `ProductListScreen` to a consumer stateful widget only if needed to own and dispose `TextEditingController`/`FocusNode`; initialize visible text from query state without cursor jumps.
-  - [ ] Add a single-line Material search `TextField` or equivalent with a persistent accessible label, search icon, and accessible clear action.
-  - [ ] Add exactly `All`, `Low Stock`, and `Out of Stock` filter controls using `FilterChip`, `ChoiceChip`, segmented controls, or an equivalent responsive Material pattern.
-  - [ ] Keep controls outside the result-state switch so loading, error, empty, and no-match transitions do not remove the user's query context.
-  - [ ] Preserve the existing Add Product FAB, `ProductRoute.addProduct`, true-empty Add action, loading/error safe copy, lazy list, stable row keys, and read-only row behavior.
-  - [ ] Render `No matching products` for non-default criteria with one reset action; do not show the first-product Add CTA as the no-match remedy.
-  - [ ] Lay out controls without horizontal overflow at `360x640` and 2x text; use wrapping or safe horizontal scrolling while retaining 48dp tap targets and selected semantics.
+- [x] Task 4: Add accessible search, filters, and no-match UX (AC: 1, 3, 5, 6)
+  - [x] Convert `ProductListScreen` to a consumer stateful widget only if needed to own and dispose `TextEditingController`/`FocusNode`; initialize visible text from query state without cursor jumps.
+  - [x] Add a single-line Material search `TextField` or equivalent with a persistent accessible label, search icon, and accessible clear action.
+  - [x] Add exactly `All`, `Low Stock`, and `Out of Stock` filter controls using `FilterChip`, `ChoiceChip`, segmented controls, or an equivalent responsive Material pattern.
+  - [x] Keep controls outside the result-state switch so loading, error, empty, and no-match transitions do not remove the user's query context.
+  - [x] Preserve the existing Add Product FAB, `ProductRoute.addProduct`, true-empty Add action, loading/error safe copy, lazy list, stable row keys, and read-only row behavior.
+  - [x] Render `No matching products` for non-default criteria with one reset action; do not show the first-product Add CTA as the no-match remedy.
+  - [x] Lay out controls without horizontal overflow at `360x640` and 2x text; use wrapping or safe horizontal scrolling while retaining 48dp tap targets and selected semantics.
 
-- [ ] Task 5: Prove the complete search/filter flow (AC: 1–6)
-  - [ ] Prove no query is applied before 300 ms, the latest rapid input wins, clear/reset is immediate, disposal cancels pending work, and filter selection is immediate.
-  - [ ] Prove the debounce/filter race: type, select a filter before 300 ms, observe old-search/new-filter immediately, then latest-search/same-filter after 300 ms.
-  - [ ] Prove name and optional-category matching, mixed-case ASCII behavior, whitespace normalization, literal wildcard characters, null category, duplicate names, and offline operation.
-  - [ ] Prove `All`, threshold-1, threshold, threshold+1, zero, and threshold-zero cases; zero must appear only under Out of Stock.
-  - [ ] Prove search and stock filter intersect, archived rows never appear, results remain name ordered, and watched results react to database changes.
-  - [ ] Prove true catalog empty versus no matching products, safe error/retry, controls/FAB persistence, clear/reset action, and selected filter semantics.
-  - [ ] Preserve and extend the 3,000-product lazy-construction proof; do not add brittle wall-clock performance assertions.
-  - [ ] Run applicable Android tap-target and labeled-target guidelines at `360x640` with 2x text.
-  - [ ] Update repository fakes and provider overrides mechanically where the query-aware method signature requires it; do not weaken existing Story 2.1–2.3 assertions.
+- [x] Task 5: Prove the complete search/filter flow (AC: 1–6)
+  - [x] Prove no query is applied before 300 ms, the latest rapid input wins, clear/reset is immediate, disposal cancels pending work, and filter selection is immediate.
+  - [x] Prove the debounce/filter race: type, select a filter before 300 ms, observe old-search/new-filter immediately, then latest-search/same-filter after 300 ms.
+  - [x] Prove name and optional-category matching, mixed-case ASCII behavior, whitespace normalization, literal wildcard characters, null category, duplicate names, and offline operation.
+  - [x] Prove `All`, threshold-1, threshold, threshold+1, zero, and threshold-zero cases; zero must appear only under Out of Stock.
+  - [x] Prove search and stock filter intersect, archived rows never appear, results remain name ordered, and watched results react to database changes.
+  - [x] Prove true catalog empty versus no matching products, safe error/retry, controls/FAB persistence, clear/reset action, and selected filter semantics.
+  - [x] Preserve and extend the 3,000-product lazy-construction proof; do not add brittle wall-clock performance assertions.
+  - [x] Run applicable Android tap-target and labeled-target guidelines at `360x640` with 2x text.
+  - [x] Update repository fakes and provider overrides mechanically where the query-aware method signature requires it; do not weaken existing Story 2.1–2.3 assertions.
 
-- [ ] Task 6: Verify Story 2.4 without disturbing completed Stories 2.1–2.3 (AC: 1–6)
-  - [ ] Run Dart formatting, Flutter analysis, focused domain/DAO/repository/controller/provider/widget/router tests, and the complete Flutter suite.
-  - [ ] Keep the current `127` tests green and record the new final total honestly.
-  - [ ] Preserve every existing uncommitted Story 2.1–2.3 change; do not reset, clean, stage, or commit.
-  - [ ] Do not run schema generation or create a migration unless implementation proves a real schema change is necessary; the intended solution uses existing columns and index.
-  - [ ] Build/launch only if a concrete integration risk appears.
+- [x] Task 6: Verify Story 2.4 without disturbing completed Stories 2.1–2.3 (AC: 1–6)
+  - [x] Run Dart formatting, Flutter analysis, focused domain/DAO/repository/controller/provider/widget/router tests, and the complete Flutter suite.
+  - [x] Keep the current `127` tests green and record the new final total honestly.
+  - [x] Preserve every existing uncommitted Story 2.1–2.3 change; do not reset, clean, stage, or commit.
+  - [x] Do not run schema generation or create a migration unless implementation proves a real schema change is necessary; the intended solution uses existing columns and index.
+  - [x] Build/launch only if a concrete integration risk appears.
+
+### Review Findings
+
+- [x] [Review][Patch] Limit product search input to 1,000 characters [tindatrack/lib/features/products/presentation/screens/product_list_screen.dart:70]
+- [x] [Review][Patch] Synchronize visible search text when the applied query changes after remount [tindatrack/lib/features/products/presentation/screens/product_list_screen.dart:31]
+- [x] [Review][Patch] Normalize ASCII case for stable equality of semantically equivalent search queries [tindatrack/lib/features/products/domain/entities/product_list_query.dart:49]
+- [x] [Review][Patch] Remove nondeterministic duplicate-name tie-order assertion [tindatrack/test/core/database/daos/products_dao_duplicate_name_search_test.dart:35]
+- [x] [Review][Patch] Add watched-query proofs for quantity and archive transitions [tindatrack/test/core/database/daos/products_dao_search_filter_test.dart:141]
 
 ## Dev Notes
 
@@ -412,15 +424,58 @@ GPT-5 Codex
 
 ### Debug Log References
 
+### Implementation Plan
+
+- Task 1: Introduce a normalized immutable domain query and enum, prove effective equality and filter identity with focused tests, then run the complete regression suite.
+- Task 2: Parameterize the SQLite watched query behind persistence-only parameters, map the domain query in the canonical repository, prove literal matching and stock composition in memory, and mechanically update repository fakes.
+- Task 3: Add app-session Riverpod query state with an exact 300 ms text debounce, immediate filter/clear/reset operations, race-safe current-filter reads, query-aware stream composition, and deterministic lifecycle/error/retry tests.
+- Task 4: Make the Products screen own its visible text/focus lifecycle, keep accessible search and exactly three selected chips outside result states, and distinguish recoverable no-match from true empty without disturbing the lazy list or Add flow.
+- Task 5: Run the cross-layer Story 2.4 proof matrix, add explicit duplicate-name and clear/filter/session-restoration coverage, and preserve all prior routing, Add Product, lazy-list, safe-error, and accessibility assertions.
+- Task 6: Recheck formatting for every touched Dart file, run clean static analysis and the complete Flutter suite in the mirror, then audit the authoritative WSL diff for scope, whitespace, schema, generated-file, dependency, and git-operation safety.
+
 ### Completion Notes List
 
 - Ultimate context engine analysis completed - comprehensive developer guide created.
+- Task 1 complete: added normalized `ProductListQuery`, stable value equality/hash behavior, default-query identity, and the three mutually exclusive stock-filter identities. Focused tests passed 4/4; full Flutter regression suite passed 131/131.
+- Task 2 complete: added escaped literal SQLite search over name/nullable category, mutually exclusive stock predicates, active-only AND composition, name ordering, watched re-emission, domain-to-persistence mapping, and query-aware repository signatures. Focused tests passed 7/7; full suite passed 138/138; analysis clean.
+- Task 3 complete: added the app-session `ProductListController`, exact latest-only debounce, race-safe immediate filters, immediate clear/reset, disposal cancellation, query-aware repository stream recreation, safe stream errors, and current-query retry. Focused tests passed 6/6; full suite passed 144/144; analysis clean.
+- Task 4 complete: added the labeled search field and accessible clear action, exactly three responsive selected `ChoiceChip` filters, persistent controls across async states, distinct no-match/reset UX, and widget-owned controller/focus disposal while preserving FAB, routing, safe copy, stable keys, read-only rows, and lazy construction. Focused screen tests passed 12/12; full suite passed 149/149; analysis clean.
+- Task 5 complete: the 37-test focused Story 2.4 matrix proves normalization, literal SQLite matching, nullable category, duplicate names, disjoint stock boundaries, query intersection/order/reactivity, debounce races, clear/reset/disposal/session behavior, safe retry, distinct empty states, selected controls, lazy 3,000-row construction, routing preservation, and 360×640/2× accessibility. Full suite passed 151/151; analysis clean.
+- Task 6 complete: formatting check reported 0/20 changes, Flutter analysis reported no issues, and the complete suite passed 151/151. `git diff --check` is clean; no schema/generated/dependency/build changes were needed; the eight intentional handoff/review files remain untouched and untracked; no reset, clean, stage, commit, or push was performed.
+- Code review complete: resolved all five findings with a 1,000-character search cap, remount-safe visible-query synchronization, ASCII-only effective query normalization, order-independent duplicate-name assertions, and quantity/archive watched-update proofs. Final suite passed 154/154; analysis and diff checks clean.
 
 ### File List
 
 - `_bmad-output/implementation-artifacts/2-4-search-and-filter-products.md`
 - `_bmad-output/implementation-artifacts/sprint-status.yaml`
+- `tindatrack/lib/core/database/daos/products_dao.dart`
+- `tindatrack/lib/features/products/data/repositories/drift_products_repository.dart`
+- `tindatrack/lib/features/products/domain/entities/product_list_query.dart`
+- `tindatrack/lib/features/products/domain/repositories/products_repository.dart`
+- `tindatrack/lib/features/products/presentation/controllers/product_list_controller.dart`
+- `tindatrack/lib/features/products/presentation/providers/product_providers.dart`
+- `tindatrack/lib/features/products/presentation/screens/product_list_screen.dart`
+- `tindatrack/test/core/database/daos/products_dao_duplicate_name_search_test.dart`
+- `tindatrack/test/core/database/daos/products_dao_search_filter_test.dart`
+- `tindatrack/test/features/products/data/repositories/drift_products_repository_query_test.dart`
+- `tindatrack/test/features/products/domain/entities/product_list_query_test.dart`
+- `tindatrack/test/features/products/domain/product_domain_test.dart`
+- `tindatrack/test/features/products/domain/usecases/add_product_test.dart`
+- `tindatrack/test/features/products/presentation/controllers/product_form_controller_test.dart`
+- `tindatrack/test/features/products/presentation/controllers/product_list_controller_test.dart`
+- `tindatrack/test/features/products/presentation/providers/product_providers_test.dart`
+- `tindatrack/test/features/products/presentation/providers/product_query_provider_test.dart`
+- `tindatrack/test/features/products/presentation/screens/add_product_screen_test.dart`
+- `tindatrack/test/features/products/presentation/screens/product_list_search_filter_screen_test.dart`
+- `tindatrack/test/features/products/presentation/screens/product_search_filter_flow_test.dart`
 
 ## Change Log
 
 - 2026-06-30: Created Story 2.4 with implementation-ready search semantics, mutually exclusive stock filters, debounced Riverpod state, SQL query boundaries, accessible no-match UX, and regression guardrails.
+- 2026-07-01: Completed Task 1 domain query contract and focused normalization/equality/filter tests; full suite 131/131 green.
+- 2026-07-01: Completed Task 2 query-aware repository/DAO boundary with literal escaped search, stock filters, reactive SQLite proofs, 138/138 tests green, and clean analysis.
+- 2026-07-01: Completed Task 3 debounced app-session query controller and query-aware provider flow; 144/144 tests green and analysis clean.
+- 2026-07-01: Completed Task 4 accessible search/filter/no-match UI while preserving list and Add behavior; 149/149 tests green and analysis clean.
+- 2026-07-01: Completed Task 5 cross-layer Story 2.4 proof matrix; 37/37 focused tests and 151/151 full tests green, analysis clean.
+- 2026-07-01: Completed Task 6 final verification with stable formatting, clean analysis/diff, and 151/151 tests; no schema or git mutation beyond working-tree edits.
+- 2026-07-01: Resolved all five parallel code-review findings; final suite 154/154 green, analysis and diff checks clean, story moved to done.

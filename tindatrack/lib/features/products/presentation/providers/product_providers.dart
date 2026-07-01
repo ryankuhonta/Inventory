@@ -5,6 +5,7 @@ import 'package:tindatrack/features/products/data/repositories/drift_products_re
 import 'package:tindatrack/features/products/domain/entities/product.dart';
 import 'package:tindatrack/features/products/domain/repositories/products_repository.dart';
 import 'package:tindatrack/features/products/domain/usecases/add_product.dart';
+import 'package:tindatrack/features/products/presentation/controllers/product_list_controller.dart';
 
 /// Persistence-only product DAO composed from the app database.
 final productsDaoProvider = Provider<ProductsDao>(
@@ -25,7 +26,9 @@ final addProductProvider = Provider<AddProduct>(
   (ref) => AddProduct(ref.watch(productRepositoryProvider)),
 );
 
-/// Reactive active catalog exposed as presentation-safe asynchronous state.
+/// Reactive active catalog for the currently applied product-list query.
 final activeProductsProvider = StreamProvider<List<Product>>(
-  (ref) => ref.watch(productRepositoryProvider).watchActiveProducts(),
+  (ref) => ref
+      .watch(productRepositoryProvider)
+      .watchActiveProducts(ref.watch(productListControllerProvider)),
 );

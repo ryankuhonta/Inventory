@@ -1,5 +1,5 @@
 # generated: 2026-06-01
-# last_updated: 2026-06-30
+# last_updated: 2026-07-01
 # project: Inventory
 # project_key: NOKEY
 # tracking_system: file-system
@@ -35,7 +35,7 @@
 # - Dev moves story to 'review', then runs code-review (fresh context, different LLM recommended)
 
 generated: 2026-06-01
-last_updated: 2026-06-30
+last_updated: 2026-07-01
 project: Inventory
 project_key: NOKEY
 tracking_system: file-system
@@ -54,8 +54,8 @@ development_status:
   2-1-create-product-catalog-data-model-and-repository: done
   2-2-add-product-with-validation: done
   2-3-view-active-product-list-with-empty-state: done
-  2-4-search-and-filter-products: ready-for-dev
-  2-5-show-low-stock-and-out-of-stock-product-status: backlog
+  2-4-search-and-filter-products: done
+  2-5-show-low-stock-and-out-of-stock-product-status: review
   2-6-edit-product-details-without-direct-stock-adjustment: backlog
   2-7-archive-product-without-deleting-history: backlog
   2-8-prepare-product-row-action-pattern: backlog

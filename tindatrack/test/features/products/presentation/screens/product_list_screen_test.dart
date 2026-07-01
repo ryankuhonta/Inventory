@@ -111,6 +111,91 @@ void main() {
     expect(find.text('Rice'), findsOneWidget);
   });
 
+  testWidgets('mixed rows show independent mutually exclusive statuses', (
+    tester,
+  ) async {
+    await _pumpProducts(
+      tester,
+      () => Stream.value([
+        _product('1', 'Rice', quantity: 5, threshold: 2),
+        _product('2', 'Soap', quantity: 2, threshold: 2),
+        _product('3', 'Soda', threshold: 5),
+      ]),
+    );
+    await tester.pump();
+
+    final rice = find.byKey(const ValueKey('product-row-1'));
+    final soap = find.byKey(const ValueKey('product-row-2'));
+    final soda = find.byKey(const ValueKey('product-row-3'));
+    expect(
+      find.descendant(of: rice, matching: find.text('Low Stock')),
+      findsNothing,
+    );
+    expect(
+      find.descendant(of: rice, matching: find.text('Out of Stock')),
+      findsNothing,
+    );
+    expect(
+      find.descendant(of: soap, matching: find.text('Low Stock')),
+      findsOneWidget,
+    );
+    expect(
+      find.descendant(of: soap, matching: find.text('Out of Stock')),
+      findsNothing,
+    );
+    expect(
+      find.descendant(of: soda, matching: find.text('Out of Stock')),
+      findsOneWidget,
+    );
+    expect(
+      find.descendant(of: soda, matching: find.text('Low Stock')),
+      findsNothing,
+    );
+  });
+
+  testWidgets('current stream data updates status without restart', (
+    tester,
+  ) async {
+    final stream = StreamController<List<Product>>.broadcast();
+    addTearDown(stream.close);
+    await _pumpProducts(tester, () => stream.stream);
+
+    stream.add([_product('1', 'Rice', quantity: 4, threshold: 2)]);
+    await tester.pump();
+    var row = find.byKey(const ValueKey('product-row-1'));
+    expect(
+      find.descendant(of: row, matching: find.text('Low Stock')),
+      findsNothing,
+    );
+    expect(
+      find.descendant(of: row, matching: find.text('Out of Stock')),
+      findsNothing,
+    );
+
+    stream.add([_product('1', 'Rice', quantity: 2, threshold: 2)]);
+    await tester.pump();
+    row = find.byKey(const ValueKey('product-row-1'));
+    expect(
+      find.descendant(of: row, matching: find.text('Low Stock')),
+      findsOneWidget,
+    );
+    expect(find.bySemanticsLabel('Rice, 2 pcs, Low Stock'), findsOneWidget);
+
+    stream.add([_product('1', 'Rice', threshold: 2)]);
+    await tester.pump();
+    await tester.pump();
+    row = find.byKey(const ValueKey('product-row-1'));
+    expect(
+      find.descendant(of: row, matching: find.text('Low Stock')),
+      findsNothing,
+    );
+    expect(
+      find.descendant(of: row, matching: find.text('Out of Stock')),
+      findsOneWidget,
+    );
+    expect(find.bySemanticsLabel('Rice, 0 pcs, Out of Stock'), findsOneWidget);
+  });
+
   testWidgets('3,000 products are built lazily and later rows can appear', (
     tester,
   ) async {
@@ -226,6 +311,7 @@ Product _product(
   String name, {
   String? category,
   int quantity = 0,
+  int threshold = 0,
 }) {
   return Product(
     id: id,
@@ -234,7 +320,7 @@ Product _product(
     unit: 'pcs',
     sellingPrice: 10,
     quantity: quantity,
-    lowStockThreshold: 0,
+    lowStockThreshold: threshold,
     barcode: null,
     isArchived: false,
     createdAt: DateTime.utc(2026, 6, 30),

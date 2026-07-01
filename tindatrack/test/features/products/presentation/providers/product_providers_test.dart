@@ -5,6 +5,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:tindatrack/core/errors/result.dart';
 import 'package:tindatrack/features/products/domain/entities/create_product_input.dart';
 import 'package:tindatrack/features/products/domain/entities/product.dart';
+import 'package:tindatrack/features/products/domain/entities/product_list_query.dart';
 import 'package:tindatrack/features/products/domain/repositories/products_repository.dart';
 import 'package:tindatrack/features/products/presentation/providers/product_providers.dart';
 
@@ -95,7 +96,9 @@ final class _StreamingProductRepository implements ProductRepository {
   }
 
   @override
-  Stream<List<Product>> watchActiveProducts() => products;
+  Stream<List<Product>> watchActiveProducts(ProductListQuery query) {
+    return products;
+  }
 }
 
 Product _product(String id, String name) {

@@ -4,6 +4,33 @@ import 'package:tindatrack/core/database/tables/products_table.dart';
 
 part 'products_dao.g.dart';
 
+/// Persistence-only stock predicates for active product queries.
+enum ProductsStockFilterParameter {
+  /// Includes every active product.
+  all,
+
+  /// Includes positive quantities at or below their threshold.
+  lowStock,
+
+  /// Includes zero quantities.
+  outOfStock,
+}
+
+/// Persistence-only parameters for the watched active product query.
+final class ProductsQueryParameters {
+  /// Creates SQLite query parameters.
+  const ProductsQueryParameters({
+    this.searchText = '',
+    this.stockFilter = ProductsStockFilterParameter.all,
+  });
+
+  /// Trimmed text to match literally against name or category.
+  final String searchText;
+
+  /// Stock predicate to apply.
+  final ProductsStockFilterParameter stockFilter;
+}
+
 /// Persistence-only access to product catalog rows.
 @DriftAccessor(tables: [Products])
 class ProductsDao extends DatabaseAccessor<AppDatabase>
@@ -16,11 +43,44 @@ class ProductsDao extends DatabaseAccessor<AppDatabase>
     return into(products).insertReturning(product);
   }
 
-  /// Watches active products, with filtering and ordering performed by SQLite.
-  Stream<List<Product>> watchActiveProducts() {
+  /// Watches active products filtered and ordered by SQLite.
+  Stream<List<Product>> watchActiveProducts([
+    ProductsQueryParameters parameters = const ProductsQueryParameters(),
+  ]) {
+    final searchText = parameters.searchText.trim();
     final query = select(products)
-      ..where((product) => product.isArchived.equals(false))
+      ..where((product) {
+        var predicate = product.isArchived.equals(false);
+
+        if (searchText.isNotEmpty) {
+          final escapedSearch = _escapeLikeLiteral(searchText);
+          final pattern = '%$escapedSearch%';
+          final textMatches =
+              product.name.like(pattern, escapeChar: r'\') |
+              product.category.like(pattern, escapeChar: r'\');
+          predicate = predicate & textMatches;
+        }
+
+        final stockMatches = switch (parameters.stockFilter) {
+          ProductsStockFilterParameter.all => const Constant(true),
+          ProductsStockFilterParameter.lowStock =>
+            product.quantity.isBiggerThanValue(0) &
+                product.quantity.isSmallerOrEqual(
+                  product.lowStockThreshold,
+                ),
+          ProductsStockFilterParameter.outOfStock => product.quantity.equals(0),
+        };
+
+        return predicate & stockMatches;
+      })
       ..orderBy([(product) => OrderingTerm.asc(product.name)]);
     return query.watch();
+  }
+
+  String _escapeLikeLiteral(String value) {
+    return value
+        .replaceAll(r'\', r'\\')
+        .replaceAll('%', r'\%')
+        .replaceAll('_', r'\_');
   }
 }

@@ -3,6 +3,7 @@ import 'package:tindatrack/core/errors/app_failure.dart';
 import 'package:tindatrack/core/errors/result.dart';
 import 'package:tindatrack/features/products/domain/entities/create_product_input.dart';
 import 'package:tindatrack/features/products/domain/entities/product.dart';
+import 'package:tindatrack/features/products/domain/entities/product_list_query.dart';
 import 'package:tindatrack/features/products/domain/failures/product_failure.dart';
 import 'package:tindatrack/features/products/domain/repositories/products_repository.dart';
 
@@ -75,7 +76,10 @@ void main() {
       );
 
       expect(await repository.createProduct(input), isA<Result<Product>>());
-      expect(repository.watchActiveProducts(), emits(isA<List<Product>>()));
+      expect(
+        repository.watchActiveProducts(const ProductListQuery.defaultQuery()),
+        emits(isA<List<Product>>()),
+      );
     },
   );
 }
@@ -101,7 +105,7 @@ final class _FakeProductRepository implements ProductRepository {
   }
 
   @override
-  Stream<List<Product>> watchActiveProducts() {
+  Stream<List<Product>> watchActiveProducts(ProductListQuery query) {
     return Stream.value(const <Product>[]);
   }
 }

@@ -12,6 +12,7 @@ import 'package:tindatrack/core/time/clock.dart';
 import 'package:tindatrack/features/products/domain/entities/create_product_input.dart';
 import 'package:tindatrack/features/products/domain/entities/product.dart'
     as domain;
+import 'package:tindatrack/features/products/domain/entities/product_list_query.dart';
 import 'package:tindatrack/features/products/domain/failures/product_failure.dart';
 import 'package:tindatrack/features/products/domain/repositories/products_repository.dart';
 
@@ -73,9 +74,23 @@ final class DriftProductsRepository implements ProductRepository {
   }
 
   @override
-  Stream<List<domain.Product>> watchActiveProducts() {
-    return _dao.watchActiveProducts().map(
-      (rows) => rows.map(_toDomain).toList(growable: false),
+  Stream<List<domain.Product>> watchActiveProducts([
+    ProductListQuery query = const ProductListQuery.defaultQuery(),
+  ]) {
+    return _dao
+        .watchActiveProducts(_toParameters(query))
+        .map((rows) => rows.map(_toDomain).toList(growable: false));
+  }
+
+  ProductsQueryParameters _toParameters(ProductListQuery query) {
+    return ProductsQueryParameters(
+      searchText: query.searchText,
+      stockFilter: switch (query.stockFilter) {
+        ProductStockFilter.all => ProductsStockFilterParameter.all,
+        ProductStockFilter.lowStock => ProductsStockFilterParameter.lowStock,
+        ProductStockFilter.outOfStock =>
+          ProductsStockFilterParameter.outOfStock,
+      },
     );
   }
 
