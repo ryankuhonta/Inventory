@@ -26,6 +26,12 @@ void main() {
     expect(AppRoute.values, hasLength(4));
   });
 
+  test('declares Edit Product with a stable ID path parameter', () {
+    expect(ProductRoute.editProduct.name, 'editProduct');
+    expect(ProductRoute.editProduct.path, '/products/:productId/edit');
+    expect(ProductRoute.editProduct.segment, ':productId/edit');
+  });
+
   testWidgets('maps Add Product under the Products branch', (tester) async {
     final router = createAppRouter(
       initialLocation: ProductRoute.addProduct.path,
@@ -51,6 +57,37 @@ void main() {
       ProductRoute.addProduct.path,
     );
   });
+
+  testWidgets('maps Edit Product ID under the Products branch', (tester) async {
+    String? receivedId;
+    final router = createAppRouter(
+      initialLocation: '/products/product-1/edit',
+      productsBuilder: (_, _) => const Scaffold(key: Key('products-screen')),
+      editProductBuilder: (_, state) {
+        receivedId = state.pathParameters['productId'];
+        return const Scaffold(key: Key('edit-product-test-screen'));
+      },
+    );
+    addTearDown(router.dispose);
+
+    await tester.pumpWidget(_RouterTestApp(router: router));
+    await tester.pumpAndSettle();
+
+    expect(receivedId, 'product-1');
+    expect(find.byKey(const Key('edit-product-test-screen')), findsOneWidget);
+    expect(
+      router.namedLocation(
+        ProductRoute.editProduct.name,
+        pathParameters: const <String, String>{'productId': 'product 1'},
+      ),
+      '/products/product%201/edit',
+    );
+    expect(
+      tester.widget<NavigationBar>(find.byType(NavigationBar)).selectedIndex,
+      1,
+    );
+  });
+
   testWidgets('maps each direct root location to its matching branch', (
     tester,
   ) async {
@@ -127,6 +164,44 @@ void main() {
     await tester.pumpAndSettle();
     expect(
       find.byKey(const Key('add-product-route-test-screen')),
+      findsOneWidget,
+    );
+
+    router.pop();
+    await tester.pumpAndSettle();
+    expect(find.byKey(const Key('products-route-test-screen')), findsOneWidget);
+    expect(router.routeInformationProvider.value.uri.path, '/products');
+  });
+
+  testWidgets('Edit Product back navigation returns to Products', (
+    tester,
+  ) async {
+    final router = createAppRouter(
+      initialLocation: AppRoute.products.path,
+      productsBuilder: (_, _) {
+        return const Scaffold(key: Key('products-route-test-screen'));
+      },
+      editProductBuilder: (_, state) {
+        return Scaffold(
+          key: const Key('edit-product-route-test-screen'),
+          body: Text(state.pathParameters['productId']!),
+        );
+      },
+    );
+    addTearDown(router.dispose);
+
+    await tester.pumpWidget(_RouterTestApp(router: router));
+    await tester.pumpAndSettle();
+
+    unawaited(
+      router.pushNamed(
+        ProductRoute.editProduct.name,
+        pathParameters: const <String, String>{'productId': 'product-1'},
+      ),
+    );
+    await tester.pumpAndSettle();
+    expect(
+      find.byKey(const Key('edit-product-route-test-screen')),
       findsOneWidget,
     );
 

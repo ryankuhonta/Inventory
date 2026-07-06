@@ -65,6 +65,19 @@ void main() {
     expect(await names(r'\'), [r'Back\slash']);
   });
 
+  test('NUL search text matches no rows', () async {
+    await _insert(dao, '1', 'Rice');
+    await _insert(dao, '2', 'Salt');
+
+    final rows = await dao
+        .watchActiveProducts(
+          const ProductsQueryParameters(searchText: '\u0000rice'),
+        )
+        .first;
+
+    expect(rows, isEmpty);
+  });
+
   test('stock filters are disjoint at every threshold boundary', () async {
     await _insert(dao, '0', 'Zero');
     await _insert(dao, '1', 'Threshold zero positive', quantity: 1);

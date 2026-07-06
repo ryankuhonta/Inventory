@@ -1,4 +1,5 @@
 import 'package:tindatrack/features/products/domain/entities/create_product_input.dart';
+import 'package:tindatrack/features/products/domain/entities/update_product_input.dart';
 import 'package:tindatrack/features/products/domain/failures/product_failure.dart';
 
 /// Practical upper bound for product quantities and thresholds.
@@ -20,6 +21,44 @@ final class ProductValidator {
       quantity: input.quantity,
       lowStockThreshold: input.lowStockThreshold,
       barcode: input.barcode,
+    );
+  }
+
+  /// Applies the canonical product normalization to editable details.
+  UpdateProductInput normalizeUpdate(UpdateProductInput input) {
+    final normalized = normalize(
+      CreateProductInput(
+        name: input.name,
+        category: input.category,
+        unit: input.unit,
+        sellingPrice: input.sellingPrice,
+        quantity: 0,
+        lowStockThreshold: input.lowStockThreshold,
+        barcode: input.barcode,
+      ),
+    );
+    return UpdateProductInput(
+      name: normalized.name,
+      category: normalized.category,
+      unit: normalized.unit,
+      sellingPrice: normalized.sellingPrice,
+      lowStockThreshold: normalized.lowStockThreshold,
+      barcode: normalized.barcode,
+    );
+  }
+
+  /// Reuses canonical detail validation with a neutral valid quantity.
+  ProductValidationFailure? validateUpdate(UpdateProductInput input) {
+    return validate(
+      CreateProductInput(
+        name: input.name,
+        category: input.category,
+        unit: input.unit,
+        sellingPrice: input.sellingPrice,
+        quantity: 0,
+        lowStockThreshold: input.lowStockThreshold,
+        barcode: input.barcode,
+      ),
     );
   }
 

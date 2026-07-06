@@ -4,7 +4,7 @@ baseline_commit: c2515545179a0b198ba64a57149baf739e351c49
 
 # Story 2.5: Show Low-Stock And Out-of-Stock Product Status
 
-Status: review
+Status: done
 
 ## Story
 
@@ -51,6 +51,12 @@ so that I know what needs attention.
   - [x] Prove current data above-threshold -> threshold -> zero renders none -> Low Stock -> Out of Stock without restart or manual status.
   - [x] Preserve disjoint Story 2.4 filters: Low Stock is `quantity > 0 && quantity <= threshold`; Out of Stock is `quantity == 0`.
   - [x] Run formatter, analyzer, focused tests, and the full Flutter suite in the mirror; audit the WSL diff.
+
+### Review Findings
+
+- [x] [Review][Patch] Reject NUL-containing search text before SQLite `LIKE` can broaden the match unexpectedly [tindatrack/lib/core/database/daos/products_dao.dart:49]
+- [x] [Review][Patch] Clear the fired debounce timer reference when its callback begins [tindatrack/lib/features/products/presentation/controllers/product_list_controller.dart:29]
+- [x] [Review][Patch] Share one stock-status label mapping between visible badge copy and merged row semantics [tindatrack/lib/features/products/presentation/widgets/product_list_item.dart:19]
 
 ## Dev Notes
 
@@ -194,11 +200,15 @@ GPT-5 Codex
 - Task 2 complete: added the token-driven informational badge; 3 focused tests and the 163-test full suite pass.
 - Task 3 complete: integrated one derived badge into each row and merged semantics; 6 focused tests and the 166-test full suite pass.
 - Task 4 complete: mixed-list and reactive status proofs pass; 24 focused tests, 168/168 full suite, clean analysis, and clean diff validation.
+- Code review complete: fixed all 3 actionable findings; 21 focused tests and the 169/169 full suite pass with clean analysis and diff validation.
 
 ### File List
 
 - `_bmad-output/implementation-artifacts/2-5-show-low-stock-and-out-of-stock-product-status.md`
 - `_bmad-output/implementation-artifacts/sprint-status.yaml`
+- `tindatrack/lib/core/database/daos/products_dao.dart`
+- `tindatrack/lib/features/products/presentation/controllers/product_list_controller.dart`
+- `tindatrack/test/core/database/daos/products_dao_search_filter_test.dart`
 - `tindatrack/lib/features/products/domain/entities/product_stock_status.dart`
 - `tindatrack/lib/features/products/presentation/widgets/product_list_item.dart`
 - `tindatrack/lib/features/products/presentation/widgets/stock_badge.dart`
@@ -210,3 +220,4 @@ GPT-5 Codex
 ## Change Log
 
 - 2026-07-01: Implemented derived low/out-of-stock status, accessible token-driven badges, reactive product-row rendering, and full regression coverage; moved story to review.
+- 2026-07-02: Completed adversarial code review, fixed all actionable findings, and moved Story 2.5 to done.

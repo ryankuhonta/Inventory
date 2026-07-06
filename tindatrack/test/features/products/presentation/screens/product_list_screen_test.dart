@@ -179,7 +179,10 @@ void main() {
       find.descendant(of: row, matching: find.text('Low Stock')),
       findsOneWidget,
     );
-    expect(find.bySemanticsLabel('Rice, 2 pcs, Low Stock'), findsOneWidget);
+    expect(
+      find.bySemanticsLabel('Rice, 2 pcs, Low Stock, Edit product'),
+      findsOneWidget,
+    );
 
     stream.add([_product('1', 'Rice', threshold: 2)]);
     await tester.pump();
@@ -193,7 +196,10 @@ void main() {
       find.descendant(of: row, matching: find.text('Out of Stock')),
       findsOneWidget,
     );
-    expect(find.bySemanticsLabel('Rice, 0 pcs, Out of Stock'), findsOneWidget);
+    expect(
+      find.bySemanticsLabel('Rice, 0 pcs, Out of Stock, Edit product'),
+      findsOneWidget,
+    );
   });
 
   testWidgets('3,000 products are built lazily and later rows can appear', (
@@ -249,7 +255,7 @@ void main() {
     expect(tester.takeException(), isNull);
     expect(
       find.bySemanticsLabel(
-        'A readable product with a longer name, Staples, 4 pcs',
+        'A readable product with a longer name, Staples, 4 pcs, Edit product',
       ),
       findsOneWidget,
     );

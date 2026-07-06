@@ -96,6 +96,27 @@ void main() {
     expect(find.text('Out of Stock'), findsNothing);
   });
 
+  testWidgets('edit callback is announced and operable from the row', (
+    tester,
+  ) async {
+    var edits = 0;
+    await tester.pumpWidget(
+      MaterialApp(
+        theme: AppTheme.light,
+        home: Scaffold(
+          body: ProductListItem(
+            product: _product(),
+            onEdit: () => edits++,
+          ),
+        ),
+      ),
+    );
+
+    expect(find.bySemanticsLabel('Rice, 4 pcs, Edit product'), findsOneWidget);
+    await tester.tap(find.byType(ListTile));
+    expect(edits, 1);
+  });
+
   testWidgets('long quantity and status remain safe at enlarged text sizes', (
     tester,
   ) async {

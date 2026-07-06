@@ -13,6 +13,7 @@ import 'package:tindatrack/features/products/domain/entities/create_product_inpu
 import 'package:tindatrack/features/products/domain/entities/product.dart'
     as domain;
 import 'package:tindatrack/features/products/domain/entities/product_list_query.dart';
+import 'package:tindatrack/features/products/domain/entities/update_product_input.dart';
 import 'package:tindatrack/features/products/domain/failures/product_failure.dart';
 import 'package:tindatrack/features/products/domain/repositories/products_repository.dart';
 
@@ -56,6 +57,67 @@ final class DriftProductsRepository implements ProductRepository {
           updatedAt: now,
         ),
       );
+      return Success<domain.Product>(_toDomain(row));
+    } on SqliteException catch (error) {
+      if (_isDuplicateBarcode(error)) {
+        return FailureResult<domain.Product>(
+          DuplicateBarcodeFailure(debugMessage: error.toString()),
+        );
+      }
+      return FailureResult<domain.Product>(
+        PersistenceFailure(debugMessage: error.toString()),
+      );
+    } on Exception catch (error) {
+      return FailureResult<domain.Product>(
+        PersistenceFailure(debugMessage: error.toString()),
+      );
+    }
+  }
+
+  @override
+  Future<Result<domain.Product>> getProduct(String id) async {
+    try {
+      final row = await _dao.getProductById(id);
+      if (row == null) {
+        return const FailureResult<domain.Product>(
+          ProductNotFoundFailure(),
+        );
+      }
+      if (row.isArchived) {
+        return const FailureResult<domain.Product>(
+          ArchivedProductFailure(),
+        );
+      }
+      return Success<domain.Product>(_toDomain(row));
+    } on Exception catch (error) {
+      return FailureResult<domain.Product>(
+        PersistenceFailure(debugMessage: error.toString()),
+      );
+    }
+  }
+
+  @override
+  Future<Result<domain.Product>> updateProduct(
+    String id,
+    UpdateProductInput input,
+  ) async {
+    final target = await getProduct(id);
+    if (target case FailureResult<domain.Product>()) return target;
+
+    final barcode = _normalizeBarcode(input.barcode);
+    try {
+      final now = _clock.now().toUtc();
+      final row = await _dao.updateProductDetails(
+        id: id,
+        name: input.name,
+        category: input.category,
+        unit: input.unit,
+        sellingPrice: input.sellingPrice,
+        lowStockThreshold: input.lowStockThreshold,
+        barcode: barcode,
+        updatedAt: now,
+      );
+      if (row == null) return getProduct(id);
       return Success<domain.Product>(_toDomain(row));
     } on SqliteException catch (error) {
       if (_isDuplicateBarcode(error)) {

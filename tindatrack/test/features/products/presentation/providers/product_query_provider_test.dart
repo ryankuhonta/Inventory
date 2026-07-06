@@ -87,6 +87,16 @@ final class _RecordingRepository implements ProductRepository {
   }
 
   @override
+  Future<Result<Product>> getProduct(String id) {
+    throw UnimplementedError();
+  }
+
+  @override
+  Future<Result<Product>> updateProduct(String id, Object input) {
+    throw UnimplementedError();
+  }
+
+  @override
   Stream<List<Product>> watchActiveProducts(ProductListQuery query) {
     queries.add(query);
     if (emitError) {

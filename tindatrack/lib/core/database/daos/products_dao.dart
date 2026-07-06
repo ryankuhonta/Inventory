@@ -43,6 +43,42 @@ class ProductsDao extends DatabaseAccessor<AppDatabase>
     return into(products).insertReturning(product);
   }
 
+  /// Loads one product by stable ID, including archived rows.
+  Future<Product?> getProductById(String id) {
+    return (select(
+      products,
+    )..where((product) => product.id.equals(id))).getSingleOrNull();
+  }
+
+  /// Partially updates editable details for one active product.
+  Future<Product?> updateProductDetails({
+    required String id,
+    required String name,
+    required String? category,
+    required String unit,
+    required double sellingPrice,
+    required int lowStockThreshold,
+    required String? barcode,
+    required DateTime updatedAt,
+  }) async {
+    final details = ProductsCompanion(
+      name: Value(name),
+      category: Value(category),
+      unit: Value(unit),
+      sellingPrice: Value(sellingPrice),
+      lowStockThreshold: Value(lowStockThreshold),
+      barcode: Value(barcode),
+      updatedAt: Value(updatedAt),
+    );
+    final rows =
+        await (update(products)..where(
+              (product) =>
+                  product.id.equals(id) & product.isArchived.equals(false),
+            ))
+            .writeReturning(details);
+    return rows.isEmpty ? null : rows.single;
+  }
+
   /// Watches active products filtered and ordered by SQLite.
   Stream<List<Product>> watchActiveProducts([
     ProductsQueryParameters parameters = const ProductsQueryParameters(),
@@ -52,7 +88,10 @@ class ProductsDao extends DatabaseAccessor<AppDatabase>
       ..where((product) {
         var predicate = product.isArchived.equals(false);
 
-        if (searchText.isNotEmpty) {
+        if (searchText.contains('\u0000')) {
+          // SQLite LIKE treats NUL as a terminator, which can broaden matches.
+          predicate = predicate & const Constant(false);
+        } else if (searchText.isNotEmpty) {
           final escapedSearch = _escapeLikeLiteral(searchText);
           final pattern = '%$escapedSearch%';
           final textMatches =

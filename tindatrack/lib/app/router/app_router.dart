@@ -6,6 +6,7 @@ import 'package:tindatrack/app/router/app_routes.dart';
 import 'package:tindatrack/features/dashboard/presentation/screens/dashboard_screen.dart';
 import 'package:tindatrack/features/history/presentation/screens/movement_history_screen.dart';
 import 'package:tindatrack/features/products/presentation/screens/add_product_screen.dart';
+import 'package:tindatrack/features/products/presentation/screens/edit_product_screen.dart';
 import 'package:tindatrack/features/products/presentation/screens/product_list_screen.dart';
 import 'package:tindatrack/features/settings/presentation/screens/settings_screen.dart';
 
@@ -29,6 +30,7 @@ GoRouter createAppRouter({
   AppRouteBuilder dashboardBuilder = _buildDashboard,
   AppRouteBuilder productsBuilder = _buildProducts,
   AppRouteBuilder addProductBuilder = _buildAddProduct,
+  AppRouteBuilder editProductBuilder = _buildEditProduct,
   AppRouteBuilder historyBuilder = _buildHistory,
   AppRouteBuilder settingsBuilder = _buildSettings,
 }) {
@@ -61,6 +63,11 @@ GoRouter createAppRouter({
                 path: ProductRoute.addProduct.segment,
                 name: ProductRoute.addProduct.name,
                 builder: addProductBuilder,
+              ),
+              GoRoute(
+                path: ProductRoute.editProduct.segment,
+                name: ProductRoute.editProduct.name,
+                builder: editProductBuilder,
               ),
             ],
           ),
@@ -109,6 +116,12 @@ Widget _buildProducts(BuildContext context, GoRouterState state) {
 
 Widget _buildAddProduct(BuildContext context, GoRouterState state) {
   return const AddProductScreen();
+}
+
+Widget _buildEditProduct(BuildContext context, GoRouterState state) {
+  return EditProductScreen(
+    productId: state.pathParameters['productId']!,
+  );
 }
 
 Widget _buildHistory(BuildContext context, GoRouterState state) {

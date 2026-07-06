@@ -237,10 +237,17 @@ final class _ProductListScreenState extends ConsumerState<ProductListScreen> {
   }
 }
 
-final class _ProductList extends StatelessWidget {
+final class _ProductList extends StatefulWidget {
   const _ProductList({required this.products});
 
   final List<Product> products;
+
+  @override
+  State<_ProductList> createState() => _ProductListState();
+}
+
+final class _ProductListState extends State<_ProductList> {
+  String? _openingProductId;
 
   @override
   Widget build(BuildContext context) {
@@ -254,15 +261,28 @@ final class _ProductList extends StatelessWidget {
         spacing.md,
         spacing.xl * 3,
       ),
-      itemCount: products.length,
+      itemCount: widget.products.length,
       itemBuilder: (context, index) {
-        final product = products[index];
+        final product = widget.products[index];
         return ProductListItem(
           key: ValueKey('product-row-${product.id}'),
           product: product,
+          onEdit: _openingProductId == null
+              ? () => unawaited(_openEditProduct(context, product.id))
+              : null,
         );
       },
       separatorBuilder: (_, _) => const Divider(height: 1),
     );
+  }
+
+  Future<void> _openEditProduct(BuildContext context, String productId) async {
+    if (_openingProductId != null) return;
+    setState(() => _openingProductId = productId);
+    await context.pushNamed(
+      ProductRoute.editProduct.name,
+      pathParameters: <String, String>{'productId': productId},
+    );
+    if (mounted) setState(() => _openingProductId = null);
   }
 }

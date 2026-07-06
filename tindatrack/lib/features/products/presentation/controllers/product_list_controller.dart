@@ -25,6 +25,7 @@ final class ProductListController extends Notifier<ProductListQuery> {
     }
 
     _pendingSearch = Timer(_searchDebounce, () {
+      _pendingSearch = null;
       if (!ref.mounted) return;
       _setQuery(
         ProductListQuery(

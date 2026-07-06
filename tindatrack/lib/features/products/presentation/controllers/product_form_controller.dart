@@ -3,9 +3,41 @@ import 'package:tindatrack/core/errors/app_failure.dart';
 import 'package:tindatrack/core/errors/result.dart';
 import 'package:tindatrack/features/products/domain/entities/create_product_input.dart';
 import 'package:tindatrack/features/products/domain/entities/product.dart';
+import 'package:tindatrack/features/products/domain/entities/update_product_input.dart';
 import 'package:tindatrack/features/products/domain/failures/product_failure.dart';
 import 'package:tindatrack/features/products/domain/validation/product_validator.dart';
 import 'package:tindatrack/features/products/presentation/providers/product_providers.dart';
+
+/// Raw values shared by Add and Edit Product detail fields.
+final class ProductDetailsFormValues {
+  /// Creates a raw editable-details submission.
+  const ProductDetailsFormValues({
+    required this.name,
+    required this.category,
+    required this.unit,
+    required this.sellingPrice,
+    required this.lowStockThreshold,
+    required this.barcode,
+  });
+
+  /// Raw product name.
+  final String name;
+
+  /// Raw optional category.
+  final String category;
+
+  /// Raw unit.
+  final String unit;
+
+  /// Raw optional selling price.
+  final String sellingPrice;
+
+  /// Raw low-stock threshold.
+  final String lowStockThreshold;
+
+  /// Raw optional manual barcode.
+  final String barcode;
+}
 
 /// Raw values collected by the Add Product form.
 final class ProductFormValues {
@@ -111,7 +143,7 @@ final class ProductFormController extends Notifier<ProductFormState> {
     if (failure case ProductValidationFailure()) {
       state = ProductFormState(
         fieldErrors: <ProductField, String>{
-          failure.field: _validationMessage(failure),
+          failure.field: productValidationMessage(failure),
         },
       );
       return false;
@@ -134,14 +166,20 @@ productFormControllerProvider =
       ProductFormController.new,
     );
 
-final class _ParsedForm {
-  const _ParsedForm({required this.input, required this.errors});
+/// Parsed editable details plus safe field errors.
+final class ParsedProductDetails {
+  /// Creates a shared Add/Edit parsing result.
+  const ParsedProductDetails({required this.input, required this.errors});
 
-  final CreateProductInput? input;
+  /// Parsed details when every shared field is valid.
+  final UpdateProductInput? input;
+
+  /// Safe field-associated parsing errors.
   final Map<ProductField, String> errors;
 }
 
-_ParsedForm _parse(ProductFormValues values) {
+/// Parses the detail fields shared by Add and Edit Product.
+ParsedProductDetails parseProductDetails(ProductDetailsFormValues values) {
   final errors = <ProductField, String>{};
   if (values.name.trim().isEmpty) {
     errors[ProductField.name] = 'Enter a product name.';
@@ -158,15 +196,6 @@ _ParsedForm _parse(ProductFormValues values) {
     errors[ProductField.sellingPrice] = 'Selling price cannot be below 0.';
   }
 
-  final quantity = int.tryParse(values.quantity.trim());
-  if (quantity == null) {
-    errors[ProductField.quantity] = 'Enter a valid starting quantity.';
-  } else if (quantity < 0) {
-    errors[ProductField.quantity] = 'Starting quantity cannot be below 0.';
-  } else if (quantity > maxProductQuantity) {
-    errors[ProductField.quantity] = 'Enter $maxProductQuantity or less.';
-  }
-
   final threshold = int.tryParse(values.lowStockThreshold.trim());
   if (threshold == null) {
     errors[ProductField.lowStockThreshold] =
@@ -180,22 +209,73 @@ _ParsedForm _parse(ProductFormValues values) {
   }
 
   if (errors.isNotEmpty) {
-    return _ParsedForm(input: null, errors: errors);
+    return ParsedProductDetails(input: null, errors: errors);
   }
-  return _ParsedForm(
-    input: CreateProductInput(
+  return ParsedProductDetails(
+    input: UpdateProductInput(
       name: values.name,
       category: values.category,
       unit: values.unit,
       sellingPrice: sellingPrice!,
-      quantity: quantity!,
       lowStockThreshold: threshold!,
+      barcode: values.barcode,
     ),
     errors: const <ProductField, String>{},
   );
 }
 
-String _validationMessage(ProductValidationFailure failure) {
+final class _ParsedForm {
+  const _ParsedForm({required this.input, required this.errors});
+
+  final CreateProductInput? input;
+  final Map<ProductField, String> errors;
+}
+
+_ParsedForm _parse(ProductFormValues values) {
+  final details = parseProductDetails(
+    ProductDetailsFormValues(
+      name: values.name,
+      category: values.category,
+      unit: values.unit,
+      sellingPrice: values.sellingPrice,
+      lowStockThreshold: values.lowStockThreshold,
+      barcode: '',
+    ),
+  );
+  final errors = Map<ProductField, String>.of(details.errors);
+  final thresholdError = errors.remove(ProductField.lowStockThreshold);
+
+  final quantity = int.tryParse(values.quantity.trim());
+  if (quantity == null) {
+    errors[ProductField.quantity] = 'Enter a valid starting quantity.';
+  } else if (quantity < 0) {
+    errors[ProductField.quantity] = 'Starting quantity cannot be below 0.';
+  } else if (quantity > maxProductQuantity) {
+    errors[ProductField.quantity] = 'Enter $maxProductQuantity or less.';
+  }
+  if (thresholdError != null) {
+    errors[ProductField.lowStockThreshold] = thresholdError;
+  }
+
+  if (errors.isNotEmpty) {
+    return _ParsedForm(input: null, errors: errors);
+  }
+  final input = details.input!;
+  return _ParsedForm(
+    input: CreateProductInput(
+      name: input.name,
+      category: input.category,
+      unit: input.unit,
+      sellingPrice: input.sellingPrice,
+      quantity: quantity!,
+      lowStockThreshold: input.lowStockThreshold,
+    ),
+    errors: const <ProductField, String>{},
+  );
+}
+
+/// Maps domain validation to safe field-associated copy.
+String productValidationMessage(ProductValidationFailure failure) {
   return switch ((failure.field, failure.issue)) {
     (ProductField.name, ProductValidationIssue.required) =>
       'Enter a product name.',

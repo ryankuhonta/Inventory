@@ -28,6 +28,13 @@ enum ProductRoute {
     path: '/products/add',
     segment: 'add',
     label: 'Add Product',
+  ),
+
+  /// Edit Product form for one stable product identity.
+  editProduct(
+    path: '/products/:productId/edit',
+    segment: ':productId/edit',
+    label: 'Edit Product',
   );
 
   const ProductRoute({

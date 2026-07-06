@@ -7,10 +7,17 @@ import 'package:tindatrack/features/products/presentation/widgets/stock_badge.da
 /// Read-only presentation for one active product.
 class ProductListItem extends StatelessWidget {
   /// Creates a product row from a domain value.
-  const ProductListItem({required this.product, super.key});
+  const ProductListItem({
+    required this.product,
+    this.onEdit,
+    super.key,
+  });
 
   /// Product displayed by this row.
   final Product product;
+
+  /// Opens Edit Product when supplied by the active list.
+  final VoidCallback? onEdit;
 
   @override
   Widget build(BuildContext context) {
@@ -18,23 +25,23 @@ class ProductListItem extends StatelessWidget {
     final quantity = '${product.quantity} ${product.unit}';
     final metadata = product.category ?? product.unit;
     final status = product.stockStatus;
-    final statusLabel = switch (status) {
-      ProductStockStatus.inStock => null,
-      ProductStockStatus.lowStock => 'Low Stock',
-      ProductStockStatus.outOfStock => 'Out of Stock',
-    };
+    final statusLabel = status.label;
     final semanticsLabel = [
       product.name,
       if (product.category != null) metadata,
       quantity,
       ?statusLabel,
+      if (onEdit != null) 'Edit product',
     ].join(', ');
 
     return Semantics(
       container: true,
       excludeSemantics: true,
       label: semanticsLabel,
+      button: onEdit != null,
+      onTap: onEdit,
       child: ListTile(
+        onTap: onEdit,
         title: Text(
           product.name,
           maxLines: 2,

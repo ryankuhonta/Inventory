@@ -6,6 +6,18 @@ final class DuplicateBarcodeFailure extends AppFailure {
   const DuplicateBarcodeFailure({super.debugMessage});
 }
 
+/// No product exists for the requested persistence identity.
+final class ProductNotFoundFailure extends AppFailure {
+  /// Creates a typed missing-product failure.
+  const ProductNotFoundFailure({super.debugMessage});
+}
+
+/// The requested product is archived and cannot be edited.
+final class ArchivedProductFailure extends AppFailure {
+  /// Creates a typed archived-product failure.
+  const ArchivedProductFailure({super.debugMessage});
+}
+
 /// Product form field associated with a validation failure.
 enum ProductField {
   /// Product display name.
