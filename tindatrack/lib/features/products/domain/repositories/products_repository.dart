@@ -6,6 +6,9 @@ import 'package:tindatrack/features/products/domain/entities/update_product_inpu
 
 /// Product catalog operations available to presentation code.
 abstract interface class ProductRepository {
+  /// Soft-archives one active product without deleting its persisted row.
+  Future<Result<void>> archiveProduct(String id);
+
   /// Persists a new active product.
   Future<Result<Product>> createProduct(CreateProductInput input);
 

@@ -39,7 +39,7 @@ void main() {
     );
     expect(find.byKey(const Key('starting-quantity-field')), findsNothing);
     expect(find.textContaining('Cost price'), findsNothing);
-    expect(find.textContaining('Archive'), findsNothing);
+    expect(find.text('Archive'), findsOneWidget);
     expect(
       find.bySemanticsLabel('Current quantity 8 pcs. Read only.'),
       findsOneWidget,
@@ -278,6 +278,11 @@ Future<void> _pumpEdit(
 
 final class _Repository implements ProductRepository {
   _Repository({this.onGet, this.onUpdate});
+
+  @override
+  Future<Result<void>> archiveProduct(String id) async {
+    throw UnimplementedError();
+  }
 
   final Future<Result<Product>> Function(String id)? onGet;
   final Future<Result<Product>> Function(

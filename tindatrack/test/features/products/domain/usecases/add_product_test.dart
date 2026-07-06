@@ -76,6 +76,11 @@ CreateProductInput _input() {
 }
 
 final class _RecordingProductRepository implements ProductRepository {
+  @override
+  Future<Result<void>> archiveProduct(String id) async {
+    throw UnimplementedError();
+  }
+
   Result<Product> result = Success<Product>(_product());
   int calls = 0;
   CreateProductInput? lastInput;

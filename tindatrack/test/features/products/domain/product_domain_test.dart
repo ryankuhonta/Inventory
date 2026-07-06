@@ -86,6 +86,11 @@ void main() {
 
 final class _FakeProductRepository implements ProductRepository {
   @override
+  Future<Result<void>> archiveProduct(String id) async {
+    throw UnimplementedError();
+  }
+
+  @override
   Future<Result<Product>> createProduct(CreateProductInput input) async {
     return Success<Product>(
       Product(

@@ -138,10 +138,12 @@ final class _EditProductFormState extends ConsumerState<_EditProductForm> {
     final provider = editProductControllerProvider(widget.product.id);
     final state = ref.watch(provider);
     final spacing = AppSpacing.of(context);
-    final fieldsEnabled = !state.isSaving;
+    final busy = state.isSaving || state.isArchiving;
+    final interactionsDisabled = busy || state.isUnavailable;
+    final fieldsEnabled = !interactionsDisabled;
 
     return PopScope(
-      canPop: !state.isSaving,
+      canPop: !busy,
       child: Scaffold(
         key: const Key('edit-product-screen'),
         appBar: AppBar(title: const Text('Edit Product')),
@@ -247,10 +249,23 @@ final class _EditProductFormState extends ConsumerState<_EditProductForm> {
                   SizedBox(height: spacing.lg),
                   FilledButton(
                     key: const Key('save-product-changes-button'),
-                    onPressed: state.isSaving ? null : _submit,
+                    onPressed: interactionsDisabled ? null : _submit,
                     child: state.isSaving
                         ? const _SavingLabel()
                         : const Text('Save Changes'),
+                  ),
+                  SizedBox(height: spacing.md),
+                  OutlinedButton.icon(
+                    key: const Key('archive-product-button'),
+                    onPressed: interactionsDisabled ? null : _confirmArchive,
+                    style: OutlinedButton.styleFrom(
+                      foregroundColor: Theme.of(context).colorScheme.error,
+                      minimumSize: const Size.fromHeight(48),
+                    ),
+                    icon: const Icon(Icons.archive_outlined),
+                    label: state.isArchiving
+                        ? const _ArchivingLabel()
+                        : const Text('Archive'),
                   ),
                 ],
               ),
@@ -308,6 +323,49 @@ final class _EditProductFormState extends ConsumerState<_EditProductForm> {
       return;
     }
     await _focusFirstInvalid();
+  }
+
+  Future<void> _confirmArchive() async {
+    FocusScope.of(context).unfocus();
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (dialogContext) => AlertDialog(
+        semanticLabel: 'Archive product confirmation',
+        scrollable: true,
+        title: const Text('Archive product?'),
+        content: Text(
+          'Archive ${widget.product.name}?\n\n'
+          'This product will be hidden from your active list. '
+          'Its inventory history will still be available.',
+        ),
+        actions: [
+          TextButton(
+            key: const Key('cancel-archive-button'),
+            onPressed: () => Navigator.pop(dialogContext, false),
+            child: const Text('Cancel'),
+          ),
+          TextButton(
+            key: const Key('confirm-archive-button'),
+            onPressed: () => Navigator.pop(dialogContext, true),
+            style: TextButton.styleFrom(
+              foregroundColor: Theme.of(context).colorScheme.error,
+            ),
+            child: const Text('Archive'),
+          ),
+        ],
+      ),
+    );
+    if (confirmed != true || !mounted) return;
+
+    final archived = await ref
+        .read(editProductControllerProvider(widget.product.id).notifier)
+        .archive();
+    if (!mounted || !archived) return;
+
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(content: Text('Product archived.')),
+    );
+    context.goNamed(AppRoute.products.name);
   }
 
   Future<void> _focusFirstInvalid() async {
@@ -378,6 +436,30 @@ final class _SavingLabel extends StatelessWidget {
           ),
           SizedBox(width: spacing.sm),
           const Text('Saving...'),
+        ],
+      ),
+    );
+  }
+}
+
+final class _ArchivingLabel extends StatelessWidget {
+  const _ArchivingLabel();
+
+  @override
+  Widget build(BuildContext context) {
+    final spacing = AppSpacing.of(context);
+    return Semantics(
+      label: 'Archiving product',
+      excludeSemantics: true,
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          const SizedBox.square(
+            dimension: 18,
+            child: CircularProgressIndicator(strokeWidth: 2),
+          ),
+          SizedBox(width: spacing.sm),
+          const Text('Archiving...'),
         ],
       ),
     );

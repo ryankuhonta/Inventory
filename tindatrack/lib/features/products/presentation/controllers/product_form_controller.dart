@@ -75,6 +75,8 @@ final class ProductFormState {
   /// Creates product form state.
   const ProductFormState({
     this.isSaving = false,
+    this.isArchiving = false,
+    this.isUnavailable = false,
     this.wasSaved = false,
     this.fieldErrors = const <ProductField, String>{},
     this.message,
@@ -82,6 +84,12 @@ final class ProductFormState {
 
   /// Whether one save is currently pending.
   final bool isSaving;
+
+  /// Whether one archive operation is currently pending.
+  final bool isArchiving;
+
+  /// Whether the target can no longer accept mutations.
+  final bool isUnavailable;
 
   /// Whether the latest submission completed successfully.
   final bool wasSaved;

@@ -112,6 +112,22 @@ void main() {
     expect(harness.state.message, isNot(contains('PRIVATE_EXCEPTION')));
   });
 
+  test('unavailable update target rejects every later mutation', () async {
+    final repository = _ControlledRepository(
+      onUpdate: (_, _) async => const FailureResult<Product>(
+        ProductNotFoundFailure(),
+      ),
+    );
+    final harness = _Harness(repository);
+    addTearDown(harness.dispose);
+
+    expect(await harness.controller.submit(_validValues()), isFalse);
+    expect(harness.state.isUnavailable, isTrue);
+    expect(await harness.controller.submit(_validValues()), isFalse);
+    expect(await harness.controller.archive(), isFalse);
+    expect(repository.updateCalls, 1);
+  });
+
   test(
     'pending save blocks duplicate submissions and disposal writes',
     () async {
@@ -180,6 +196,11 @@ final class _Harness {
 
 final class _ControlledRepository implements ProductRepository {
   _ControlledRepository({this.onUpdate});
+
+  @override
+  Future<Result<void>> archiveProduct(String id) async {
+    throw UnimplementedError();
+  }
 
   final Future<Result<Product>> Function(
     String id,

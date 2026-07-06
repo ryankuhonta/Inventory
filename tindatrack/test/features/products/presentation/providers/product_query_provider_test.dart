@@ -78,6 +78,11 @@ void main() {
 }
 
 final class _RecordingRepository implements ProductRepository {
+  @override
+  Future<Result<void>> archiveProduct(String id) async {
+    throw UnimplementedError();
+  }
+
   bool emitError = false;
   final List<ProductListQuery> queries = <ProductListQuery>[];
 

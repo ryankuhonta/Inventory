@@ -388,6 +388,11 @@ Future<void> _pumpForm(
 final class _ControlledRepository implements ProductRepository {
   _ControlledRepository({this.onCreate});
 
+  @override
+  Future<Result<void>> archiveProduct(String id) async {
+    throw UnimplementedError();
+  }
+
   final Future<Result<Product>> Function(CreateProductInput input)? onCreate;
   int calls = 0;
   CreateProductInput? lastInput;

@@ -79,6 +79,11 @@ UpdateProductInput _update() {
 }
 
 final class _RecordingRepository implements ProductRepository {
+  @override
+  Future<Result<void>> archiveProduct(String id) async {
+    throw UnimplementedError();
+  }
+
   Result<Product> updateResult = Success<Product>(_product());
   int updateCalls = 0;
   String? lastId;

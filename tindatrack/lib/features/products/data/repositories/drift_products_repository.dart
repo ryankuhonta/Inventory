@@ -30,6 +30,28 @@ final class DriftProductsRepository implements ProductRepository {
        _idGenerator = idGenerator,
        _clock = clock;
 
+  @override
+  Future<Result<void>> archiveProduct(String id) async {
+    try {
+      final updatedAt = _clock.now().toUtc();
+      final archived = await _dao.archiveProduct(
+        id: id,
+        updatedAt: updatedAt,
+      );
+      if (archived) return const Success<void>(null);
+
+      final row = await _dao.getProductById(id);
+      if (row == null) {
+        return const FailureResult<void>(ProductNotFoundFailure());
+      }
+      return const FailureResult<void>(ArchivedProductFailure());
+    } on Object catch (error) {
+      return FailureResult<void>(
+        PersistenceFailure(debugMessage: error.toString()),
+      );
+    }
+  }
+
   final ProductsDao _dao;
   final IdGenerator _idGenerator;
   final Clock _clock;

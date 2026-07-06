@@ -18,9 +18,38 @@ final class EditProductController extends Notifier<ProductFormState> {
   @override
   ProductFormState build() => const ProductFormState();
 
+  /// Archives this product at most once while no save is pending.
+  Future<bool> archive() async {
+    if (state.isSaving || state.isArchiving || state.isUnavailable) {
+      return false;
+    }
+
+    state = ProductFormState(
+      isArchiving: true,
+      fieldErrors: state.fieldErrors,
+    );
+    try {
+      final result = await ref.read(archiveProductProvider)(productId);
+      if (!ref.mounted) return false;
+      return switch (result) {
+        Success<void>() => _completeArchiveSuccess(),
+        FailureResult<void>(:final failure) => _completeArchiveFailure(failure),
+      };
+    } on Object {
+      if (!ref.mounted) return false;
+      state = ProductFormState(
+        fieldErrors: state.fieldErrors,
+        message: 'Something went wrong. Please try again.',
+      );
+      return false;
+    }
+  }
+
   /// Parses editable details and submits at most one update.
   Future<bool> submit(ProductDetailsFormValues values) async {
-    if (state.isSaving) return false;
+    if (state.isSaving || state.isArchiving || state.isUnavailable) {
+      return false;
+    }
 
     final parsed = parseProductDetails(values);
     if (parsed.errors.isNotEmpty) {
@@ -48,6 +77,29 @@ final class EditProductController extends Notifier<ProductFormState> {
     }
   }
 
+  bool _completeArchiveSuccess() {
+    state = const ProductFormState();
+    return true;
+  }
+
+  bool _completeArchiveFailure(AppFailure failure) {
+    final isUnavailable =
+        failure is ProductNotFoundFailure || failure is ArchivedProductFailure;
+    final message = switch (failure) {
+      ProductNotFoundFailure() ||
+      ArchivedProductFailure() => 'This product is no longer available.',
+      PersistenceFailure() =>
+        "We couldn't archive this product. Please try again.",
+      _ => 'Something went wrong. Please try again.',
+    };
+    state = ProductFormState(
+      isUnavailable: isUnavailable,
+      fieldErrors: state.fieldErrors,
+      message: message,
+    );
+    return false;
+  }
+
   bool _completeSuccess() {
     state = const ProductFormState(wasSaved: true);
     return true;
@@ -70,7 +122,12 @@ final class EditProductController extends Notifier<ProductFormState> {
         "We couldn't update this product. Please try again.",
       _ => 'Something went wrong. Please try again.',
     };
-    state = ProductFormState(message: message);
+    state = ProductFormState(
+      isUnavailable:
+          failure is ProductNotFoundFailure ||
+          failure is ArchivedProductFailure,
+      message: message,
+    );
     return false;
   }
 }

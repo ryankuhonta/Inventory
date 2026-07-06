@@ -10,6 +10,23 @@ import 'package:tindatrack/features/products/domain/repositories/products_reposi
 import 'package:tindatrack/features/products/presentation/providers/product_providers.dart';
 
 void main() {
+  test('archive provider delegates through the canonical repository', () async {
+    final repository = _StreamingProductRepository(
+      const Stream<List<Product>>.empty(),
+    );
+    final container = ProviderContainer.test(
+      overrides: [
+        productRepositoryProvider.overrideWithValue(repository),
+      ],
+    );
+    addTearDown(container.dispose);
+
+    final result = await container.read(archiveProductProvider)('product-7');
+
+    expect(result, isA<Success<void>>());
+    expect(repository.archivedId, 'product-7');
+  });
+
   test('active products provider exposes repository stream updates', () async {
     final stream = StreamController<List<Product>>();
     final repository = _StreamingProductRepository(stream.stream);
@@ -86,9 +103,16 @@ void main() {
 }
 
 final class _StreamingProductRepository implements ProductRepository {
-  const _StreamingProductRepository(this.products);
+  _StreamingProductRepository(this.products);
 
   final Stream<List<Product>> products;
+  String? archivedId;
+
+  @override
+  Future<Result<void>> archiveProduct(String id) async {
+    archivedId = id;
+    return const Success<void>(null);
+  }
 
   @override
   Future<Result<Product>> createProduct(CreateProductInput input) {

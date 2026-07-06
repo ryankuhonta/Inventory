@@ -7,6 +7,7 @@ import 'package:tindatrack/features/products/data/repositories/drift_products_re
 import 'package:tindatrack/features/products/domain/entities/product.dart';
 import 'package:tindatrack/features/products/domain/repositories/products_repository.dart';
 import 'package:tindatrack/features/products/domain/usecases/add_product.dart';
+import 'package:tindatrack/features/products/domain/usecases/archive_product.dart';
 import 'package:tindatrack/features/products/domain/usecases/get_product.dart';
 import 'package:tindatrack/features/products/domain/usecases/update_product.dart';
 import 'package:tindatrack/features/products/presentation/controllers/product_list_controller.dart';
@@ -28,6 +29,11 @@ final productRepositoryProvider = Provider<ProductRepository>(
 /// Validated Add Product application boundary.
 final addProductProvider = Provider<AddProduct>(
   (ref) => AddProduct(ref.watch(productRepositoryProvider)),
+);
+
+/// Product archive boundary for Edit Product.
+final archiveProductProvider = Provider<ArchiveProduct>(
+  (ref) => ArchiveProduct(ref.watch(productRepositoryProvider)),
 );
 
 /// Product lookup boundary for edit screens.

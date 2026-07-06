@@ -84,6 +84,11 @@ void main() {
 }
 
 final class _Repository implements ProductRepository {
+  @override
+  Future<Result<void>> archiveProduct(String id) async {
+    throw UnimplementedError();
+  }
+
   final _updates = StreamController<List<Product>>.broadcast();
   Product product = _product();
 
