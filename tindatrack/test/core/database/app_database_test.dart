@@ -11,11 +11,11 @@ void main() {
 
   tearDown(() => database.close());
 
-  test('uses product catalog schema version 2', () {
-    expect(database.schemaVersion, 2);
+  test('uses stock movement schema version 3', () {
+    expect(database.schemaVersion, 3);
   });
 
-  test('contains only the Story 2.1 products feature table', () async {
+  test('contains product catalog and stock movement feature tables', () async {
     final rows = await database.customSelect(
       '''
 SELECT name FROM sqlite_master
@@ -25,7 +25,7 @@ ORDER BY name
     ).get();
     final names = rows.map((row) => row.read<String>('name')).toSet();
 
-    expect(names, {'products'});
+    expect(names, {'products', 'stock_movements'});
   });
 
   test('readiness probe opens and queries the database', () async {

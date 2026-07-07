@@ -11,48 +11,51 @@ void main() {
 
   tearDown(() => database.close());
 
-  test('fresh database exposes the exact Story 2.1 products schema', () async {
-    await database.ensureReady();
+  test(
+    'fresh database exposes the Story 3.1 schema version and products table',
+    () async {
+      await database.ensureReady();
 
-    expect(database.schemaVersion, 2);
+      expect(database.schemaVersion, 3);
 
-    final columns = await database
-        .customSelect(
-          'PRAGMA table_info(products)',
-        )
-        .get();
-    expect(
-      columns.map((row) => row.read<String>('name')).toList(),
-      [
-        'id',
-        'name',
-        'category',
-        'unit',
-        'selling_price',
-        'quantity',
-        'low_stock_threshold',
-        'barcode',
-        'is_archived',
-        'created_at',
-        'updated_at',
-      ],
-    );
+      final columns = await database
+          .customSelect(
+            'PRAGMA table_info(products)',
+          )
+          .get();
+      expect(
+        columns.map((row) => row.read<String>('name')).toList(),
+        [
+          'id',
+          'name',
+          'category',
+          'unit',
+          'selling_price',
+          'quantity',
+          'low_stock_threshold',
+          'barcode',
+          'is_archived',
+          'created_at',
+          'updated_at',
+        ],
+      );
 
-    final sqlRow = await database
-        .customSelect(
-          'SELECT sql FROM sqlite_master '
-          "WHERE type = 'table' AND name = 'products'",
-        )
-        .getSingle();
-    final createSql = sqlRow.read<String>('sql').toLowerCase();
+      final sqlRow = await database
+          .customSelect(
+            'SELECT sql FROM sqlite_master '
+            "WHERE type = 'table' AND name = 'products'",
+          )
+          .getSingle();
+      final createSql = sqlRow.read<String>('sql').toLowerCase();
 
-    expect(createSql, contains('primary key'));
-    expect(createSql, contains('unique'));
-    expect(createSql, contains('"selling_price" >= 0.0'));
-    expect(createSql, contains('"quantity" >= 0'));
-    expect(createSql, contains('"low_stock_threshold" >= 0'));
-    expect(createSql, isNot(contains('cost_price')));
-  });
+      expect(createSql, contains('primary key'));
+      expect(createSql, contains('unique'));
+      expect(createSql, contains('"selling_price" >= 0.0'));
+      expect(createSql, contains('"quantity" >= 0'));
+      expect(createSql, contains('"low_stock_threshold" >= 0'));
+      expect(createSql, isNot(contains('cost_price')));
+    },
+  );
 
   test(
     'products schema has active-name index '
