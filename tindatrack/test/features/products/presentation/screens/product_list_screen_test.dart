@@ -180,9 +180,10 @@ void main() {
       findsOneWidget,
     );
     expect(
-      find.bySemanticsLabel('Rice, 2 pcs, Low Stock, Edit product'),
+      find.bySemanticsLabel('Rice, 2 pcs, Low Stock'),
       findsOneWidget,
     );
+    expect(find.bySemanticsLabel('Edit Rice'), findsOneWidget);
 
     stream.add([_product('1', 'Rice', threshold: 2)]);
     await tester.pump();
@@ -197,9 +198,10 @@ void main() {
       findsOneWidget,
     );
     expect(
-      find.bySemanticsLabel('Rice, 0 pcs, Out of Stock, Edit product'),
+      find.bySemanticsLabel('Rice, 0 pcs, Out of Stock'),
       findsOneWidget,
     );
+    expect(find.bySemanticsLabel('Edit Rice'), findsOneWidget);
   });
 
   testWidgets('3,000 products are built lazily and later rows can appear', (
@@ -255,7 +257,26 @@ void main() {
     expect(tester.takeException(), isNull);
     expect(
       find.bySemanticsLabel(
-        'A readable product with a longer name, Staples, 4 pcs, Edit product',
+        'A readable product with a longer name, Staples, 4 pcs',
+      ),
+      findsOneWidget,
+    );
+    expect(
+      find.bySemanticsLabel('Edit A readable product with a longer name'),
+      findsOneWidget,
+    );
+    const actionKey = ValueKey('product-edit-action-1');
+    final action = find.byKey(actionKey);
+    expect(action, findsOneWidget);
+    final actionSize = tester.getSize(action);
+    expect(actionSize.width, greaterThanOrEqualTo(48));
+    expect(actionSize.height, greaterThanOrEqualTo(48));
+    final actionRect = tester.getRect(action);
+    expect(actionRect.left, greaterThanOrEqualTo(0));
+    expect(actionRect.right, lessThanOrEqualTo(360));
+    expect(
+      find.bySemanticsLabel(
+        'A readable product with a longer name, Staples, 4 pcs',
       ),
       findsOneWidget,
     );

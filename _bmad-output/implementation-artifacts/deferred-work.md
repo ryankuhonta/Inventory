@@ -23,3 +23,7 @@
 ## Deferred from: code review of 2-3-view-active-product-list-with-empty-state.md (2026-06-30)
 
 - Guard against duplicate Add Product routes from rapid repeated taps. The existing Story 2.2 FAB navigation behavior predates Story 2.3; address route de-duplication as a focused navigation hardening change.
+
+## Deferred from: code review of 2-8-prepare-product-row-action-pattern.md (2026-07-07)
+
+- Harden `_openEditProduct` so `_openingProductId` is cleared if `context.pushNamed(ProductRoute.editProduct.name, ...)` throws. The guard predates Story 2.8 and should be handled as focused navigation hardening.

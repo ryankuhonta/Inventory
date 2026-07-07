@@ -278,6 +278,7 @@ final class _ProductListState extends State<_ProductList> {
 
   Future<void> _openEditProduct(BuildContext context, String productId) async {
     if (_openingProductId != null) return;
+    FocusManager.instance.primaryFocus?.unfocus();
     setState(() => _openingProductId = productId);
     await context.pushNamed(
       ProductRoute.editProduct.name,

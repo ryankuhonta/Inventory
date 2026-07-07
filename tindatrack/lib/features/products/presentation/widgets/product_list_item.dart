@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:tindatrack/core/ui/app_spacing.dart';
 import 'package:tindatrack/features/products/domain/entities/product.dart';
 import 'package:tindatrack/features/products/domain/entities/product_stock_status.dart';
+import 'package:tindatrack/features/products/presentation/widgets/product_row_actions.dart';
 import 'package:tindatrack/features/products/presentation/widgets/stock_badge.dart';
 
 /// Read-only presentation for one active product.
@@ -31,44 +32,53 @@ class ProductListItem extends StatelessWidget {
       if (product.category != null) metadata,
       quantity,
       ?statusLabel,
-      if (onEdit != null) 'Edit product',
     ].join(', ');
 
-    return Semantics(
-      container: true,
-      excludeSemantics: true,
-      label: semanticsLabel,
-      button: onEdit != null,
-      onTap: onEdit,
-      child: ListTile(
-        onTap: onEdit,
-        title: Text(
-          product.name,
-          maxLines: 2,
-          overflow: TextOverflow.ellipsis,
-        ),
-        subtitle: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(
-              metadata,
-              maxLines: 1,
-              overflow: TextOverflow.ellipsis,
-            ),
-            Text(
-              quantity,
-              maxLines: 2,
-              overflow: TextOverflow.ellipsis,
-              style: Theme.of(context).textTheme.titleMedium,
-            ),
-            if (status != ProductStockStatus.inStock)
-              Padding(
-                padding: EdgeInsets.only(top: spacing.xs),
-                child: StockBadge(status: status),
+    return Row(
+      children: [
+        Expanded(
+          child: Semantics(
+            excludeSemantics: true,
+            label: semanticsLabel,
+            button: onEdit != null,
+            onTap: onEdit,
+            child: ListTile(
+              onTap: onEdit,
+              title: Text(
+                product.name,
+                maxLines: 2,
+                overflow: TextOverflow.ellipsis,
               ),
-          ],
+              subtitle: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    metadata,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                  Text(
+                    quantity,
+                    maxLines: 2,
+                    overflow: TextOverflow.ellipsis,
+                    style: Theme.of(context).textTheme.titleMedium,
+                  ),
+                  if (status != ProductStockStatus.inStock)
+                    Padding(
+                      padding: EdgeInsets.only(top: spacing.xs),
+                      child: StockBadge(status: status),
+                    ),
+                ],
+              ),
+            ),
+          ),
         ),
-      ),
+        ProductRowActions(
+          productId: product.id,
+          productName: product.name,
+          onEdit: onEdit,
+        ),
+      ],
     );
   }
 }

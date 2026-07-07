@@ -28,6 +28,12 @@ void main() {
     expect(find.text('4 pcs'), findsOneWidget);
     expect(find.bySemanticsLabel('Rice, Staples, 4 pcs'), findsOneWidget);
     expect(tester.widget<ListTile>(find.byType(ListTile)).onTap, isNull);
+    expect(
+      find.byKey(const ValueKey('product-edit-action-product-1')),
+      findsOneWidget,
+    );
+    expect(find.bySemanticsLabel('Edit Rice'), findsOneWidget);
+    expect(find.textContaining('Stock In'), findsNothing);
   });
 
   testWidgets('uses unit as metadata when category is absent', (tester) async {
@@ -96,7 +102,7 @@ void main() {
     expect(find.text('Out of Stock'), findsNothing);
   });
 
-  testWidgets('edit callback is announced and operable from the row', (
+  testWidgets('row information and Edit are distinct single-fire actions', (
     tester,
   ) async {
     var edits = 0;
@@ -112,9 +118,22 @@ void main() {
       ),
     );
 
-    expect(find.bySemanticsLabel('Rice, 4 pcs, Edit product'), findsOneWidget);
+    expect(find.bySemanticsLabel('Rice, 4 pcs'), findsOneWidget);
+    expect(find.bySemanticsLabel('Edit Rice'), findsOneWidget);
+    expect(
+      find.bySemanticsLabel('Rice, 4 pcs, Edit Rice'),
+      findsNothing,
+    );
+
     await tester.tap(find.byType(ListTile));
     expect(edits, 1);
+
+    await tester.tap(
+      find.byKey(const ValueKey('product-edit-action-product-1')),
+    );
+    expect(edits, 2);
+    expect(find.textContaining('Stock Out'), findsNothing);
+    expect(find.textContaining('Archive'), findsNothing);
   });
 
   testWidgets('long quantity and status remain safe at enlarged text sizes', (
@@ -128,26 +147,39 @@ void main() {
     addTearDown(tester.view.resetDevicePixelRatio);
     addTearDown(tester.platformDispatcher.clearTextScaleFactorTestValue);
 
+    const name = 'A very long product name that must remain readable';
     const unit = 'extra-long-packaging-unit-that-must-not-crowd-the-row';
     await tester.pumpWidget(
       MaterialApp(
         theme: AppTheme.light,
         home: Scaffold(
           body: ProductListItem(
-            product: _product(unit: unit, quantity: 1),
+            product: _product(name: name, unit: unit, quantity: 1),
           ),
         ),
       ),
     );
 
     expect(tester.takeException(), isNull);
+    expect(find.text(name), findsOneWidget);
     expect(find.text('1 $unit'), findsOneWidget);
     expect(find.text('Low Stock'), findsOneWidget);
-    expect(find.bySemanticsLabel('Rice, 1 $unit, Low Stock'), findsOneWidget);
+    expect(
+      find.bySemanticsLabel('$name, 1 $unit, Low Stock'),
+      findsOneWidget,
+    );
+    expect(
+      tester.getSize(
+        find.byKey(const ValueKey('product-edit-action-product-1')),
+      ),
+      const Size(48, 48),
+    );
+    expect(find.bySemanticsLabel('Edit $name'), findsOneWidget);
   });
 }
 
 Product _product({
+  String name = 'Rice',
   String? category,
   String unit = 'pcs',
   int quantity = 4,
@@ -155,7 +187,7 @@ Product _product({
 }) {
   return Product(
     id: 'product-1',
-    name: 'Rice',
+    name: name,
     category: category,
     unit: unit,
     sellingPrice: 50,

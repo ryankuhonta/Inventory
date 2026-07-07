@@ -70,7 +70,9 @@ void main() {
       await tester.pump(const Duration(milliseconds: 500));
 
       final row = find.byKey(const ValueKey('product-row-product-1'));
+      const actionKey = ValueKey('product-edit-action-product-1');
       expect(row, findsOneWidget);
+      expect(find.byKey(actionKey), findsOneWidget);
       await tester.tap(row);
       await tester.pump();
       await tester.pump(const Duration(milliseconds: 500));
@@ -101,6 +103,7 @@ void main() {
         isTrue,
       );
       expect(row, findsNothing);
+      expect(find.byKey(actionKey), findsNothing);
       expect(find.byKey(const Key('products-no-match-state')), findsOneWidget);
       expect(find.text('Product archived.'), findsOneWidget);
 

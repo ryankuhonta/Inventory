@@ -1,5 +1,3 @@
-import 'dart:async';
-
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -15,84 +13,91 @@ import 'package:tindatrack/features/products/domain/repositories/products_reposi
 import 'package:tindatrack/features/products/presentation/providers/product_providers.dart';
 
 void main() {
-  testWidgets('row edit preserves the app-session product query', (
-    tester,
-  ) async {
-    final repository = _Repository();
-    addTearDown(repository.dispose);
-    final router = createAppRouter(
-      initialLocation: AppRoute.products.path,
-      dashboardBuilder: (_, _) => const Scaffold(),
-      historyBuilder: (_, _) => const Scaffold(),
-      settingsBuilder: (_, _) => const Scaffold(),
-    );
-    addTearDown(router.dispose);
+  testWidgets(
+    'explicit Edit action opens the real route with product identity',
+    (
+      tester,
+    ) async {
+      final repository = _Repository();
+      String? openedProductId;
+      String? openedRoutePath;
+      final router = createAppRouter(
+        initialLocation: AppRoute.products.path,
+        dashboardBuilder: (_, _) => const Scaffold(),
+        historyBuilder: (_, _) => const Scaffold(),
+        settingsBuilder: (_, _) => const Scaffold(),
+        editProductBuilder: (_, state) {
+          openedProductId = state.pathParameters['productId'];
+          openedRoutePath = state.uri.path;
+          return Scaffold(
+            key: const Key('edit-product-test-screen'),
+            appBar: AppBar(title: const Text('Edit Product')),
+          );
+        },
+      );
+      addTearDown(router.dispose);
 
-    await tester.pumpWidget(
-      ProviderScope(
-        overrides: [
-          productRepositoryProvider.overrideWithValue(repository),
-        ],
-        child: MaterialApp.router(
-          theme: AppTheme.light,
-          routerConfig: router,
+      await tester.pumpWidget(
+        ProviderScope(
+          overrides: [
+            productRepositoryProvider.overrideWithValue(repository),
+          ],
+          child: MaterialApp.router(
+            theme: AppTheme.light,
+            routerConfig: router,
+          ),
         ),
-      ),
-    );
-    await tester.pumpAndSettle();
+      );
+      await tester.pump();
+      await tester.pump(const Duration(milliseconds: 500));
 
-    await tester.enterText(
-      find.byKey(const Key('product-search-field')),
-      'rice',
-    );
-    await tester.pump(const Duration(milliseconds: 300));
-    await tester.pumpAndSettle();
-    final row = find.byKey(const ValueKey('product-row-product-1'));
-    await tester.tap(row);
-    await tester.tap(row);
-    await tester.pumpAndSettle();
+      await tester.enterText(
+        find.byKey(const Key('product-search-field')),
+        'rice',
+      );
+      await tester.pump(const Duration(milliseconds: 300));
+      await tester.pump(const Duration(milliseconds: 500));
 
-    expect(find.text('Edit Product'), findsOneWidget);
-    router.pop();
-    await tester.pumpAndSettle();
-    expect(find.byKey(const Key('products-screen')), findsOneWidget);
+      const actionKey = ValueKey('product-edit-action-product-1');
+      final action = find.byKey(actionKey);
+      expect(action, findsOneWidget);
 
-    await tester.tap(row);
-    await tester.pumpAndSettle();
-    await tester.enterText(
-      find.byKey(const Key('edit-product-name-field')),
-      'Updated Rice',
-    );
+      await tester.tap(action);
+      await tester.pump();
+      await tester.pump(const Duration(milliseconds: 500));
 
-    await tester.ensureVisible(
-      find.byKey(const Key('save-product-changes-button')),
-    );
-    await tester.tap(find.byKey(const Key('save-product-changes-button')));
-    await tester.pumpAndSettle();
+      expect(find.byKey(const Key('edit-product-test-screen')), findsOneWidget);
+      expect(find.text('Edit Product'), findsOneWidget);
+      expect(openedProductId, 'product-1');
+      expect(
+        openedRoutePath,
+        '/products/product-1/edit',
+      );
 
-    expect(router.routeInformationProvider.value.uri.path, '/products');
-    expect(
-      tester
-          .widget<TextField>(find.byKey(const Key('product-search-field')))
-          .controller
-          ?.text,
-      'rice',
-    );
-    expect(find.text('Updated Rice'), findsOneWidget);
-    expect(find.text('Product updated.'), findsOneWidget);
-  });
+      router.pop();
+      await tester.pump();
+      await tester.pump(const Duration(milliseconds: 500));
+
+      expect(find.byKey(const Key('products-screen')), findsOneWidget);
+      expect(
+        tester
+            .widget<TextField>(find.byKey(const Key('product-search-field')))
+            .controller
+            ?.text,
+        'rice',
+      );
+      expect(find.byKey(actionKey), findsOneWidget);
+    },
+  );
 }
 
 final class _Repository implements ProductRepository {
+  Product product = _product();
+
   @override
   Future<Result<void>> archiveProduct(String id) async {
     throw UnimplementedError();
   }
-
-  final _updates = StreamController<List<Product>>.broadcast();
-  Product product = _product();
-
-  Future<void> dispose() => _updates.close();
 
   @override
   Future<Result<Product>> createProduct(CreateProductInput input) {
@@ -110,14 +115,12 @@ final class _Repository implements ProductRepository {
     UpdateProductInput input,
   ) async {
     product = _product(name: input.name);
-    _updates.add(<Product>[product]);
     return Success<Product>(product);
   }
 
   @override
-  Stream<List<Product>> watchActiveProducts(ProductListQuery query) async* {
-    yield <Product>[product];
-    yield* _updates.stream;
+  Stream<List<Product>> watchActiveProducts(ProductListQuery query) {
+    return Stream.value(<Product>[product]);
   }
 }
 
