@@ -32,6 +32,12 @@ void main() {
     expect(ProductRoute.editProduct.segment, ':productId/edit');
   });
 
+  test('declares Stock In with a stable ID path parameter', () {
+    expect(ProductRoute.stockIn.name, 'stockIn');
+    expect(ProductRoute.stockIn.path, '/products/:productId/stock-in');
+    expect(ProductRoute.stockIn.segment, ':productId/stock-in');
+  });
+
   testWidgets('maps Add Product under the Products branch', (tester) async {
     final router = createAppRouter(
       initialLocation: ProductRoute.addProduct.path,
@@ -58,6 +64,37 @@ void main() {
     );
   });
 
+  testWidgets('maps Stock In product ID under the Products branch', (
+    tester,
+  ) async {
+    String? receivedId;
+    final router = createAppRouter(
+      initialLocation: '/products/product-1/stock-in',
+      productsBuilder: (_, _) => const Scaffold(key: Key('products-screen')),
+      stockInBuilder: (_, state) {
+        receivedId = state.pathParameters['productId'];
+        return const Scaffold(key: Key('stock-in-test-screen'));
+      },
+    );
+    addTearDown(router.dispose);
+
+    await tester.pumpWidget(_RouterTestApp(router: router));
+    await tester.pumpAndSettle();
+
+    expect(receivedId, 'product-1');
+    expect(find.byKey(const Key('stock-in-test-screen')), findsOneWidget);
+    expect(
+      router.namedLocation(
+        ProductRoute.stockIn.name,
+        pathParameters: const <String, String>{'productId': 'product 1'},
+      ),
+      '/products/product%201/stock-in',
+    );
+    expect(
+      tester.widget<NavigationBar>(find.byType(NavigationBar)).selectedIndex,
+      1,
+    );
+  });
   testWidgets('maps Edit Product ID under the Products branch', (tester) async {
     String? receivedId;
     final router = createAppRouter(
@@ -173,6 +210,43 @@ void main() {
     expect(router.routeInformationProvider.value.uri.path, '/products');
   });
 
+  testWidgets('Stock In back navigation returns to Products', (
+    tester,
+  ) async {
+    final router = createAppRouter(
+      initialLocation: AppRoute.products.path,
+      productsBuilder: (_, _) {
+        return const Scaffold(key: Key('products-route-test-screen'));
+      },
+      stockInBuilder: (_, state) {
+        return Scaffold(
+          key: const Key('stock-in-route-test-screen'),
+          body: Text(state.pathParameters['productId']!),
+        );
+      },
+    );
+    addTearDown(router.dispose);
+
+    await tester.pumpWidget(_RouterTestApp(router: router));
+    await tester.pumpAndSettle();
+
+    unawaited(
+      router.pushNamed(
+        ProductRoute.stockIn.name,
+        pathParameters: const <String, String>{'productId': 'product-1'},
+      ),
+    );
+    await tester.pumpAndSettle();
+    expect(
+      find.byKey(const Key('stock-in-route-test-screen')),
+      findsOneWidget,
+    );
+
+    router.pop();
+    await tester.pumpAndSettle();
+    expect(find.byKey(const Key('products-route-test-screen')), findsOneWidget);
+    expect(router.routeInformationProvider.value.uri.path, '/products');
+  });
   testWidgets('Edit Product back navigation returns to Products', (
     tester,
   ) async {

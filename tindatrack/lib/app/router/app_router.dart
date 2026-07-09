@@ -9,6 +9,7 @@ import 'package:tindatrack/features/products/presentation/screens/add_product_sc
 import 'package:tindatrack/features/products/presentation/screens/edit_product_screen.dart';
 import 'package:tindatrack/features/products/presentation/screens/product_list_screen.dart';
 import 'package:tindatrack/features/settings/presentation/screens/settings_screen.dart';
+import 'package:tindatrack/features/stock/presentation/screens/stock_in_screen.dart';
 
 /// Builder used to supply a branch root screen.
 typedef AppRouteBuilder =
@@ -31,6 +32,7 @@ GoRouter createAppRouter({
   AppRouteBuilder productsBuilder = _buildProducts,
   AppRouteBuilder addProductBuilder = _buildAddProduct,
   AppRouteBuilder editProductBuilder = _buildEditProduct,
+  AppRouteBuilder stockInBuilder = _buildStockIn,
   AppRouteBuilder historyBuilder = _buildHistory,
   AppRouteBuilder settingsBuilder = _buildSettings,
 }) {
@@ -68,6 +70,11 @@ GoRouter createAppRouter({
                 path: ProductRoute.editProduct.segment,
                 name: ProductRoute.editProduct.name,
                 builder: editProductBuilder,
+              ),
+              GoRoute(
+                path: ProductRoute.stockIn.segment,
+                name: ProductRoute.stockIn.name,
+                builder: stockInBuilder,
               ),
             ],
           ),
@@ -120,6 +127,12 @@ Widget _buildAddProduct(BuildContext context, GoRouterState state) {
 
 Widget _buildEditProduct(BuildContext context, GoRouterState state) {
   return EditProductScreen(
+    productId: state.pathParameters['productId']!,
+  );
+}
+
+Widget _buildStockIn(BuildContext context, GoRouterState state) {
+  return StockInScreen(
     productId: state.pathParameters['productId']!,
   );
 }

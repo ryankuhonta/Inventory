@@ -35,6 +35,13 @@ enum ProductRoute {
     path: '/products/:productId/edit',
     segment: ':productId/edit',
     label: 'Edit Product',
+  ),
+
+  /// Stock In form for one stable product identity.
+  stockIn(
+    path: '/products/:productId/stock-in',
+    segment: ':productId/stock-in',
+    label: 'Stock In',
   );
 
   const ProductRoute({
