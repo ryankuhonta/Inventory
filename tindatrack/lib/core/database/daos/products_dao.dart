@@ -50,6 +50,26 @@ class ProductsDao extends DatabaseAccessor<AppDatabase>
     )..where((product) => product.id.equals(id))).getSingleOrNull();
   }
 
+  /// Updates one active product quantity and returns the persisted row.
+  Future<Product?> updateActiveProductQuantity({
+    required String id,
+    required int quantity,
+    required DateTime updatedAt,
+  }) async {
+    final rows =
+        await (update(products)..where(
+              (product) =>
+                  product.id.equals(id) & product.isArchived.equals(false),
+            ))
+            .writeReturning(
+              ProductsCompanion(
+                quantity: Value(quantity),
+                updatedAt: Value(updatedAt),
+              ),
+            );
+    return rows.isEmpty ? null : rows.single;
+  }
+
   /// Marks one active product archived without replacing its row.
   Future<bool> archiveProduct({
     required String id,

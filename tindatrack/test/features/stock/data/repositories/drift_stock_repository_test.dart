@@ -9,6 +9,8 @@ import 'package:tindatrack/core/id/id_generator.dart';
 import 'package:tindatrack/core/time/clock.dart';
 import 'package:tindatrack/features/stock/data/repositories/drift_stock_repository.dart';
 import 'package:tindatrack/features/stock/domain/entities/create_stock_movement_input.dart';
+import 'package:tindatrack/features/stock/domain/entities/record_stock_in_input.dart';
+import 'package:tindatrack/features/stock/domain/entities/record_stock_out_input.dart';
 import 'package:tindatrack/features/stock/domain/entities/stock_movement.dart';
 import 'package:tindatrack/features/stock/domain/failures/stock_failure.dart';
 
@@ -25,7 +27,8 @@ void main() {
     await productsDao.insertProduct(_product());
     ids = _SequenceIdGenerator();
     repository = DriftStockRepository(
-      dao: StockMovementsDao(database),
+      productsDao: productsDao,
+      stockMovementsDao: StockMovementsDao(database),
       idGenerator: ids,
       clock: _FixedClock(instant),
     );
@@ -33,6 +36,300 @@ void main() {
 
   tearDown(() => database.close());
 
+  test(
+    'recordStockIn updates product quantity and writes movement history',
+    () async {
+      final result = await repository.recordStockIn(
+        const RecordStockInInput(
+          productId: 'product-1',
+          quantity: 3,
+          note: ' delivery ',
+        ),
+      );
+
+      expect(result, isA<Success<StockMovement>>());
+      final movement = (result as Success<StockMovement>).value;
+      final product = await productsDao.getProductById('product-1');
+      final rows = await StockMovementsDao(database).listMovements();
+
+      expect(product?.quantity, 8);
+      expect(rows, hasLength(1));
+      expect(movement.id, 'movement-1');
+      expect(movement.type, StockMovementType.stockIn);
+      expect(movement.quantity, 3);
+      expect(movement.previousQuantity, 5);
+      expect(movement.newQuantity, 8);
+      expect(movement.reason, isNull);
+      expect(movement.note, 'delivery');
+      expect(movement.productNameSnapshot, 'Rice');
+      expect(movement.unitSnapshot, 'kg');
+      expect(movement.createdAt, instant);
+      expect(ids.calls, 1);
+    },
+  );
+
+  test(
+    'recordStockIn snapshots product name and unit from product row',
+    () async {
+      await productsDao.insertProduct(
+        _product(id: 'product-2', name: 'Coke 1L', unit: 'bottle'),
+      );
+
+      final result = await repository.recordStockIn(
+        const RecordStockInInput(productId: 'product-2', quantity: 4),
+      );
+
+      final movement = (result as Success<StockMovement>).value;
+      expect(movement.productNameSnapshot, 'Coke 1L');
+      expect(movement.unitSnapshot, 'bottle');
+      expect(movement.previousQuantity, 5);
+      expect(movement.newQuantity, 9);
+    },
+  );
+
+  test(
+    'invalid stock-in quantity does not mutate product or history',
+    () async {
+      for (final quantity in [0, -1]) {
+        final result = await repository.recordStockIn(
+          RecordStockInInput(productId: 'product-1', quantity: quantity),
+        );
+
+        expect(result, isA<FailureResult<StockMovement>>());
+        expect(
+          (result as FailureResult<StockMovement>).failure,
+          isA<StockMovementValidationFailure>()
+              .having(
+                (failure) => failure.field,
+                'field',
+                StockMovementField.quantity,
+              )
+              .having(
+                (failure) => failure.issue,
+                'issue',
+                StockMovementValidationIssue.notPositive,
+              ),
+        );
+        expect((await productsDao.getProductById('product-1'))?.quantity, 5);
+        expect(await StockMovementsDao(database).listMovements(), isEmpty);
+        expect(ids.calls, 0);
+      }
+    },
+  );
+
+  test('missing product does not mutate history', () async {
+    final result = await repository.recordStockIn(
+      const RecordStockInInput(productId: 'missing-product', quantity: 1),
+    );
+
+    expect(result, isA<FailureResult<StockMovement>>());
+    expect(
+      (result as FailureResult<StockMovement>).failure,
+      isA<StockProductNotFoundFailure>(),
+    );
+    expect(await StockMovementsDao(database).listMovements(), isEmpty);
+    expect(ids.calls, 0);
+  });
+
+  test('archived product does not mutate product or history', () async {
+    await productsDao.archiveProduct(id: 'product-1', updatedAt: instant);
+
+    final result = await repository.recordStockIn(
+      const RecordStockInInput(productId: 'product-1', quantity: 1),
+    );
+
+    expect(result, isA<FailureResult<StockMovement>>());
+    expect(
+      (result as FailureResult<StockMovement>).failure,
+      isA<StockArchivedProductFailure>(),
+    );
+    final product = await productsDao.getProductById('product-1');
+    expect(product?.quantity, 5);
+    expect(product?.isArchived, isTrue);
+    expect(await StockMovementsDao(database).listMovements(), isEmpty);
+    expect(ids.calls, 0);
+  });
+
+  test('movement insert failure rolls back product quantity update', () async {
+    final failingRepository = DriftStockRepository(
+      productsDao: productsDao,
+      stockMovementsDao: _FailingInsertStockMovementsDao(database),
+      idGenerator: ids,
+      clock: _FixedClock(instant),
+    );
+
+    final result = await failingRepository.recordStockIn(
+      const RecordStockInInput(productId: 'product-1', quantity: 3),
+    );
+
+    expect(result, isA<FailureResult<StockMovement>>());
+    expect(
+      (result as FailureResult<StockMovement>).failure,
+      isA<PersistenceFailure>(),
+    );
+    expect((await productsDao.getProductById('product-1'))?.quantity, 5);
+    expect(await StockMovementsDao(database).listMovements(), isEmpty);
+  });
+
+  test(
+    'recordStockOut decreases product quantity and writes movement history',
+    () async {
+      final result = await repository.recordStockOut(
+        const RecordStockOutInput(
+          productId: 'product-1',
+          quantity: 3,
+          note: ' sold today ',
+        ),
+      );
+
+      expect(result, isA<Success<StockMovement>>());
+      final movement = (result as Success<StockMovement>).value;
+      final product = await productsDao.getProductById('product-1');
+      final rows = await StockMovementsDao(database).listMovements();
+
+      expect(product?.quantity, 2);
+      expect(rows, hasLength(1));
+      expect(movement.id, 'movement-1');
+      expect(movement.type, StockMovementType.stockOut);
+      expect(movement.quantity, 3);
+      expect(movement.previousQuantity, 5);
+      expect(movement.newQuantity, 2);
+      expect(movement.reason, StockOutReason.sold);
+      expect(movement.note, 'sold today');
+      expect(movement.productNameSnapshot, 'Rice');
+      expect(movement.unitSnapshot, 'kg');
+      expect(movement.createdAt, instant);
+      expect(ids.calls, 1);
+    },
+  );
+
+  test('recordStockOut preserves explicit reason and snapshots', () async {
+    await productsDao.insertProduct(
+      _product(id: 'product-2', name: 'Coke 1L', unit: 'bottle'),
+    );
+
+    final result = await repository.recordStockOut(
+      const RecordStockOutInput(
+        productId: 'product-2',
+        quantity: 4,
+        reason: StockOutReason.damaged,
+      ),
+    );
+
+    final movement = (result as Success<StockMovement>).value;
+    expect(movement.reason, StockOutReason.damaged);
+    expect(movement.productNameSnapshot, 'Coke 1L');
+    expect(movement.unitSnapshot, 'bottle');
+    expect(movement.previousQuantity, 5);
+    expect(movement.newQuantity, 1);
+  });
+
+  test(
+    'invalid stock-out quantity does not mutate product or history',
+    () async {
+      for (final quantity in [0, -1]) {
+        final result = await repository.recordStockOut(
+          RecordStockOutInput(productId: 'product-1', quantity: quantity),
+        );
+
+        expect(result, isA<FailureResult<StockMovement>>());
+        expect(
+          (result as FailureResult<StockMovement>).failure,
+          isA<StockMovementValidationFailure>()
+              .having(
+                (failure) => failure.field,
+                'field',
+                StockMovementField.quantity,
+              )
+              .having(
+                (failure) => failure.issue,
+                'issue',
+                StockMovementValidationIssue.notPositive,
+              ),
+        );
+        expect((await productsDao.getProductById('product-1'))?.quantity, 5);
+        expect(await StockMovementsDao(database).listMovements(), isEmpty);
+        expect(ids.calls, 0);
+      }
+    },
+  );
+
+  test('insufficient stock does not mutate product or history', () async {
+    final result = await repository.recordStockOut(
+      const RecordStockOutInput(productId: 'product-1', quantity: 6),
+    );
+
+    expect(result, isA<FailureResult<StockMovement>>());
+    expect(
+      (result as FailureResult<StockMovement>).failure,
+      isA<StockInsufficientQuantityFailure>()
+          .having((failure) => failure.availableQuantity, 'available', 5)
+          .having((failure) => failure.requestedQuantity, 'requested', 6),
+    );
+    expect((await productsDao.getProductById('product-1'))?.quantity, 5);
+    expect(await StockMovementsDao(database).listMovements(), isEmpty);
+    expect(ids.calls, 0);
+  });
+
+  test('missing product stock out does not mutate history', () async {
+    final result = await repository.recordStockOut(
+      const RecordStockOutInput(productId: 'missing-product', quantity: 1),
+    );
+
+    expect(result, isA<FailureResult<StockMovement>>());
+    expect(
+      (result as FailureResult<StockMovement>).failure,
+      isA<StockProductNotFoundFailure>(),
+    );
+    expect(await StockMovementsDao(database).listMovements(), isEmpty);
+    expect(ids.calls, 0);
+  });
+
+  test(
+    'archived product stock out does not mutate product or history',
+    () async {
+      await productsDao.archiveProduct(id: 'product-1', updatedAt: instant);
+
+      final result = await repository.recordStockOut(
+        const RecordStockOutInput(productId: 'product-1', quantity: 1),
+      );
+
+      expect(result, isA<FailureResult<StockMovement>>());
+      expect(
+        (result as FailureResult<StockMovement>).failure,
+        isA<StockArchivedProductFailure>(),
+      );
+      final product = await productsDao.getProductById('product-1');
+      expect(product?.quantity, 5);
+      expect(product?.isArchived, isTrue);
+      expect(await StockMovementsDao(database).listMovements(), isEmpty);
+      expect(ids.calls, 0);
+    },
+  );
+
+  test(
+    'stock-out movement insert failure rolls back quantity update',
+    () async {
+      final failingRepository = DriftStockRepository(
+        productsDao: productsDao,
+        stockMovementsDao: _FailingInsertStockMovementsDao(database),
+        idGenerator: ids,
+        clock: _FixedClock(instant),
+      );
+
+      final result = await failingRepository.recordStockOut(
+        const RecordStockOutInput(productId: 'product-1', quantity: 3),
+      );
+
+      expect(result, isA<FailureResult<StockMovement>>());
+      expect(
+        (result as FailureResult<StockMovement>).failure,
+        isA<PersistenceFailure>(),
+      );
+      expect((await productsDao.getProductById('product-1'))?.quantity, 5);
+      expect(await StockMovementsDao(database).listMovements(), isEmpty);
+    },
+  );
   test('record uses one injected ID and one UTC instant', () async {
     final result = await repository.recordMovementRow(_input());
 
@@ -89,7 +386,8 @@ void main() {
   test('list and watch return domain entities newest first', () async {
     await repository.recordMovementRow(_input(note: 'older'));
     repository = DriftStockRepository(
-      dao: StockMovementsDao(database),
+      productsDao: productsDao,
+      stockMovementsDao: StockMovementsDao(database),
       idGenerator: ids,
       clock: _FixedClock(instant.add(const Duration(minutes: 1))),
     );
@@ -175,7 +473,8 @@ void main() {
     'invalid persisted movement type maps list failures to persistence',
     () async {
       final invalidRepository = DriftStockRepository(
-        dao: _InvalidTypeStockMovementsDao(database),
+        productsDao: productsDao,
+        stockMovementsDao: _InvalidTypeStockMovementsDao(database),
         idGenerator: ids,
         clock: _FixedClock(instant),
       );
@@ -207,7 +506,8 @@ void main() {
       ),
     );
     final duplicateRepository = DriftStockRepository(
-      dao: StockMovementsDao(database),
+      productsDao: productsDao,
+      stockMovementsDao: StockMovementsDao(database),
       idGenerator: const _FixedIdGenerator('duplicate-id'),
       clock: _FixedClock(instant),
     );
@@ -222,12 +522,16 @@ void main() {
   });
 }
 
-db.ProductsCompanion _product({String id = 'product-1', String name = 'Rice'}) {
+db.ProductsCompanion _product({
+  String id = 'product-1',
+  String name = 'Rice',
+  String unit = 'kg',
+}) {
   final instant = DateTime.utc(2026, 7);
   return db.ProductsCompanion.insert(
     id: id,
     name: name,
-    unit: 'kg',
+    unit: unit,
     sellingPrice: 10,
     quantity: 5,
     lowStockThreshold: 1,
@@ -257,6 +561,15 @@ CreateStockMovementInput _input({
     productNameSnapshot: productNameSnapshot,
     unitSnapshot: 'kg',
   );
+}
+
+final class _FailingInsertStockMovementsDao extends StockMovementsDao {
+  _FailingInsertStockMovementsDao(super.attachedDatabase);
+
+  @override
+  Future<db.StockMovement> insertMovement(db.StockMovementsCompanion movement) {
+    throw Exception('forced movement insert failure');
+  }
 }
 
 final class _InvalidTypeStockMovementsDao extends StockMovementsDao {
