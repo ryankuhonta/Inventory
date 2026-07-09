@@ -66,7 +66,7 @@ development_status:
   3-2-record-stock-in-atomically: done
   3-3-record-stock-out-atomically-with-insufficient-stock-protection: done
   3-4-build-stock-in-screen: done
-  3-5-build-stock-out-screen: backlog
+  3-5-build-stock-out-screen: ready-for-dev
   3-6-show-inventory-history-list: backlog
   3-7-activate-product-row-stock-movement-actions: backlog
   3-8-protect-stock-movement-reliability-with-tests: backlog
