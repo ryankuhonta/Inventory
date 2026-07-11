@@ -38,6 +38,12 @@ void main() {
     expect(ProductRoute.stockIn.segment, ':productId/stock-in');
   });
 
+  test('declares Stock Out with a stable ID path parameter', () {
+    expect(ProductRoute.stockOut.name, 'stockOut');
+    expect(ProductRoute.stockOut.path, '/products/:productId/stock-out');
+    expect(ProductRoute.stockOut.segment, ':productId/stock-out');
+  });
+
   testWidgets('maps Add Product under the Products branch', (tester) async {
     final router = createAppRouter(
       initialLocation: ProductRoute.addProduct.path,
@@ -89,6 +95,37 @@ void main() {
         pathParameters: const <String, String>{'productId': 'product 1'},
       ),
       '/products/product%201/stock-in',
+    );
+    expect(
+      tester.widget<NavigationBar>(find.byType(NavigationBar)).selectedIndex,
+      1,
+    );
+  });
+  testWidgets('maps Stock Out product ID under the Products branch', (
+    tester,
+  ) async {
+    String? receivedId;
+    final router = createAppRouter(
+      initialLocation: '/products/product-1/stock-out',
+      productsBuilder: (_, _) => const Scaffold(key: Key('products-screen')),
+      stockOutBuilder: (_, state) {
+        receivedId = state.pathParameters['productId'];
+        return const Scaffold(key: Key('stock-out-test-screen'));
+      },
+    );
+    addTearDown(router.dispose);
+
+    await tester.pumpWidget(_RouterTestApp(router: router));
+    await tester.pumpAndSettle();
+
+    expect(receivedId, 'product-1');
+    expect(find.byKey(const Key('stock-out-test-screen')), findsOneWidget);
+    expect(
+      router.namedLocation(
+        ProductRoute.stockOut.name,
+        pathParameters: const <String, String>{'productId': 'product 1'},
+      ),
+      '/products/product%201/stock-out',
     );
     expect(
       tester.widget<NavigationBar>(find.byType(NavigationBar)).selectedIndex,
@@ -239,6 +276,43 @@ void main() {
     await tester.pumpAndSettle();
     expect(
       find.byKey(const Key('stock-in-route-test-screen')),
+      findsOneWidget,
+    );
+
+    router.pop();
+    await tester.pumpAndSettle();
+    expect(find.byKey(const Key('products-route-test-screen')), findsOneWidget);
+    expect(router.routeInformationProvider.value.uri.path, '/products');
+  });
+  testWidgets('Stock Out back navigation returns to Products', (
+    tester,
+  ) async {
+    final router = createAppRouter(
+      initialLocation: AppRoute.products.path,
+      productsBuilder: (_, _) {
+        return const Scaffold(key: Key('products-route-test-screen'));
+      },
+      stockOutBuilder: (_, state) {
+        return Scaffold(
+          key: const Key('stock-out-route-test-screen'),
+          body: Text(state.pathParameters['productId']!),
+        );
+      },
+    );
+    addTearDown(router.dispose);
+
+    await tester.pumpWidget(_RouterTestApp(router: router));
+    await tester.pumpAndSettle();
+
+    unawaited(
+      router.pushNamed(
+        ProductRoute.stockOut.name,
+        pathParameters: const <String, String>{'productId': 'product-1'},
+      ),
+    );
+    await tester.pumpAndSettle();
+    expect(
+      find.byKey(const Key('stock-out-route-test-screen')),
       findsOneWidget,
     );
 

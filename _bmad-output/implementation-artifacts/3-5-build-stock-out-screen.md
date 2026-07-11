@@ -4,7 +4,7 @@ baseline_commit: b76e67a2e19d69afb97c230bc21aa10aa71023c1
 
 # Story 3.5: Build Stock Out Screen
 
-Status: ready-for-dev
+Status: done
 
 ## Story
 
@@ -23,58 +23,58 @@ So that I can quickly record sold, lost, or removed stock.
 
 ## Tasks / Subtasks
 
-- [ ] Task 1: Add Stock Out route and screen shell (AC: 1)
-  - [ ] Extend `ProductRoute` with `/products/:productId/stock-out` and segment `:productId/stock-out`.
-  - [ ] Add `stockOutBuilder` to `createAppRouter`, defaulting to a private `_buildStockOut` helper.
-  - [ ] Register Stock Out as a Products-branch child route and pass `productId` from `GoRouterState.pathParameters`.
-  - [ ] Create `tindatrack/lib/features/stock/presentation/screens/stock_out_screen.dart`.
-  - [ ] Load the selected product through `productByIdProvider(productId)` / `GetProduct`; do not query Drift from the widget.
-  - [ ] Show loading and unavailable-product states using the existing `AppLoadingView` / `AppErrorView` pattern.
+- [x] Task 1: Add Stock Out route and screen shell (AC: 1)
+  - [x] Extend `ProductRoute` with `/products/:productId/stock-out` and segment `:productId/stock-out`.
+  - [x] Add `stockOutBuilder` to `createAppRouter`, defaulting to a private `_buildStockOut` helper.
+  - [x] Register Stock Out as a Products-branch child route and pass `productId` from `GoRouterState.pathParameters`.
+  - [x] Create `tindatrack/lib/features/stock/presentation/screens/stock_out_screen.dart`.
+  - [x] Load the selected product through `productByIdProvider(productId)` / `GetProduct`; do not query Drift from the widget.
+  - [x] Show loading and unavailable-product states using the existing `AppLoadingView` / `AppErrorView` pattern.
 
-- [ ] Task 2: Build the Stock Out form UI (AC: 1, 2, 3, 4)
-  - [ ] Display product name and `Current quantity: <qty> <unit>`.
-  - [ ] Add numeric quantity field with stable key `stock-out-quantity-field` and accessible label.
-  - [ ] Add optional note field with stable key `stock-out-note-field`.
-  - [ ] Add primary action `Record Stock Out` with stable key `record-stock-out-button` and minimum 48dp tap target.
-  - [ ] Do not add a visible Stock Out reason selector in this story; reason must default to `sold` through domain/repository behavior.
-  - [ ] Keep the form scrollable for small Android screens and large system font sizes.
-  - [ ] Disable fields/back navigation while saving and show button-level `Saving...` progress.
+- [x] Task 2: Build the Stock Out form UI (AC: 1, 2, 3, 4)
+  - [x] Display product name and `Current quantity: <qty> <unit>`.
+  - [x] Add numeric quantity field with stable key `stock-out-quantity-field` and accessible label.
+  - [x] Add optional note field with stable key `stock-out-note-field`.
+  - [x] Add primary action `Record Stock Out` with stable key `record-stock-out-button` and minimum 48dp tap target.
+  - [x] Do not add a visible Stock Out reason selector in this story; reason must default to `sold` through domain/repository behavior.
+  - [x] Keep the form scrollable for small Android screens and large system font sizes.
+  - [x] Disable fields/back navigation while saving and show button-level `Saving...` progress.
 
-- [ ] Task 3: Add Stock Out presentation controller (AC: 2, 3, 4, 6)
-  - [ ] Create `tindatrack/lib/features/stock/presentation/controllers/stock_out_controller.dart`.
-  - [ ] Use an auto-disposed Riverpod Notifier family keyed by product ID, mirroring `StockInController` conventions.
-  - [ ] Parse raw form values into `RecordStockOutInput`.
-  - [ ] Reject blank, non-integer, zero, negative, and over-maximum quantities before calling the repository.
-  - [ ] For visible excessive quantity where current product quantity is known, show inline quantity copy `Not enough stock available.` before calling the repository.
-  - [ ] Guard duplicate submissions while `isSaving` is true.
-  - [ ] Call `ref.read(stockRepositoryProvider).recordStockOut(...)`; do not reimplement stock mutation logic in the controller.
-  - [ ] Leave `reason` unset or pass `StockOutReason.defaultReason`; both must persist as `sold`.
-  - [ ] Map `StockMovementValidationFailure`, `StockInsufficientQuantityFailure`, `StockProductNotFoundFailure`, `StockArchivedProductFailure`, and `PersistenceFailure` to friendly UI copy.
-  - [ ] Never display `debugMessage`, raw Drift errors, SQL text, or exception text.
+- [x] Task 3: Add Stock Out presentation controller (AC: 2, 3, 4, 6)
+  - [x] Create `tindatrack/lib/features/stock/presentation/controllers/stock_out_controller.dart`.
+  - [x] Use an auto-disposed Riverpod Notifier family keyed by product ID, mirroring `StockInController` conventions.
+  - [x] Parse raw form values into `RecordStockOutInput`.
+  - [x] Reject blank, non-integer, zero, negative, and over-maximum quantities before calling the repository.
+  - [x] For visible excessive quantity where current product quantity is known, show inline quantity copy `Not enough stock available.` before calling the repository.
+  - [x] Guard duplicate submissions while `isSaving` is true.
+  - [x] Call `ref.read(stockRepositoryProvider).recordStockOut(...)`; do not reimplement stock mutation logic in the controller.
+  - [x] Leave `reason` unset or pass `StockOutReason.defaultReason`; both must persist as `sold`.
+  - [x] Map `StockMovementValidationFailure`, `StockInsufficientQuantityFailure`, `StockProductNotFoundFailure`, `StockArchivedProductFailure`, and `PersistenceFailure` to friendly UI copy.
+  - [x] Never display `debugMessage`, raw Drift errors, SQL text, or exception text.
 
-- [ ] Task 4: Success behavior and state refresh (AC: 5)
-  - [ ] On success, show feedback like `Removed 3 pcs from Rice. New stock: 2 pcs.`
-  - [ ] Return to the previous screen or Products branch in a predictable way, matching Stock In behavior.
-  - [ ] Invalidate `productByIdProvider(product.id)` and `activeProductsProvider` after successful mutation.
-  - [ ] Do not add product-row Stock Out buttons yet; Story 3.7 owns row action activation after both screens exist.
+- [x] Task 4: Success behavior and state refresh (AC: 5)
+  - [x] On success, show feedback like `Removed 3 pcs from Rice. New stock: 2 pcs.`
+  - [x] Return to the previous screen or Products branch in a predictable way, matching Stock In behavior.
+  - [x] Invalidate `productByIdProvider(product.id)` and `activeProductsProvider` after successful mutation.
+  - [x] Do not add product-row Stock Out buttons yet; Story 3.7 owns row action activation after both screens exist.
 
-- [ ] Task 5: Add focused tests (AC: 1, 2, 3, 4, 5, 6)
-  - [ ] Router test proves the Stock Out route maps under the Products branch and preserves `productId`.
-  - [ ] Widget test proves active product details, current quantity, numeric quantity input, note field, and primary action render.
-  - [ ] Controller/widget test proves invalid quantity shows inline validation and does not call `recordStockOut`.
-  - [ ] Test excessive quantity shows `Not enough stock available.` and does not call `recordStockOut` when the current product quantity is available in presentation.
-  - [ ] Test repository `StockInsufficientQuantityFailure` also maps to friendly inline quantity copy without leaking diagnostics.
-  - [ ] Test pending save disables duplicate submission and shows button-level loading.
-  - [ ] Test success calls `recordStockOut`, leaves/defaults reason to `sold`, shows friendly new-stock feedback, and navigates/refreshes.
-  - [ ] Test typed repository failures show friendly copy without leaking debug/private diagnostics.
-  - [ ] Test small-screen or enlarged-text layout remains scrollable and the primary button remains usable.
+- [x] Task 5: Add focused tests (AC: 1, 2, 3, 4, 5, 6)
+  - [x] Router test proves the Stock Out route maps under the Products branch and preserves `productId`.
+  - [x] Widget test proves active product details, current quantity, numeric quantity input, note field, and primary action render.
+  - [x] Controller/widget test proves invalid quantity shows inline validation and does not call `recordStockOut`.
+  - [x] Test excessive quantity shows `Not enough stock available.` and does not call `recordStockOut` when the current product quantity is available in presentation.
+  - [x] Test repository `StockInsufficientQuantityFailure` also maps to friendly inline quantity copy without leaking diagnostics.
+  - [x] Test pending save disables duplicate submission and shows button-level loading.
+  - [x] Test success calls `recordStockOut`, leaves/defaults reason to `sold`, shows friendly new-stock feedback, and navigates/refreshes.
+  - [x] Test typed repository failures show friendly copy without leaking debug/private diagnostics.
+  - [x] Test small-screen or enlarged-text layout remains scrollable and the primary button remains usable.
 
-- [ ] Task 6: Verify Story 3.5 completion (AC: 1, 2, 3, 4, 5, 6)
-  - [ ] Run focused stock/product/router tests.
-  - [ ] Run Dart format for `lib` and `test`.
-  - [ ] Run Dart analyzer.
-  - [ ] Run the full Flutter test suite.
-  - [ ] Run WSL `git diff --check`.
+- [x] Task 6: Verify Story 3.5 completion (AC: 1, 2, 3, 4, 5, 6)
+  - [x] Run focused stock/product/router tests.
+  - [x] Run Dart format for `lib` and `test`.
+  - [x] Run Dart analyzer.
+  - [x] Run the full Flutter test suite.
+  - [x] Run WSL `git diff --check`.
 
 ## Dev Notes
 
@@ -147,16 +147,32 @@ GPT-5 Codex
 ### Debug Log References
 
 - 2026-07-09: Created Story 3.5 context from Epic 3, UX, architecture, existing Stock In presentation patterns, and Story 3.3/3.4 stock movement implementation.
+- 2026-07-10: Implemented Stock Out route, screen, controller, and focused tests.
+- 2026-07-10: Focused route/controller/screen tests passed on local verification copy: 29/29.
+- 2026-07-10: Dart analyzer passed on local verification copy with no issues.
+- 2026-07-10: Full Flutter test suite passed on local verification copy: 294/294.
 
 ### Completion Notes List
 
 - Ultimate context engine analysis completed - comprehensive developer guide created.
+- Added Products-branch Stock Out route with stable productId path parameter.
+- Added Stock Out screen with product loading, current quantity display, numeric quantity input, optional note, button-level saving state, and friendly success/failure feedback.
+- Added Stock Out controller that validates quantity before repository calls, guards duplicate submissions, calls recordStockOut, defaults reason through repository behavior, and maps typed failures to UI-safe copy.
+- Added focused router, controller, and widget coverage for Stock Out behavior, validation, loading, success, failures, insufficient stock, and small-screen layout.
 
 ### File List
 
 - _bmad-output/implementation-artifacts/3-5-build-stock-out-screen.md
 - _bmad-output/implementation-artifacts/sprint-status.yaml
+- tindatrack/lib/app/router/app_routes.dart
+- tindatrack/lib/app/router/app_router.dart
+- tindatrack/lib/features/stock/presentation/controllers/stock_out_controller.dart
+- tindatrack/lib/features/stock/presentation/screens/stock_out_screen.dart
+- tindatrack/test/app/router/app_router_test.dart
+- tindatrack/test/features/stock/presentation/controllers/stock_out_controller_test.dart
+- tindatrack/test/features/stock/presentation/screens/stock_out_screen_test.dart
 
 ### Change Log
 
 - 2026-07-09: Created Story 3.5 artifact and marked it ready for dev.
+- 2026-07-10: Implemented Stock Out screen and moved story to review.

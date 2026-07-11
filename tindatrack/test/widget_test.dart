@@ -15,6 +15,7 @@ import 'package:tindatrack/core/errors/app_failure.dart';
 import 'package:tindatrack/core/errors/result.dart';
 import 'package:tindatrack/core/widgets/app_error_view.dart';
 import 'package:tindatrack/core/widgets/app_loading_view.dart';
+import 'package:tindatrack/features/history/presentation/providers/movement_history_providers.dart';
 import 'package:tindatrack/features/products/presentation/providers/product_providers.dart';
 
 void main() {
@@ -242,6 +243,9 @@ void main() {
           activeProductsProvider.overrideWith(
             (ref) => Stream.value(const []),
           ),
+          movementHistoryProvider.overrideWith(
+            (ref) => Stream.value(const []),
+          ),
         ],
         child: const MainApp(),
       ),
@@ -405,6 +409,9 @@ void main() {
             (ref) async => const Success<void>(null),
           ),
           activeProductsProvider.overrideWith(
+            (ref) => Stream.value(const []),
+          ),
+          movementHistoryProvider.overrideWith(
             (ref) => Stream.value(const []),
           ),
         ],
