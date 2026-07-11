@@ -69,7 +69,7 @@ development_status:
   3-5-build-stock-out-screen: done
   3-6-show-inventory-history-list: done
   3-7-activate-product-row-stock-movement-actions: done
-  3-8-protect-stock-movement-reliability-with-tests: backlog
+  3-8-protect-stock-movement-reliability-with-tests: done
   epic-3-retrospective: optional
 
   epic-4: backlog
