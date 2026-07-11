@@ -29,11 +29,21 @@ void main() {
     expect(find.bySemanticsLabel('Rice, Staples, 4 pcs'), findsOneWidget);
     expect(tester.widget<ListTile>(find.byType(ListTile)).onTap, isNull);
     expect(
+      find.byKey(const ValueKey('product-stock-in-action-product-1')),
+      findsOneWidget,
+    );
+    expect(
+      find.byKey(const ValueKey('product-stock-out-action-product-1')),
+      findsOneWidget,
+    );
+    expect(
       find.byKey(const ValueKey('product-edit-action-product-1')),
       findsOneWidget,
     );
+    expect(find.bySemanticsLabel('Stock In Rice'), findsOneWidget);
+    expect(find.bySemanticsLabel('Stock Out Rice'), findsOneWidget);
     expect(find.bySemanticsLabel('Edit Rice'), findsOneWidget);
-    expect(find.textContaining('Stock In'), findsNothing);
+    expect(find.textContaining('Archive'), findsNothing);
   });
 
   testWidgets('uses unit as metadata when category is absent', (tester) async {
@@ -88,6 +98,7 @@ void main() {
     expect(find.text('Out of Stock'), findsOneWidget);
     expect(find.text('Low Stock'), findsNothing);
     expect(find.bySemanticsLabel('Rice, 0 pcs, Out of Stock'), findsOneWidget);
+    expect(find.bySemanticsLabel('Stock Out Rice'), findsOneWidget);
   });
 
   testWidgets('normal stock renders no warning label', (tester) async {
@@ -102,39 +113,65 @@ void main() {
     expect(find.text('Out of Stock'), findsNothing);
   });
 
-  testWidgets('row information and Edit are distinct single-fire actions', (
-    tester,
-  ) async {
-    var edits = 0;
-    await tester.pumpWidget(
-      MaterialApp(
-        theme: AppTheme.light,
-        home: Scaffold(
-          body: ProductListItem(
-            product: _product(),
-            onEdit: () => edits++,
+  testWidgets(
+    'row information and row actions are distinct single-fire actions',
+    (
+      tester,
+    ) async {
+      var stockIns = 0;
+      var stockOuts = 0;
+      var edits = 0;
+      await tester.pumpWidget(
+        MaterialApp(
+          theme: AppTheme.light,
+          home: Scaffold(
+            body: ProductListItem(
+              product: _product(),
+              onStockIn: () => stockIns++,
+              onStockOut: () => stockOuts++,
+              onEdit: () => edits++,
+            ),
           ),
         ),
-      ),
-    );
+      );
 
-    expect(find.bySemanticsLabel('Rice, 4 pcs'), findsOneWidget);
-    expect(find.bySemanticsLabel('Edit Rice'), findsOneWidget);
-    expect(
-      find.bySemanticsLabel('Rice, 4 pcs, Edit Rice'),
-      findsNothing,
-    );
+      expect(find.bySemanticsLabel('Rice, 4 pcs'), findsOneWidget);
+      expect(find.bySemanticsLabel('Stock In Rice'), findsOneWidget);
+      expect(find.bySemanticsLabel('Stock Out Rice'), findsOneWidget);
+      expect(find.bySemanticsLabel('Edit Rice'), findsOneWidget);
+      expect(
+        find.bySemanticsLabel('Rice, 4 pcs, Stock In Rice'),
+        findsNothing,
+      );
 
-    await tester.tap(find.byType(ListTile));
-    expect(edits, 1);
+      await tester.tap(find.byType(ListTile));
+      expect(edits, 1);
+      expect(stockIns, 0);
+      expect(stockOuts, 0);
 
-    await tester.tap(
-      find.byKey(const ValueKey('product-edit-action-product-1')),
-    );
-    expect(edits, 2);
-    expect(find.textContaining('Stock Out'), findsNothing);
-    expect(find.textContaining('Archive'), findsNothing);
-  });
+      await tester.tap(
+        find.byKey(const ValueKey('product-stock-in-action-product-1')),
+      );
+      expect(stockIns, 1);
+      expect(stockOuts, 0);
+      expect(edits, 1);
+
+      await tester.tap(
+        find.byKey(const ValueKey('product-stock-out-action-product-1')),
+      );
+      expect(stockIns, 1);
+      expect(stockOuts, 1);
+      expect(edits, 1);
+
+      await tester.tap(
+        find.byKey(const ValueKey('product-edit-action-product-1')),
+      );
+      expect(stockIns, 1);
+      expect(stockOuts, 1);
+      expect(edits, 2);
+      expect(find.textContaining('Archive'), findsNothing);
+    },
+  );
 
   testWidgets('long quantity and status remain safe at enlarged text sizes', (
     tester,
@@ -168,12 +205,15 @@ void main() {
       find.bySemanticsLabel('$name, 1 $unit, Low Stock'),
       findsOneWidget,
     );
-    expect(
-      tester.getSize(
-        find.byKey(const ValueKey('product-edit-action-product-1')),
-      ),
-      const Size(48, 48),
-    );
+    for (final key in [
+      const ValueKey('product-stock-in-action-product-1'),
+      const ValueKey('product-stock-out-action-product-1'),
+      const ValueKey('product-edit-action-product-1'),
+    ]) {
+      expect(tester.getSize(find.byKey(key)), const Size(48, 48));
+    }
+    expect(find.bySemanticsLabel('Stock In $name'), findsOneWidget);
+    expect(find.bySemanticsLabel('Stock Out $name'), findsOneWidget);
     expect(find.bySemanticsLabel('Edit $name'), findsOneWidget);
   });
 }

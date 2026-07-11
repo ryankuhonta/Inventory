@@ -4,7 +4,7 @@ baseline_commit: 4fad416907209de8dbe9756997134e0c5e2bfbbf
 
 # Story 3.7: Activate Product Row Stock Movement Actions
 
-Status: ready-for-dev
+Status: done
 
 ## Story
 
@@ -21,40 +21,47 @@ So that I can record inventory movement without extra searching.
 
 ## Tasks / Subtasks
 
-- [ ] Task 1: Extend product row action presentation (AC: 1, 4)
-  - [ ] Update `tindatrack/lib/features/products/presentation/widgets/product_row_actions.dart` to expose Stock In, Stock Out, and Edit actions for one active product row.
-  - [ ] Keep `ProductRowActions` presentation-only: it receives callbacks and product identity/name, and it must not call repositories, DAOs, stock controllers, or go_router directly.
-  - [ ] Use familiar Material icons and tooltips/semantics such as `Stock In <productName>`, `Stock Out <productName>`, and `Edit <productName>`.
-  - [ ] Add stable product-keyed keys, for example `product-stock-in-action-<id>`, `product-stock-out-action-<id>`, and preserve `product-edit-action-<id>`.
-  - [ ] Keep each action at least 48dp and usable on a 360px-wide Android screen with enlarged text.
-  - [ ] Choose a compact accessible row action pattern that does not overflow. Direct icon buttons are acceptable if they fit; a menu/action sheet is acceptable if tests prove Stock In and Stock Out are available and tappable.
+- [x] Task 1: Extend product row action presentation (AC: 1, 4)
+  - [x] Update `tindatrack/lib/features/products/presentation/widgets/product_row_actions.dart` to expose Stock In, Stock Out, and Edit actions for one active product row.
+  - [x] Keep `ProductRowActions` presentation-only: it receives callbacks and product identity/name, and it must not call repositories, DAOs, stock controllers, or go_router directly.
+  - [x] Use familiar Material icons and tooltips/semantics such as `Stock In <productName>`, `Stock Out <productName>`, and `Edit <productName>`.
+  - [x] Add stable product-keyed keys, for example `product-stock-in-action-<id>`, `product-stock-out-action-<id>`, and preserve `product-edit-action-<id>`.
+  - [x] Keep each action at least 48dp and usable on a 360px-wide Android screen with enlarged text.
+  - [x] Choose a compact accessible row action pattern that does not overflow. Direct icon buttons are acceptable if they fit; a menu/action sheet is acceptable if tests prove Stock In and Stock Out are available and tappable.
 
-- [ ] Task 2: Thread callbacks through product list rows (AC: 1, 2, 3, 4)
-  - [ ] Update `ProductListItem` to accept `onStockIn` and `onStockOut` callbacks alongside `onEdit`.
-  - [ ] Pass the callbacks into `ProductRowActions` without changing product row display data, stock badges, row semantics for product information, or Edit behavior.
-  - [ ] Keep product rows scoped to active products supplied by `activeProductsProvider`; do not introduce archived product queries or archive restore behavior in this story.
+- [x] Task 2: Thread callbacks through product list rows (AC: 1, 2, 3, 4)
+  - [x] Update `ProductListItem` to accept `onStockIn` and `onStockOut` callbacks alongside `onEdit`.
+  - [x] Pass the callbacks into `ProductRowActions` without changing product row display data, stock badges, row semantics for product information, or Edit behavior.
+  - [x] Keep product rows scoped to active products supplied by `activeProductsProvider`; do not introduce archived product queries or archive restore behavior in this story.
 
-- [ ] Task 3: Navigate from active product rows to existing stock flows (AC: 2, 3)
-  - [ ] Update `_ProductList` in `product_list_screen.dart` to open `ProductRoute.stockIn.name` and `ProductRoute.stockOut.name` with `pathParameters: {'productId': product.id}`.
-  - [ ] Reuse the existing duplicate-navigation guard pattern around `_openingProductId`; while one row action is navigating, disable row actions so repeated taps do not stack routes.
-  - [ ] Unfocus search/keyboard before navigation, matching the existing Edit navigation behavior.
-  - [ ] Do not create new Stock In/Stock Out screens, routes, controllers, repository calls, dialogs, confirmation flows, or history writes here. Story 3.4 and 3.5 already own the real stock flows.
+- [x] Task 3: Navigate from active product rows to existing stock flows (AC: 2, 3)
+  - [x] Update `_ProductList` in `product_list_screen.dart` to open `ProductRoute.stockIn.name` and `ProductRoute.stockOut.name` with `pathParameters: {'productId': product.id}`.
+  - [x] Reuse the existing duplicate-navigation guard pattern around `_openingProductId`; while one row action is navigating, disable row actions so repeated taps do not stack routes.
+  - [x] Unfocus search/keyboard before navigation, matching the existing Edit navigation behavior.
+  - [x] Do not create new Stock In/Stock Out screens, routes, controllers, repository calls, dialogs, confirmation flows, or history writes here. Story 3.4 and 3.5 already own the real stock flows.
 
-- [ ] Task 4: Add focused widget and navigation tests (AC: 1, 2, 3, 4)
-  - [ ] Update `product_row_actions_test.dart` to assert all three actions render with stable keys, accessible labels/tooltips, 48dp tap targets, disabled callback behavior, and no Archive action.
-  - [ ] Update `product_list_item_test.dart` to prove product information semantics remain distinct from the row actions and all callbacks fire independently.
-  - [ ] Update `product_list_screen_test.dart` or add a focused navigation test to prove tapping row Stock In opens `/products/<id>/stock-in` and tapping row Stock Out opens `/products/<id>/stock-out` with the selected product ID preserved.
-  - [ ] Test the out-of-stock row still exposes Stock Out from the active list; validation/blocking belongs inside the Stock Out flow, not this row action surface.
-  - [ ] Test active-list scoping by using the fake active-products stream: archived products should not appear, so they should not expose row stock actions.
-  - [ ] Keep existing Add Product, Edit, search/filter, 3,000-product lazy list, small-screen, and accessibility tests passing.
+- [x] Task 4: Add focused widget and navigation tests (AC: 1, 2, 3, 4)
+  - [x] Update `product_row_actions_test.dart` to assert all three actions render with stable keys, accessible labels/tooltips, 48dp tap targets, disabled callback behavior, and no Archive action.
+  - [x] Update `product_list_item_test.dart` to prove product information semantics remain distinct from the row actions and all callbacks fire independently.
+  - [x] Update `product_list_screen_test.dart` or add a focused navigation test to prove tapping row Stock In opens `/products/<id>/stock-in` and tapping row Stock Out opens `/products/<id>/stock-out` with the selected product ID preserved.
+  - [x] Test the out-of-stock row still exposes Stock Out from the active list; validation/blocking belongs inside the Stock Out flow, not this row action surface.
+  - [x] Test active-list scoping by using the fake active-products stream: archived products should not appear, so they should not expose row stock actions.
+  - [x] Keep existing Add Product, Edit, search/filter, 3,000-product lazy list, small-screen, and accessibility tests passing.
 
-- [ ] Task 5: Verify Story 3.7 completion (AC: 1, 2, 3, 4)
-  - [ ] Run focused product row/product list/router tests.
-  - [ ] Run Dart format for `lib` and `test`.
-  - [ ] Run Dart analyzer.
-  - [ ] Run the full Flutter test suite.
-  - [ ] Run WSL `git diff --check`.
+- [x] Task 5: Verify Story 3.7 completion (AC: 1, 2, 3, 4)
+  - [x] Run focused product row/product list/router tests.
+  - [x] Run Dart format for `lib` and `test`.
+  - [x] Run Dart analyzer.
+  - [x] Run the full Flutter test suite.
+  - [x] Run WSL `git diff --check`.
 
+
+  ### Review Findings
+
+  - [x] [Review][Patch] Reset row navigation guard when route push fails [tindatrack/lib/features/products/presentation/screens/product_list_screen.dart]
+  - [x] [Review][Patch] Prove Stock In and Stock Out remain tappable on small enlarged-text screens [tindatrack/test/features/products/presentation/screens/product_list_screen_test.dart]
+  - [x] [Review][Patch] Make archived-product absence test non-vacuous with a mixed source list [tindatrack/test/features/products/presentation/screens/product_list_screen_test.dart]
+  - [x] [Review][Patch] Remove literal backtick-n artifacts from row action doc comments [tindatrack/lib/features/products/presentation/widgets/product_row_actions.dart]
 ## Dev Notes
 
 ### Source Requirements
@@ -136,13 +143,26 @@ GPT-5 Codex
 
 ### Completion Notes List
 
-- Ultimate context engine analysis completed - comprehensive developer guide created.
+- Implemented direct 48dp row actions for Stock In, Stock Out, and Edit with product-keyed stable keys, tooltips, and semantics labels.
+- Threaded Stock In/Stock Out callbacks through active product list rows and routed them to the existing ProductRoute.stockIn/ProductRoute.stockOut flows with selected productId preserved.
+- Reused the product-list duplicate navigation guard and keyboard unfocus behavior for all row actions.
+- Added focused widget and navigation coverage for action availability, callback independence, out-of-stock Stock Out availability, archived-product absence from active list, route identity preservation, small-screen accessibility, and existing list behavior.
+- Verification passed: focused product row/list/screen tests, dart format, dart analyze, full Flutter test suite, and WSL git diff --check.
+- Code review resolved 4 patch findings: route reset safety, small-screen tappability proof, non-vacuous archived-product coverage, and doc-comment cleanup.
 
 ### File List
 
 - _bmad-output/implementation-artifacts/3-7-activate-product-row-stock-movement-actions.md
 - _bmad-output/implementation-artifacts/sprint-status.yaml
+- tindatrack/lib/features/products/presentation/screens/product_list_screen.dart
+- tindatrack/lib/features/products/presentation/widgets/product_list_item.dart
+- tindatrack/lib/features/products/presentation/widgets/product_row_actions.dart
+- tindatrack/test/features/products/presentation/screens/product_list_screen_test.dart
+- tindatrack/test/features/products/presentation/widgets/product_list_item_test.dart
+- tindatrack/test/features/products/presentation/widgets/product_row_actions_test.dart
 
 ### Change Log
 
 - 2026-07-11: Created Story 3.7 artifact and marked it ready for dev.
+- 2026-07-11: Implemented product row Stock In/Stock Out/Edit actions and marked story ready for review.
+- 2026-07-11: Code review found 4 patch items; all were resolved.

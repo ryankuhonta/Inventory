@@ -267,8 +267,24 @@ final class _ProductListState extends State<_ProductList> {
         return ProductListItem(
           key: ValueKey('product-row-${product.id}'),
           product: product,
+          onStockIn: _openingProductId == null
+              ? () => unawaited(
+                  _openProductRoute(context, ProductRoute.stockIn, product.id),
+                )
+              : null,
+          onStockOut: _openingProductId == null
+              ? () => unawaited(
+                  _openProductRoute(context, ProductRoute.stockOut, product.id),
+                )
+              : null,
           onEdit: _openingProductId == null
-              ? () => unawaited(_openEditProduct(context, product.id))
+              ? () => unawaited(
+                  _openProductRoute(
+                    context,
+                    ProductRoute.editProduct,
+                    product.id,
+                  ),
+                )
               : null,
         );
       },
@@ -276,14 +292,21 @@ final class _ProductListState extends State<_ProductList> {
     );
   }
 
-  Future<void> _openEditProduct(BuildContext context, String productId) async {
+  Future<void> _openProductRoute(
+    BuildContext context,
+    ProductRoute route,
+    String productId,
+  ) async {
     if (_openingProductId != null) return;
     FocusManager.instance.primaryFocus?.unfocus();
     setState(() => _openingProductId = productId);
-    await context.pushNamed(
-      ProductRoute.editProduct.name,
-      pathParameters: <String, String>{'productId': productId},
-    );
-    if (mounted) setState(() => _openingProductId = null);
+    try {
+      await context.pushNamed(
+        route.name,
+        pathParameters: <String, String>{'productId': productId},
+      );
+    } finally {
+      if (mounted) setState(() => _openingProductId = null);
+    }
   }
 }

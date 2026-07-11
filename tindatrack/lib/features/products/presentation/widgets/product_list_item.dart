@@ -10,12 +10,20 @@ class ProductListItem extends StatelessWidget {
   /// Creates a product row from a domain value.
   const ProductListItem({
     required this.product,
+    this.onStockIn,
+    this.onStockOut,
     this.onEdit,
     super.key,
   });
 
   /// Product displayed by this row.
   final Product product;
+
+  /// Opens Stock In when supplied by the active list.
+  final VoidCallback? onStockIn;
+
+  /// Opens Stock Out when supplied by the active list.
+  final VoidCallback? onStockOut;
 
   /// Opens Edit Product when supplied by the active list.
   final VoidCallback? onEdit;
@@ -76,6 +84,8 @@ class ProductListItem extends StatelessWidget {
         ProductRowActions(
           productId: product.id,
           productName: product.name,
+          onStockIn: onStockIn,
+          onStockOut: onStockOut,
           onEdit: onEdit,
         ),
       ],

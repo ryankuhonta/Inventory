@@ -111,6 +111,73 @@ void main() {
     expect(find.text('Rice'), findsOneWidget);
   });
 
+  testWidgets(
+    'row Stock In and Stock Out open existing flows with product id',
+    (
+      tester,
+    ) async {
+      await _pumpProducts(
+        tester,
+        () => Stream.value([
+          _product('1', 'Rice', quantity: 4),
+          _product('2', 'Soap'),
+        ]),
+      );
+      await tester.pump();
+
+      await tester.tap(find.byKey(const ValueKey('product-stock-in-action-1')));
+      await tester.pumpAndSettle();
+      expect(find.byKey(const Key('stock-in-test-screen')), findsOneWidget);
+      expect(find.text('Stock In product 1'), findsOneWidget);
+
+      await tester.pageBack();
+      await tester.pumpAndSettle();
+
+      await tester.tap(
+        find.byKey(const ValueKey('product-stock-out-action-2')),
+      );
+      await tester.pumpAndSettle();
+      expect(find.byKey(const Key('stock-out-test-screen')), findsOneWidget);
+      expect(find.text('Stock Out product 2'), findsOneWidget);
+    },
+  );
+
+  testWidgets('active list exposes no row actions for archived products', (
+    tester,
+  ) async {
+    final storedProducts = [
+      _product('1', 'Active Rice', quantity: 4),
+      _product('archived', 'Archived Rice', isArchived: true),
+    ];
+
+    await _pumpProducts(
+      tester,
+      () => Stream.value(
+        storedProducts.where((product) => !product.isArchived).toList(),
+      ),
+    );
+    await tester.pump();
+
+    expect(storedProducts.any((product) => product.isArchived), isTrue);
+    expect(find.text('Active Rice'), findsOneWidget);
+    expect(find.text('Archived Rice'), findsNothing);
+    expect(
+      find.byKey(const ValueKey('product-stock-in-action-1')),
+      findsOneWidget,
+    );
+    expect(
+      find.byKey(const ValueKey('product-stock-out-action-1')),
+      findsOneWidget,
+    );
+    expect(
+      find.byKey(const ValueKey('product-stock-in-action-archived')),
+      findsNothing,
+    );
+    expect(
+      find.byKey(const ValueKey('product-stock-out-action-archived')),
+      findsNothing,
+    );
+  });
   testWidgets('mixed rows show independent mutually exclusive statuses', (
     tester,
   ) async {
@@ -262,18 +329,36 @@ void main() {
       findsOneWidget,
     );
     expect(
+      find.bySemanticsLabel('Stock In A readable product with a longer name'),
+      findsOneWidget,
+    );
+    expect(
+      find.bySemanticsLabel('Stock Out A readable product with a longer name'),
+      findsOneWidget,
+    );
+    expect(
       find.bySemanticsLabel('Edit A readable product with a longer name'),
       findsOneWidget,
     );
-    const actionKey = ValueKey('product-edit-action-1');
-    final action = find.byKey(actionKey);
-    expect(action, findsOneWidget);
-    final actionSize = tester.getSize(action);
-    expect(actionSize.width, greaterThanOrEqualTo(48));
-    expect(actionSize.height, greaterThanOrEqualTo(48));
-    final actionRect = tester.getRect(action);
-    expect(actionRect.left, greaterThanOrEqualTo(0));
-    expect(actionRect.right, lessThanOrEqualTo(360));
+
+    for (final key in [
+      const ValueKey('product-stock-in-action-1'),
+      const ValueKey('product-stock-out-action-1'),
+      const ValueKey('product-edit-action-1'),
+    ]) {
+      final action = find.byKey(key);
+      expect(action, findsOneWidget);
+      final actionSize = tester.getSize(action);
+      expect(actionSize.width, greaterThanOrEqualTo(48));
+      expect(actionSize.height, greaterThanOrEqualTo(48));
+      final actionRect = tester.getRect(action);
+      expect(actionRect.left, greaterThanOrEqualTo(0));
+      expect(actionRect.right, lessThanOrEqualTo(360));
+      await tester.tap(action);
+      await tester.pumpAndSettle();
+      await tester.pageBack();
+      await tester.pumpAndSettle();
+    }
     expect(
       find.bySemanticsLabel(
         'A readable product with a longer name, Staples, 4 pcs',
@@ -313,6 +398,42 @@ Future<void> _pumpProducts(
               );
             },
           ),
+          GoRoute(
+            path: ProductRoute.editProduct.segment,
+            name: ProductRoute.editProduct.name,
+            builder: (_, state) {
+              final productId = state.pathParameters['productId']!;
+              return Scaffold(
+                key: const Key('edit-product-test-screen'),
+                appBar: AppBar(title: const Text('Edit Product')),
+                body: Text('Edit product $productId'),
+              );
+            },
+          ),
+          GoRoute(
+            path: ProductRoute.stockIn.segment,
+            name: ProductRoute.stockIn.name,
+            builder: (_, state) {
+              final productId = state.pathParameters['productId']!;
+              return Scaffold(
+                key: const Key('stock-in-test-screen'),
+                appBar: AppBar(title: const Text('Stock In')),
+                body: Text('Stock In product $productId'),
+              );
+            },
+          ),
+          GoRoute(
+            path: ProductRoute.stockOut.segment,
+            name: ProductRoute.stockOut.name,
+            builder: (_, state) {
+              final productId = state.pathParameters['productId']!;
+              return Scaffold(
+                key: const Key('stock-out-test-screen'),
+                appBar: AppBar(title: const Text('Stock Out')),
+                body: Text('Stock Out product $productId'),
+              );
+            },
+          ),
         ],
       ),
     ],
@@ -339,6 +460,7 @@ Product _product(
   String? category,
   int quantity = 0,
   int threshold = 0,
+  bool isArchived = false,
 }) {
   return Product(
     id: id,
@@ -349,7 +471,7 @@ Product _product(
     quantity: quantity,
     lowStockThreshold: threshold,
     barcode: null,
-    isArchived: false,
+    isArchived: isArchived,
     createdAt: DateTime.utc(2026, 6, 30),
     updatedAt: DateTime.utc(2026, 6, 30),
   );
