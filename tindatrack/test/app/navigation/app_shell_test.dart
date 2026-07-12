@@ -1,20 +1,20 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:go_router/go_router.dart';
 import 'package:tindatrack/app/router/app_router.dart';
 import 'package:tindatrack/app/router/app_routes.dart';
+import 'package:tindatrack/features/dashboard/domain/entities/dashboard_summary.dart';
+import 'package:tindatrack/features/dashboard/presentation/providers/dashboard_providers.dart';
 
 void main() {
   testWidgets('shows and navigates the four canonical destinations', (
     tester,
   ) async {
-    final router = createAppRouter(
-      productsBuilder: (_, _) {
-        return const Scaffold(key: Key('products-screen'));
-      },
-    );
+    final router = _createShellTestRouter();
     addTearDown(router.dispose);
 
-    await tester.pumpWidget(MaterialApp.router(routerConfig: router));
+    await tester.pumpWidget(_RouterTestApp(router: router));
     await tester.pumpAndSettle();
 
     final navigationBar = find.byType(NavigationBar);
@@ -59,14 +59,10 @@ void main() {
   testWidgets('reselecting the active destination stays at its root', (
     tester,
   ) async {
-    final router = createAppRouter(
-      productsBuilder: (_, _) {
-        return const Scaffold(key: Key('products-screen'));
-      },
-    );
+    final router = _createShellTestRouter();
     addTearDown(router.dispose);
 
-    await tester.pumpWidget(MaterialApp.router(routerConfig: router));
+    await tester.pumpWidget(_RouterTestApp(router: router));
     await tester.pumpAndSettle();
 
     await tester.tap(_navigationLabel(AppRoute.dashboard.label));
@@ -84,9 +80,50 @@ void main() {
   });
 }
 
+GoRouter _createShellTestRouter() {
+  return createAppRouter(
+    dashboardBuilder: (_, _) {
+      return const Scaffold(key: Key('dashboard-screen'));
+    },
+    productsBuilder: (_, _) {
+      return const Scaffold(key: Key('products-screen'));
+    },
+    historyBuilder: (_, _) {
+      return const Scaffold(key: Key('history-screen'));
+    },
+    settingsBuilder: (_, _) {
+      return const Scaffold(key: Key('settings-screen'));
+    },
+  );
+}
+
 Finder _navigationLabel(String label) {
   return find.descendant(
     of: find.byType(NavigationBar),
     matching: find.text(label),
   );
+}
+
+final class _RouterTestApp extends StatelessWidget {
+  const _RouterTestApp({required this.router});
+
+  final RouterConfig<Object> router;
+
+  @override
+  Widget build(BuildContext context) {
+    return ProviderScope(
+      overrides: [
+        dashboardSummaryProvider.overrideWith((ref) {
+          return Stream.value(
+            const DashboardSummary(
+              totalActiveProducts: 1,
+              lowStockProducts: 0,
+              stockChangesToday: 0,
+            ),
+          );
+        }),
+      ],
+      child: MaterialApp.router(routerConfig: router),
+    );
+  }
 }

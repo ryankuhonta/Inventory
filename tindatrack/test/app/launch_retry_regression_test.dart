@@ -10,6 +10,8 @@ import 'package:tindatrack/app/providers.dart';
 import 'package:tindatrack/core/database/app_database.dart';
 import 'package:tindatrack/core/errors/app_failure.dart';
 import 'package:tindatrack/core/errors/result.dart';
+import 'package:tindatrack/features/dashboard/domain/entities/dashboard_summary.dart';
+import 'package:tindatrack/features/dashboard/presentation/providers/dashboard_providers.dart';
 
 void main() {
   testWidgets('Retry recovers when reading databaseProvider throws', (
@@ -121,6 +123,15 @@ void main() {
               return const FailureResult<void>(PersistenceFailure());
             }
             return const Success<void>(null);
+          }),
+          dashboardSummaryProvider.overrideWith((ref) {
+            return Stream.value(
+              const DashboardSummary(
+                totalActiveProducts: 1,
+                lowStockProducts: 0,
+                stockChangesToday: 0,
+              ),
+            );
           }),
         ],
         child: const MainApp(),

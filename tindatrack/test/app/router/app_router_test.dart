@@ -1,10 +1,13 @@
 import 'dart:async';
 
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:go_router/go_router.dart';
 import 'package:tindatrack/app/router/app_router.dart';
 import 'package:tindatrack/app/router/app_routes.dart';
+import 'package:tindatrack/features/dashboard/domain/entities/dashboard_summary.dart';
+import 'package:tindatrack/features/dashboard/presentation/providers/dashboard_providers.dart';
 
 void main() {
   test('declares only the four authorized root routes', () {
@@ -166,12 +169,7 @@ void main() {
     tester,
   ) async {
     for (final (index, route) in AppRoute.values.indexed) {
-      final router = createAppRouter(
-        initialLocation: route.path,
-        productsBuilder: (_, _) {
-          return const Scaffold(key: Key('products-screen'));
-        },
-      );
+      final router = _createRootMappingRouter(initialLocation: route.path);
       addTearDown(router.dispose);
 
       await tester.pumpWidget(_RouterTestApp(router: router));
@@ -360,6 +358,24 @@ void main() {
   });
 }
 
+GoRouter _createRootMappingRouter({required String initialLocation}) {
+  return createAppRouter(
+    initialLocation: initialLocation,
+    dashboardBuilder: (_, _) {
+      return const Scaffold(key: Key('dashboard-screen'));
+    },
+    productsBuilder: (_, _) {
+      return const Scaffold(key: Key('products-screen'));
+    },
+    historyBuilder: (_, _) {
+      return const Scaffold(key: Key('history-screen'));
+    },
+    settingsBuilder: (_, _) {
+      return const Scaffold(key: Key('settings-screen'));
+    },
+  );
+}
+
 Finder _navigationLabel(String label) {
   return find.descendant(
     of: find.byType(NavigationBar),
@@ -374,7 +390,20 @@ final class _RouterTestApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return MaterialApp.router(routerConfig: router);
+    return ProviderScope(
+      overrides: [
+        dashboardSummaryProvider.overrideWith((ref) {
+          return Stream.value(
+            const DashboardSummary(
+              totalActiveProducts: 1,
+              lowStockProducts: 0,
+              stockChangesToday: 0,
+            ),
+          );
+        }),
+      ],
+      child: MaterialApp.router(routerConfig: router),
+    );
   }
 }
 

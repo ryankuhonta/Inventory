@@ -15,6 +15,8 @@ import 'package:tindatrack/core/errors/app_failure.dart';
 import 'package:tindatrack/core/errors/result.dart';
 import 'package:tindatrack/core/widgets/app_error_view.dart';
 import 'package:tindatrack/core/widgets/app_loading_view.dart';
+import 'package:tindatrack/features/dashboard/domain/entities/dashboard_summary.dart';
+import 'package:tindatrack/features/dashboard/presentation/providers/dashboard_providers.dart';
 import 'package:tindatrack/features/history/presentation/providers/movement_history_providers.dart';
 import 'package:tindatrack/features/products/presentation/providers/product_providers.dart';
 
@@ -49,14 +51,18 @@ void main() {
           bootstrapProvider.overrideWith(
             (ref) async => const Success<void>(null),
           ),
+          dashboardSummaryProvider.overrideWith(
+            (ref) => _dashboardSummaryStream(),
+          ),
         ],
         child: const MainApp(),
       ),
     );
     await tester.pump();
+    await tester.pump();
 
     expect(find.byKey(const Key('dashboard-screen')), findsOneWidget);
-    expect(find.text('Offline inventory tracker'), findsOneWidget);
+    expect(find.text('Inventory Today'), findsOneWidget);
     expect(find.byType(CircularProgressIndicator), findsNothing);
     expect(find.byType(NavigationBar), findsOneWidget);
     expect(
@@ -117,6 +123,9 @@ void main() {
             }
             return retryCompleter.future;
           }),
+          dashboardSummaryProvider.overrideWith(
+            (ref) => _dashboardSummaryStream(),
+          ),
         ],
         child: const MainApp(),
       ),
@@ -133,6 +142,7 @@ void main() {
     expect(find.byType(CircularProgressIndicator), findsOneWidget);
 
     retryCompleter.complete(const Success<void>(null));
+    await tester.pump();
     await tester.pump();
 
     expect(find.byKey(const Key('dashboard-screen')), findsOneWidget);
@@ -186,6 +196,9 @@ void main() {
                   : _ReadyDatabase.new,
             );
           }),
+          dashboardSummaryProvider.overrideWith(
+            (ref) => _dashboardSummaryStream(),
+          ),
         ],
         child: const MainApp(),
       ),
@@ -240,6 +253,9 @@ void main() {
             await ref.read(databaseProvider).ensureReady();
             return const Success<void>(null);
           }),
+          dashboardSummaryProvider.overrideWith(
+            (ref) => _dashboardSummaryStream(),
+          ),
           activeProductsProvider.overrideWith(
             (ref) => Stream.value(const []),
           ),
@@ -297,6 +313,9 @@ void main() {
               await ref.read(databaseProvider).ensureReady();
               return const Success<void>(null);
             }),
+            dashboardSummaryProvider.overrideWith(
+              (ref) => _dashboardSummaryStream(),
+            ),
             activeProductsProvider.overrideWith(
               (ref) => Stream.value(const []),
             ),
@@ -365,6 +384,9 @@ void main() {
           bootstrapProvider.overrideWith(
             (ref) async => const Success<void>(null),
           ),
+          dashboardSummaryProvider.overrideWith(
+            (ref) => _dashboardSummaryStream(),
+          ),
         ],
         child: const MainApp(),
       ),
@@ -408,6 +430,9 @@ void main() {
           bootstrapProvider.overrideWith(
             (ref) async => const Success<void>(null),
           ),
+          dashboardSummaryProvider.overrideWith(
+            (ref) => _dashboardSummaryStream(),
+          ),
           activeProductsProvider.overrideWith(
             (ref) => Stream.value(const []),
           ),
@@ -439,6 +464,16 @@ Finder _navigationLabel(String label) {
   return find.descendant(
     of: find.byType(NavigationBar),
     matching: find.text(label),
+  );
+}
+
+Stream<DashboardSummary> _dashboardSummaryStream() {
+  return Stream.value(
+    const DashboardSummary(
+      totalActiveProducts: 3,
+      lowStockProducts: 1,
+      stockChangesToday: 2,
+    ),
   );
 }
 

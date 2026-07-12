@@ -74,7 +74,7 @@ development_status:
 
   epic-4: in-progress
   4-1-create-dashboard-summary-queries: done
-  4-2-build-dashboard-screen-with-summary-cards: backlog
+  4-2-build-dashboard-screen-with-summary-cards: review
   4-3-show-low-stock-preview-on-dashboard: backlog
   4-4-navigate-from-dashboard-to-low-stock-product-list: backlog
   4-5-show-recent-activity-preview: backlog
