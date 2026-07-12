@@ -4,7 +4,7 @@ baseline_commit: 1970740
 
 # Story 4.2: Build Dashboard Screen With Summary Cards
 
-Status: review
+Status: done
 
 ## Story
 
@@ -173,7 +173,8 @@ Codex GPT-5
 - Replaced the placeholder Dashboard branch with a Riverpod-backed summary screen consuming `dashboardSummaryProvider` only.
 - Added summary cards for Total Products, Low Stock, and Stock Changes Today, including a non-color-only warning treatment when low-stock count is non-zero.
 - Added friendly loading, error/retry, and first-product empty states without exposing raw exception or database details.
-- Added focused Dashboard screen widget coverage and updated app/root test harnesses to provide deterministic Dashboard summary data now that Dashboard is no longer static.\n- Addressed review findings by showing cards when any visible summary count is non-zero, making zero-low-stock treatment neutral, using approved warning color tokens, and guarding card text overflow.
+- Added focused Dashboard screen widget coverage and updated app/root test harnesses to provide deterministic Dashboard summary data now that Dashboard is no longer static.
+- Addressed review findings by showing cards when any visible summary count is non-zero, making zero-low-stock treatment neutral, using approved warning color tokens, and guarding card text overflow.
 
 ### File List
 
@@ -188,4 +189,6 @@ Codex GPT-5
 
 ### Change Log
 
-- 2026-07-12: Implemented Dashboard summary cards and marked Story 4.2 ready for review.\n- 2026-07-12: Applied Story 4.2 review fixes for neutral low-stock state and zero-product activity summaries.
+- 2026-07-12: Implemented Dashboard summary cards and marked Story 4.2 ready for review.
+- 2026-07-12: Applied Story 4.2 review fixes for neutral low-stock state and zero-product activity summaries.
+- 2026-07-13: Finalized Story 4.2 review and marked the story done.
