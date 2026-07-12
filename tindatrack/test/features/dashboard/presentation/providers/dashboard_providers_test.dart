@@ -49,6 +49,50 @@ void main() {
     expect(summary.stockChangesToday, 0);
   });
 
+  test('dashboard low-stock preview provider uses app database', () async {
+    final database = AppDatabase(NativeDatabase.memory());
+    final productsDao = ProductsDao(database);
+    await productsDao.insertProduct(
+      ProductsCompanion.insert(
+        id: 'low-1',
+        name: 'Rice',
+        unit: 'kg',
+        sellingPrice: 10,
+        quantity: 1,
+        lowStockThreshold: 2,
+        createdAt: DateTime.utc(2026, 7),
+        updatedAt: DateTime.utc(2026, 7),
+      ),
+    );
+    final container = ProviderContainer.test(
+      overrides: [
+        databaseProvider.overrideWithValue(database),
+        clockProvider.overrideWithValue(_FixedClock(DateTime(2026, 7, 11, 9))),
+      ],
+    );
+    addTearDown(() async {
+      container.dispose();
+      await database.close();
+    });
+
+    final subscription = container.listen(
+      dashboardLowStockPreviewProvider,
+      (_, _) {},
+      fireImmediately: true,
+    );
+    addTearDown(subscription.close);
+
+    final preview = await container.read(
+      dashboardLowStockPreviewProvider.future,
+    );
+
+    expect(preview, hasLength(1));
+    expect(preview.single.name, 'Rice');
+    expect(preview.single.quantity, 1);
+    expect(preview.single.unit, 'kg');
+    expect(preview.single.status.name, 'lowStock');
+  });
+
   test('dashboard summary provider refreshes after local midnight', () async {
     final database = AppDatabase(NativeDatabase.memory());
     final productsDao = ProductsDao(database);

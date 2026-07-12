@@ -69,7 +69,6 @@ void main() {
       'archived-low',
       'Archived Low',
       quantity: 0,
-      threshold: 5,
       archived: true,
     );
 
@@ -143,6 +142,75 @@ void main() {
       expect(movementInsideLocalDay.day, isNot(localNow.toUtc().day));
     },
   );
+
+  test(
+    'low-stock preview includes attention rows, excludes others, '
+    'and limits output',
+    () async {
+      await _insertProduct(
+        productsDao,
+        'out-z',
+        'Zesto',
+        quantity: 0,
+        threshold: 5,
+      );
+      await _insertProduct(
+        productsDao,
+        'out-a',
+        'Apple Juice',
+        quantity: 0,
+        threshold: 2,
+      );
+      await _insertProduct(
+        productsDao,
+        'low-a',
+        'Bread',
+        quantity: 2,
+        threshold: 3,
+      );
+      await _insertProduct(
+        productsDao,
+        'low-b',
+        'Coffee',
+        quantity: 1,
+      );
+      await _insertProduct(
+        productsDao,
+        'ok',
+        'Rice',
+        quantity: 10,
+        threshold: 2,
+      );
+      await _insertProduct(
+        productsDao,
+        'archived-low',
+        'Hidden',
+        quantity: 0,
+        threshold: 5,
+        archived: true,
+      );
+
+      final preview = await repository.watchLowStockPreview().first;
+
+      expect(
+        preview.map((item) => item.id),
+        ['out-a', 'out-z', 'low-a'],
+      );
+      expect(preview.map((item) => item.name), [
+        'Apple Juice',
+        'Zesto',
+        'Bread',
+      ]);
+      expect(preview.map((item) => item.quantity), [0, 0, 2]);
+      expect(preview.map((item) => item.unit), ['pcs', 'pcs', 'pcs']);
+      expect(preview.map((item) => item.status.name), [
+        'outOfStock',
+        'outOfStock',
+        'lowStock',
+      ]);
+    },
+  );
+
   test('summary stream re-emits from focused table watches', () async {
     final localNow = DateTime(2026, 7, 11, 9);
     final stream = repository.watchSummary(localNow: localNow);

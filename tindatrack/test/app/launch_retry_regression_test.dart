@@ -10,6 +10,7 @@ import 'package:tindatrack/app/providers.dart';
 import 'package:tindatrack/core/database/app_database.dart';
 import 'package:tindatrack/core/errors/app_failure.dart';
 import 'package:tindatrack/core/errors/result.dart';
+import 'package:tindatrack/features/dashboard/domain/entities/dashboard_low_stock_preview_item.dart';
 import 'package:tindatrack/features/dashboard/domain/entities/dashboard_summary.dart';
 import 'package:tindatrack/features/dashboard/presentation/providers/dashboard_providers.dart';
 
@@ -133,6 +134,9 @@ void main() {
               ),
             );
           }),
+          dashboardLowStockPreviewProvider.overrideWith(
+            (ref) => _emptyLowStockPreviewStream(),
+          ),
         ],
         child: const MainApp(),
       ),
@@ -188,4 +192,8 @@ FilledButton _retryButton(WidgetTester tester) {
 
 final class _TestDatabase extends AppDatabase {
   _TestDatabase() : super(NativeDatabase.memory());
+}
+
+Stream<List<DashboardLowStockPreviewItem>> _emptyLowStockPreviewStream() {
+  return Stream.value(const <DashboardLowStockPreviewItem>[]);
 }

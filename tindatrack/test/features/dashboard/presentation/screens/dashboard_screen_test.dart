@@ -2,10 +2,12 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:tindatrack/app/theme/app_theme.dart';
+import 'package:tindatrack/features/dashboard/domain/entities/dashboard_low_stock_preview_item.dart';
 import 'package:tindatrack/features/dashboard/domain/entities/dashboard_summary.dart';
 import 'package:tindatrack/features/dashboard/domain/repositories/dashboard_repository.dart';
 import 'package:tindatrack/features/dashboard/presentation/providers/dashboard_providers.dart';
 import 'package:tindatrack/features/dashboard/presentation/screens/dashboard_screen.dart';
+import 'package:tindatrack/features/products/domain/entities/product_stock_status.dart';
 
 void main() {
   testWidgets('renders inventory summary cards from provider data', (
@@ -14,7 +16,7 @@ void main() {
     await _pumpDashboard(
       tester,
       repository: _DashboardRepository(
-        stream: Stream.value(
+        summaryStream: Stream.value(
           const DashboardSummary(
             totalActiveProducts: 12,
             lowStockProducts: 3,
@@ -52,7 +54,7 @@ void main() {
     await _pumpDashboard(
       tester,
       repository: _DashboardRepository(
-        stream: Stream.value(
+        summaryStream: Stream.value(
           const DashboardSummary(
             totalActiveProducts: 4,
             lowStockProducts: 0,
@@ -89,7 +91,7 @@ void main() {
       await _pumpDashboard(
         tester,
         repository: _DashboardRepository(
-          stream: Stream.value(
+          summaryStream: Stream.value(
             const DashboardSummary(
               totalActiveProducts: 0,
               lowStockProducts: 0,
@@ -108,6 +110,112 @@ void main() {
     },
   );
 
+  testWidgets('renders low-stock preview rows below summary cards', (
+    tester,
+  ) async {
+    await _pumpDashboard(
+      tester,
+      repository: _DashboardRepository(
+        summaryStream: Stream.value(
+          const DashboardSummary(
+            totalActiveProducts: 4,
+            lowStockProducts: 2,
+            stockChangesToday: 1,
+          ),
+        ),
+        previewStream: Stream.value(const [
+          DashboardLowStockPreviewItem(
+            id: 'out-1',
+            name: 'Sardines',
+            quantity: 0,
+            unit: 'cans',
+            status: ProductStockStatus.outOfStock,
+          ),
+          DashboardLowStockPreviewItem(
+            id: 'low-1',
+            name: 'Rice',
+            quantity: 2,
+            unit: 'kg',
+            status: ProductStockStatus.lowStock,
+          ),
+        ]),
+      ),
+    );
+
+    expect(
+      find.byKey(const Key('dashboard-low-stock-preview-section')),
+      findsOneWidget,
+    );
+    expect(find.text('Needs Restocking'), findsOneWidget);
+    expect(find.text('Sardines'), findsOneWidget);
+    expect(find.text('0 cans'), findsOneWidget);
+    expect(find.text('Rice'), findsOneWidget);
+    expect(find.text('2 kg'), findsOneWidget);
+    expect(find.text('Out of Stock'), findsOneWidget);
+    expect(find.text('Low Stock'), findsWidgets);
+  });
+
+  testWidgets('shows calm copy when low-stock preview is empty', (
+    tester,
+  ) async {
+    await _pumpDashboard(
+      tester,
+      repository: _DashboardRepository(
+        summaryStream: Stream.value(
+          const DashboardSummary(
+            totalActiveProducts: 4,
+            lowStockProducts: 0,
+            stockChangesToday: 2,
+          ),
+        ),
+      ),
+    );
+
+    expect(
+      find.byKey(const Key('dashboard-low-stock-preview-empty')),
+      findsOneWidget,
+    );
+    expect(
+      find.text('No products need restocking right now.'),
+      findsOneWidget,
+    );
+    expect(find.text('Needs attention'), findsNothing);
+  });
+
+  testWidgets(
+    'shows friendly low-stock preview error without raw diagnostics',
+    (
+      tester,
+    ) async {
+      await _pumpDashboard(
+        tester,
+        repository: _DashboardRepository(
+          summaryStream: Stream.value(
+            const DashboardSummary(
+              totalActiveProducts: 4,
+              lowStockProducts: 1,
+              stockChangesToday: 2,
+            ),
+          ),
+          previewStream: Stream<List<DashboardLowStockPreviewItem>>.error(
+            Exception('PRIVATE_SQL_FAILURE'),
+          ),
+        ),
+      );
+      await tester.pump();
+
+      expect(
+        find.byKey(const Key('dashboard-low-stock-preview-error')),
+        findsOneWidget,
+      );
+      expect(
+        find.text("We couldn't load products that need restocking."),
+        findsOneWidget,
+      );
+      expect(find.textContaining('PRIVATE_SQL_FAILURE'), findsNothing);
+    },
+  );
+
   testWidgets('shows a lightweight loading state on a small screen', (
     tester,
   ) async {
@@ -119,7 +227,7 @@ void main() {
 
     await _pumpDashboard(
       tester,
-      repository: const _DashboardRepository(stream: Stream.empty()),
+      repository: const _DashboardRepository(summaryStream: Stream.empty()),
       settle: false,
     );
     await tester.pump();
@@ -135,7 +243,7 @@ void main() {
     await _pumpDashboard(
       tester,
       repository: _DashboardRepository(
-        stream: Stream<DashboardSummary>.error(
+        summaryStream: Stream<DashboardSummary>.error(
           Exception('PRIVATE_SQL_FAILURE'),
         ),
       ),
@@ -156,7 +264,7 @@ void main() {
     await _pumpDashboard(
       tester,
       repository: _DashboardRepository(
-        stream: Stream.value(
+        summaryStream: Stream.value(
           const DashboardSummary(
             totalActiveProducts: 0,
             lowStockProducts: 0,
@@ -169,6 +277,10 @@ void main() {
     expect(find.byKey(const Key('dashboard-empty-state')), findsOneWidget);
     expect(find.text('No products yet'), findsOneWidget);
     expect(find.text('Add your first product'), findsOneWidget);
+    expect(
+      find.byKey(const Key('dashboard-low-stock-preview-section')),
+      findsNothing,
+    );
     expect(find.textContaining('login'), findsNothing);
     expect(find.textContaining('cloud'), findsNothing);
   });
@@ -194,10 +306,23 @@ Future<void> _pumpDashboard(
 }
 
 final class _DashboardRepository implements DashboardRepository {
-  const _DashboardRepository({required this.stream});
+  const _DashboardRepository({
+    required this.summaryStream,
+    this.previewStream,
+  });
 
-  final Stream<DashboardSummary> stream;
+  final Stream<DashboardSummary> summaryStream;
+  final Stream<List<DashboardLowStockPreviewItem>>? previewStream;
 
   @override
-  Stream<DashboardSummary> watchSummary({required DateTime localNow}) => stream;
+  Stream<DashboardSummary> watchSummary({required DateTime localNow}) {
+    return summaryStream;
+  }
+
+  @override
+  Stream<List<DashboardLowStockPreviewItem>> watchLowStockPreview({
+    int limit = dashboardLowStockPreviewLimit,
+  }) {
+    return previewStream ?? Stream.value(const []);
+  }
 }

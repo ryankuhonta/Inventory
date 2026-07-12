@@ -3,6 +3,7 @@ import 'dart:async';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:tindatrack/app/providers.dart';
 import 'package:tindatrack/features/dashboard/data/repositories/drift_dashboard_repository.dart';
+import 'package:tindatrack/features/dashboard/domain/entities/dashboard_low_stock_preview_item.dart';
 import 'package:tindatrack/features/dashboard/domain/entities/dashboard_summary.dart';
 import 'package:tindatrack/features/dashboard/domain/repositories/dashboard_repository.dart';
 
@@ -29,3 +30,9 @@ final dashboardSummaryProvider = StreamProvider<DashboardSummary>((ref) {
       .watch(dashboardRepositoryProvider)
       .watchSummary(localNow: localNow);
 });
+
+/// Compact active products that need restocking on the Dashboard.
+final dashboardLowStockPreviewProvider =
+    StreamProvider<List<DashboardLowStockPreviewItem>>((ref) {
+      return ref.watch(dashboardRepositoryProvider).watchLowStockPreview();
+    });
