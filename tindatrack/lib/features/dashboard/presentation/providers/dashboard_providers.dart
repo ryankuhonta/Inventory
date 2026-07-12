@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:tindatrack/app/providers.dart';
 import 'package:tindatrack/features/dashboard/data/repositories/drift_dashboard_repository.dart';
@@ -10,8 +12,20 @@ final dashboardRepositoryProvider = Provider<DashboardRepository>(
 );
 
 /// Live summary counts for the Dashboard tab.
-final dashboardSummaryProvider = StreamProvider<DashboardSummary>(
-  (ref) => ref
+final dashboardSummaryProvider = StreamProvider<DashboardSummary>((ref) {
+  final localNow = ref.watch(clockProvider).now().toLocal();
+  final nextLocalMidnight = DateTime(
+    localNow.year,
+    localNow.month,
+    localNow.day + 1,
+  );
+  final refresh = Timer(
+    nextLocalMidnight.difference(localNow),
+    ref.invalidateSelf,
+  );
+  ref.onDispose(refresh.cancel);
+
+  return ref
       .watch(dashboardRepositoryProvider)
-      .watchSummary(localNow: ref.watch(clockProvider).now().toLocal()),
-);
+      .watchSummary(localNow: localNow);
+});

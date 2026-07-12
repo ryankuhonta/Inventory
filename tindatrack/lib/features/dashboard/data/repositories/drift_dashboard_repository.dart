@@ -13,7 +13,7 @@ final class DriftDashboardRepository implements DashboardRepository {
   @override
   Stream<DashboardSummary> watchSummary({required DateTime localNow}) {
     final localStart = DateTime(localNow.year, localNow.month, localNow.day);
-    final localEnd = localStart.add(const Duration(days: 1));
+    final localEnd = DateTime(localNow.year, localNow.month, localNow.day + 1);
     final startUtc = localStart.toUtc();
     final endUtc = localEnd.toUtc();
 

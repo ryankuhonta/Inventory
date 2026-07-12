@@ -81,7 +81,7 @@ void main() {
   test('summary counts stock changes in the current local day', () async {
     final localNow = DateTime(2026, 7, 11, 9);
     final localStart = DateTime(localNow.year, localNow.month, localNow.day);
-    final localEnd = localStart.add(const Duration(days: 1));
+    final localEnd = DateTime(localNow.year, localNow.month, localNow.day + 1);
     await _insertProduct(productsDao, 'product-1', 'Rice');
     await _insertMovement(
       stockMovementsDao,
@@ -109,6 +109,40 @@ void main() {
     expect(summary.stockChangesToday, 2);
   });
 
+  test(
+    'summary uses a local-day window instead of a UTC calendar day',
+    () async {
+      final localNow = DateTime(2026, 7, 11, 9);
+      final localOffset = DateTime(2026, 7, 11).timeZoneOffset;
+      if (localOffset == Duration.zero) {
+        markTestSkipped(
+          'Requires a non-UTC local timezone to prove conversion.',
+        );
+        return;
+      }
+
+      final localStart = DateTime(localNow.year, localNow.month, localNow.day);
+      final localEnd = DateTime(
+        localNow.year,
+        localNow.month,
+        localNow.day + 1,
+      );
+      final movementInsideLocalDay = localOffset.isNegative
+          ? localEnd.subtract(const Duration(minutes: 30)).toUtc()
+          : localStart.add(const Duration(minutes: 30)).toUtc();
+      await _insertProduct(productsDao, 'product-1', 'Rice');
+      await _insertMovement(
+        stockMovementsDao,
+        'inside-local-day-different-utc-day',
+        movementInsideLocalDay,
+      );
+
+      final summary = await repository.watchSummary(localNow: localNow).first;
+
+      expect(summary.stockChangesToday, 1);
+      expect(movementInsideLocalDay.day, isNot(localNow.toUtc().day));
+    },
+  );
   test('summary stream re-emits from focused table watches', () async {
     final localNow = DateTime(2026, 7, 11, 9);
     final stream = repository.watchSummary(localNow: localNow);

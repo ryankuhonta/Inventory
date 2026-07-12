@@ -4,7 +4,7 @@ baseline_commit: b250a8f
 
 # Story 4.1: Create Dashboard Summary Queries
 
-Status: review
+Status: done
 
 ## Story
 
@@ -57,6 +57,14 @@ So that I can quickly understand store status.
   - [x] Run `dart analyze`.
   - [x] Run the full Flutter test suite if focused tests and analyzer pass.
   - [x] Run `git diff --check`.
+
+### Review Findings
+
+- [x] [Review][Patch] Local day end is not DST-safe [tindatrack/lib/features/dashboard/data/repositories/drift_dashboard_repository.dart:15]
+- [x] [Review][Patch] Dashboard summary can stay on yesterday after local midnight [tindatrack/lib/features/dashboard/presentation/providers/dashboard_providers.dart:13]
+- [x] [Review][Patch] Timezone-boundary test mirrors implementation instead of proving non-UTC local-day behavior [tindatrack/test/features/dashboard/data/repositories/drift_dashboard_repository_test.dart:81]
+- [x] [Review][Patch] Story Change Log contains a literal backtick-n artifact [_bmad-output/implementation-artifacts/4-1-create-dashboard-summary-queries.md:150]
+- [x] [Review][Patch] Dev Agent Record is empty despite story being in review [_bmad-output/implementation-artifacts/4-1-create-dashboard-summary-queries.md:135]
 
 ## Dev Notes
 
@@ -140,12 +148,35 @@ So that I can quickly understand store status.
 
 ### Agent Model Used
 
+- Codex GPT-5
+
 ### Debug Log References
+
+- Focused dashboard tests: `flutter test test/features/dashboard` passed from `C:\tmp\tindatrack-story-4-1-review-fixes` with 7 tests.
+- Analyzer: `dart analyze` passed from `C:\tmp\tindatrack-story-4-1-review-fixes`.
+- Full suite: `flutter test` passed from `C:\tmp\tindatrack-story-4-1-review-fixes` with 309 tests.
+- Whitespace check: `git diff --check` passed.
 
 ### Completion Notes List
 
+- Added a read-only dashboard summary boundary with focused aggregate counts over products and stock movements.
+- Added Riverpod providers for Story 4.2 dashboard card consumption.
+- Added repository and provider tests for active-product, low-stock, stock-change, table-watch, local-day, and provider composition behavior.
+- Review fixes: made local day end DST-safe, refreshed dashboard summary after local midnight, strengthened local-day tests, and cleaned story metadata.
+
 ### File List
+
+- `_bmad-output/implementation-artifacts/4-1-create-dashboard-summary-queries.md`
+- `_bmad-output/implementation-artifacts/sprint-status.yaml`
+- `tindatrack/lib/features/dashboard/data/repositories/drift_dashboard_repository.dart`
+- `tindatrack/lib/features/dashboard/domain/entities/dashboard_summary.dart`
+- `tindatrack/lib/features/dashboard/domain/repositories/dashboard_repository.dart`
+- `tindatrack/lib/features/dashboard/presentation/providers/dashboard_providers.dart`
+- `tindatrack/test/features/dashboard/data/repositories/drift_dashboard_repository_test.dart`
+- `tindatrack/test/features/dashboard/presentation/providers/dashboard_providers_test.dart`
 
 ### Change Log
 
-- 2026-07-11: Created Story 4.1 artifact and marked it ready for dev.`n- 2026-07-11: Implemented dashboard summary queries/providers and marked Story 4.1 ready for review.
+- 2026-07-11: Created Story 4.1 artifact and marked it ready for dev.
+- 2026-07-11: Implemented dashboard summary queries/providers and marked Story 4.1 ready for review.
+- 2026-07-12: Applied Story 4.1 code review fixes for local-day boundaries, midnight refresh, test coverage, and story metadata.
