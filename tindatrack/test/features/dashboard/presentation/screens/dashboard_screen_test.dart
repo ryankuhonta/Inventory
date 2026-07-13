@@ -151,8 +151,93 @@ void main() {
     expect(find.text('0 cans'), findsOneWidget);
     expect(find.text('Rice'), findsOneWidget);
     expect(find.text('2 kg'), findsOneWidget);
-    expect(find.text('Out of Stock'), findsOneWidget);
-    expect(find.text('Low Stock'), findsWidgets);
+    expect(
+      find.descendant(
+        of: find.byKey(const Key('dashboard-low-stock-preview-item-out-1')),
+        matching: find.text('Out of Stock'),
+      ),
+      findsOneWidget,
+    );
+    expect(
+      find.descendant(
+        of: find.byKey(const Key('dashboard-low-stock-preview-item-low-1')),
+        matching: find.text('Low Stock'),
+      ),
+      findsOneWidget,
+    );
+  });
+
+  testWidgets('shows preview loading without hiding summary cards', (
+    tester,
+  ) async {
+    await _pumpDashboard(
+      tester,
+      repository: _DashboardRepository(
+        summaryStream: Stream.value(
+          const DashboardSummary(
+            totalActiveProducts: 4,
+            lowStockProducts: 2,
+            stockChangesToday: 1,
+          ),
+        ),
+        previewStream: const Stream<List<DashboardLowStockPreviewItem>>.empty(),
+      ),
+      settle: false,
+    );
+    await tester.pump();
+
+    expect(
+      find.byKey(const Key('dashboard-summary-total-products')),
+      findsOneWidget,
+    );
+    expect(
+      find.byKey(const Key('dashboard-low-stock-preview-loading')),
+      findsOneWidget,
+    );
+  });
+
+  testWidgets('preview rows fit a small phone with enlarged text', (
+    tester,
+  ) async {
+    tester.view
+      ..physicalSize = const Size(360, 640)
+      ..devicePixelRatio = 1;
+    tester.platformDispatcher.textScaleFactorTestValue = 2;
+    addTearDown(tester.view.resetPhysicalSize);
+    addTearDown(tester.view.resetDevicePixelRatio);
+    addTearDown(
+      tester.platformDispatcher.clearTextScaleFactorTestValue,
+    );
+
+    await _pumpDashboard(
+      tester,
+      repository: _DashboardRepository(
+        summaryStream: Stream.value(
+          const DashboardSummary(
+            totalActiveProducts: 4,
+            lowStockProducts: 1,
+            stockChangesToday: 1,
+          ),
+        ),
+        previewStream: Stream.value(const [
+          DashboardLowStockPreviewItem(
+            id: 'long-1',
+            name: 'Very Long Product Name For A Small Store Shelf',
+            quantity: 123456,
+            unit: 'large bundled cartons',
+            status: ProductStockStatus.outOfStock,
+          ),
+        ]),
+      ),
+    );
+
+    final previewItem = find.byKey(
+      const Key('dashboard-low-stock-preview-item-long-1'),
+    );
+    await tester.scrollUntilVisible(previewItem, 120);
+
+    expect(previewItem, findsOneWidget);
+    expect(tester.takeException(), isNull);
   });
 
   testWidgets('shows calm copy when low-stock preview is empty', (

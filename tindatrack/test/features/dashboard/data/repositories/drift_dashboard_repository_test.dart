@@ -211,6 +211,71 @@ void main() {
     },
   );
 
+  test(
+    'low-stock preview clamps custom limits and uses stable tie-breaks',
+    () async {
+      await _insertProduct(
+        productsDao,
+        'out-b',
+        'Same Name',
+        quantity: 0,
+        threshold: 5,
+      );
+      await _insertProduct(
+        productsDao,
+        'out-a',
+        'Same Name',
+        quantity: 0,
+        threshold: 5,
+      );
+      await _insertProduct(
+        productsDao,
+        'low-a',
+        'Bread',
+        quantity: 1,
+        threshold: 2,
+      );
+      await _insertProduct(
+        productsDao,
+        'low-b',
+        'Coffee',
+        quantity: 1,
+        threshold: 2,
+      );
+
+      final limited = await repository.watchLowStockPreview(limit: 2).first;
+      final negative = await repository.watchLowStockPreview(limit: -1).first;
+      final oversized = await repository.watchLowStockPreview(limit: 99).first;
+
+      expect(limited.map((item) => item.id), ['out-a', 'out-b']);
+      expect(negative, isEmpty);
+      expect(oversized, hasLength(3));
+    },
+  );
+
+  test(
+    'low-stock preview stream re-emits from focused table watches',
+    () async {
+      final stream = repository.watchLowStockPreview();
+      final emissions = StreamIterator(stream);
+      addTearDown(emissions.cancel);
+
+      expect(await emissions.moveNext(), isTrue);
+      expect(emissions.current, isEmpty);
+
+      await _insertProduct(
+        productsDao,
+        'low-1',
+        'Rice',
+        quantity: 1,
+        threshold: 2,
+      );
+
+      expect(await emissions.moveNext(), isTrue);
+      expect(emissions.current.map((item) => item.id), ['low-1']);
+    },
+  );
+
   test('summary stream re-emits from focused table watches', () async {
     final localNow = DateTime(2026, 7, 11, 9);
     final stream = repository.watchSummary(localNow: localNow);

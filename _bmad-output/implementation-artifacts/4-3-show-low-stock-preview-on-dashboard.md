@@ -4,7 +4,7 @@ baseline_commit: 595de64
 
 # Story 4.3: Show Low-Stock Preview On Dashboard
 
-Status: review
+Status: done
 
 ## Story
 
@@ -176,6 +176,11 @@ Codex GPT-5
 - Final focused dashboard tests passed from `C:\tmp\tindatrack-story-4-3-full-20260713021104` with 18 tests.
 - Final `dart analyze` passed with no issues from `C:\tmp\tindatrack-story-4-3-verify`.
 - Final full `flutter test` passed from `C:\tmp\tindatrack-story-4-3-full-20260713021104` with 320 tests.
+- Review fix verification passed from `C:\tmp\tindatrack-story-4-3-review-fix-20260713`:
+  - `flutter test test/features/dashboard` passed with 22 tests.
+  - `dart analyze` passed with no issues.
+  - Full `flutter test` passed with 324 tests.
+  - `git diff --check` passed.
 
 ### Completion Notes List
 
@@ -205,3 +210,4 @@ Codex GPT-5
 
 - 2026-07-13: Created Story 4.3 implementation guide and marked it ready for development.
 - 2026-07-13: Implemented Dashboard low-stock preview and marked Story 4.3 ready for review.
+- 2026-07-13: Completed Story 4.3 review fixes and marked story done.

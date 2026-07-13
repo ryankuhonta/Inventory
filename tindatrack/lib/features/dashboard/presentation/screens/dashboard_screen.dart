@@ -19,7 +19,6 @@ class DashboardScreen extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final summary = ref.watch(dashboardSummaryProvider);
-    final lowStockPreview = ref.watch(dashboardLowStockPreviewProvider);
 
     return Scaffold(
       key: const Key('dashboard-screen'),
@@ -27,10 +26,7 @@ class DashboardScreen extends ConsumerWidget {
         child: summary.when(
           data: (value) => _isEmptySummary(value)
               ? const _DashboardEmptyState()
-              : _DashboardContent(
-                  summary: value,
-                  lowStockPreview: lowStockPreview,
-                ),
+              : _DashboardContent(summary: value),
           error: (_, _) => AppErrorView(
             key: const Key('dashboard-error-state'),
             title: 'Dashboard unavailable',
@@ -56,16 +52,13 @@ bool _isEmptySummary(DashboardSummary summary) {
 }
 
 final class _DashboardContent extends ConsumerWidget {
-  const _DashboardContent({
-    required this.summary,
-    required this.lowStockPreview,
-  });
+  const _DashboardContent({required this.summary});
 
   final DashboardSummary summary;
-  final AsyncValue<List<DashboardLowStockPreviewItem>> lowStockPreview;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final lowStockPreview = ref.watch(dashboardLowStockPreviewProvider);
     final spacing = AppSpacing.of(context);
     final theme = Theme.of(context);
 
@@ -259,31 +252,25 @@ final class _LowStockPreviewItem extends StatelessWidget {
         ),
         child: Padding(
           padding: EdgeInsets.all(spacing.md),
-          child: Row(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      item.name,
-                      maxLines: 2,
-                      overflow: TextOverflow.ellipsis,
-                      style: theme.textTheme.titleMedium,
-                    ),
-                    SizedBox(height: spacing.xs),
-                    Text(
-                      quantity,
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                      style: theme.textTheme.bodyMedium?.copyWith(
-                        color: theme.colorScheme.onSurfaceVariant,
-                      ),
-                    ),
-                  ],
+              Text(
+                item.name,
+                maxLines: 2,
+                overflow: TextOverflow.ellipsis,
+                style: theme.textTheme.titleMedium,
+              ),
+              SizedBox(height: spacing.xs),
+              Text(
+                quantity,
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+                style: theme.textTheme.bodyMedium?.copyWith(
+                  color: theme.colorScheme.onSurfaceVariant,
                 ),
               ),
-              SizedBox(width: spacing.sm),
+              SizedBox(height: spacing.sm),
               StockBadge(status: item.status),
             ],
           ),

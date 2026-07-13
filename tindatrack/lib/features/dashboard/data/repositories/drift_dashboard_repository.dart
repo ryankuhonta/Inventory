@@ -16,19 +16,25 @@ final class DriftDashboardRepository implements DashboardRepository {
   Stream<List<DashboardLowStockPreviewItem>> watchLowStockPreview({
     int limit = dashboardLowStockPreviewLimit,
   }) {
+    final effectiveLimit = limit.clamp(0, dashboardLowStockPreviewLimit);
+
     return _database
         .customSelect(
           '''
           SELECT id, name, quantity, unit
           FROM products
           WHERE is_archived = 0
-            AND quantity <= low_stock_threshold
+            AND (
+              quantity = 0
+              OR (quantity > 0 AND quantity <= low_stock_threshold)
+            )
           ORDER BY
             CASE WHEN quantity = 0 THEN 0 ELSE 1 END ASC,
-            name COLLATE NOCASE ASC
+            name COLLATE NOCASE ASC,
+            id ASC
           LIMIT ?
           ''',
-          variables: [Variable<int>(limit)],
+          variables: [Variable<int>(effectiveLimit)],
           readsFrom: {_database.products},
         )
         .watch()
