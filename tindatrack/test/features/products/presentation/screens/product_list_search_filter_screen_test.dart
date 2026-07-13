@@ -94,6 +94,43 @@ void main() {
     );
   });
 
+  testWidgets('preselected Low Stock filter can return to All', (
+    tester,
+  ) async {
+    final container = ProviderContainer.test();
+    addTearDown(container.dispose);
+    container
+        .read(productListControllerProvider.notifier)
+        .stockFilterChanged(ProductStockFilter.lowStock);
+
+    await _pumpScreen(
+      tester,
+      Stream<List<Product>>.value(const <Product>[]),
+      container: container,
+    );
+
+    expect(
+      tester
+          .widget<ChoiceChip>(find.widgetWithText(ChoiceChip, 'Low Stock'))
+          .selected,
+      isTrue,
+    );
+
+    await tester.tap(find.widgetWithText(ChoiceChip, 'All'));
+    await tester.pump();
+
+    expect(
+      container.read(productListControllerProvider).stockFilter,
+      ProductStockFilter.all,
+    );
+    expect(
+      tester
+          .widget<ChoiceChip>(find.widgetWithText(ChoiceChip, 'All'))
+          .selected,
+      isTrue,
+    );
+  });
+
   testWidgets('safe error keeps controls, retry, and FAB', (tester) async {
     await _pumpScreen(
       tester,

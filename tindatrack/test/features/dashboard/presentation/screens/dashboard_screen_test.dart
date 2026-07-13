@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:go_router/go_router.dart';
+import 'package:tindatrack/app/router/app_routes.dart';
 import 'package:tindatrack/app/theme/app_theme.dart';
 import 'package:tindatrack/features/dashboard/domain/entities/dashboard_low_stock_preview_item.dart';
 import 'package:tindatrack/features/dashboard/domain/entities/dashboard_summary.dart';
@@ -8,6 +10,7 @@ import 'package:tindatrack/features/dashboard/domain/repositories/dashboard_repo
 import 'package:tindatrack/features/dashboard/presentation/providers/dashboard_providers.dart';
 import 'package:tindatrack/features/dashboard/presentation/screens/dashboard_screen.dart';
 import 'package:tindatrack/features/products/domain/entities/product_stock_status.dart';
+import 'package:tindatrack/features/products/presentation/controllers/product_list_controller.dart';
 
 void main() {
   testWidgets('renders inventory summary cards from provider data', (
@@ -165,6 +168,38 @@ void main() {
       ),
       findsOneWidget,
     );
+  });
+
+  testWidgets('navigates to Products with Low Stock selected', (
+    tester,
+  ) async {
+    await _pumpDashboardRouter(
+      tester,
+      repository: _DashboardRepository(
+        summaryStream: Stream.value(
+          const DashboardSummary(
+            totalActiveProducts: 4,
+            lowStockProducts: 2,
+            stockChangesToday: 1,
+          ),
+        ),
+        previewStream: Stream.value(const [
+          DashboardLowStockPreviewItem(
+            id: 'low-1',
+            name: 'Rice',
+            quantity: 2,
+            unit: 'kg',
+            status: ProductStockStatus.lowStock,
+          ),
+        ]),
+      ),
+    );
+
+    await tester.tap(find.byKey(const Key('dashboard-view-low-stock-action')));
+    await tester.pumpAndSettle();
+
+    expect(find.byKey(const Key('products-route-test-screen')), findsOneWidget);
+    expect(find.text('filter: lowStock'), findsOneWidget);
   });
 
   testWidgets('shows preview loading without hiding summary cards', (
@@ -366,9 +401,54 @@ void main() {
       find.byKey(const Key('dashboard-low-stock-preview-section')),
       findsNothing,
     );
+    expect(
+      find.byKey(const Key('dashboard-view-low-stock-action')),
+      findsNothing,
+    );
     expect(find.textContaining('login'), findsNothing);
     expect(find.textContaining('cloud'), findsNothing);
   });
+}
+
+Future<void> _pumpDashboardRouter(
+  WidgetTester tester, {
+  required DashboardRepository repository,
+}) async {
+  final router = GoRouter(
+    initialLocation: AppRoute.dashboard.path,
+    routes: [
+      GoRoute(
+        path: AppRoute.dashboard.path,
+        builder: (_, _) => const DashboardScreen(),
+      ),
+      GoRoute(
+        path: AppRoute.products.path,
+        builder: (_, _) => Consumer(
+          builder: (context, ref, child) {
+            final query = ref.watch(productListControllerProvider);
+            return Scaffold(
+              key: const Key('products-route-test-screen'),
+              body: Text('filter: ${query.stockFilter.name}'),
+            );
+          },
+        ),
+      ),
+    ],
+  );
+  addTearDown(router.dispose);
+
+  await tester.pumpWidget(
+    ProviderScope(
+      overrides: [
+        dashboardRepositoryProvider.overrideWithValue(repository),
+      ],
+      child: MaterialApp.router(
+        theme: AppTheme.light,
+        routerConfig: router,
+      ),
+    ),
+  );
+  await tester.pumpAndSettle();
 }
 
 Future<void> _pumpDashboard(

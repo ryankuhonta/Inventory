@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
+import 'package:tindatrack/app/router/app_routes.dart';
 import 'package:tindatrack/app/theme/app_colors.dart';
 import 'package:tindatrack/core/ui/app_dimensions.dart';
 import 'package:tindatrack/core/ui/app_spacing.dart';
@@ -9,6 +11,8 @@ import 'package:tindatrack/core/widgets/app_loading_view.dart';
 import 'package:tindatrack/features/dashboard/domain/entities/dashboard_low_stock_preview_item.dart';
 import 'package:tindatrack/features/dashboard/domain/entities/dashboard_summary.dart';
 import 'package:tindatrack/features/dashboard/presentation/providers/dashboard_providers.dart';
+import 'package:tindatrack/features/products/domain/entities/product_list_query.dart';
+import 'package:tindatrack/features/products/presentation/controllers/product_list_controller.dart';
 import 'package:tindatrack/features/products/presentation/widgets/stock_badge.dart';
 
 /// Inventory snapshot shown on the Dashboard branch.
@@ -97,6 +101,7 @@ final class _DashboardContent extends ConsumerWidget {
         _LowStockPreviewSection(
           preview: lowStockPreview,
           onRetry: () => ref.invalidate(dashboardLowStockPreviewProvider),
+          onViewLowStock: () => _openLowStockProducts(context, ref),
         ),
       ],
     );
@@ -192,10 +197,12 @@ final class _LowStockPreviewSection extends StatelessWidget {
   const _LowStockPreviewSection({
     required this.preview,
     required this.onRetry,
+    required this.onViewLowStock,
   });
 
   final AsyncValue<List<DashboardLowStockPreviewItem>> preview;
   final VoidCallback onRetry;
+  final VoidCallback onViewLowStock;
 
   @override
   Widget build(BuildContext context) {
@@ -208,6 +215,12 @@ final class _LowStockPreviewSection extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text('Needs Restocking', style: theme.textTheme.titleLarge),
+          SizedBox(height: spacing.xs),
+          TextButton(
+            key: const Key('dashboard-view-low-stock-action'),
+            onPressed: onViewLowStock,
+            child: const Text('View Low Stock'),
+          ),
           SizedBox(height: spacing.sm),
           preview.when(
             data: (items) => items.isEmpty
@@ -374,6 +387,13 @@ final class _DashboardEmptyState extends StatelessWidget {
       ),
     );
   }
+}
+
+void _openLowStockProducts(BuildContext context, WidgetRef ref) {
+  ref
+      .read(productListControllerProvider.notifier)
+      .stockFilterChanged(ProductStockFilter.lowStock);
+  context.go(AppRoute.products.path);
 }
 
 void _noop() {}
