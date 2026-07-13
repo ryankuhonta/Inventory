@@ -60,6 +60,15 @@ so that I know what may need restocking without opening the full list.
   - [x] Run the full Flutter test suite if focused tests and analyzer pass.
   - [x] Run `git diff --check`.
 
+### Review Findings
+
+- [x] [Review][Patch] Clamp dashboard low-stock preview limits so invalid callers cannot return an unbounded list. [`tindatrack/lib/features/dashboard/data/repositories/drift_dashboard_repository.dart`]
+- [x] [Review][Patch] Add a stable product ID tie-breaker to low-stock preview ordering. [`tindatrack/lib/features/dashboard/data/repositories/drift_dashboard_repository.dart`]
+- [x] [Review][Patch] Avoid subscribing to the preview stream before summary content is visible. [`tindatrack/lib/features/dashboard/presentation/screens/dashboard_screen.dart`]
+- [x] [Review][Patch] Harden preview rows against narrow-screen and enlarged-text overflow. [`tindatrack/lib/features/dashboard/presentation/screens/dashboard_screen.dart`]
+- [x] [Review][Patch] Strengthen repository and widget coverage for limits, re-emission, precise badges, inline loading, and small-screen preview layout. [`tindatrack/test/features/dashboard`]
+
+
 ## Dev Notes
 
 ### Source Requirements
