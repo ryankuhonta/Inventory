@@ -4,7 +4,7 @@ baseline_commit: 0097c74
 
 # Story 4.4: Navigate From Dashboard To Low-Stock Product List
 
-Status: review
+Status: done
 
 ## Story
 
@@ -154,6 +154,12 @@ Codex GPT-5
 - `dart analyze` passed with no issues.
 - Full `flutter test` passed with 326 tests.
 - `git diff --check` passed.
+- Review fix aligned the Products Low Stock filter with the Dashboard restocking rule so zero-quantity products are included in the filtered list while Out of Stock remains visually distinct.
+- Review-fix verification ran from `C:\tmp\tindatrack-story-4-4-review-fix-20260717`.
+- `flutter test test/core/database/daos/products_dao_search_filter_test.dart test/features/dashboard/presentation/screens/dashboard_screen_test.dart test/features/products/presentation/screens/product_list_search_filter_screen_test.dart` passed with 26 tests.
+- `dart analyze` passed with no issues.
+- Full `flutter test` passed with 326 tests.
+- `git diff --check` passed.
 
 ### Completion Notes List
 
@@ -163,11 +169,15 @@ Codex GPT-5
 - Preserved the existing Products query/filter pipeline; no new routes, repositories, Drift queries, schema changes, or generated files were added.
 - Product List can still switch from Low Stock back to All.
 - First-product Dashboard empty state continues to hide the low-stock navigation action.
+- Review fix: Products Low Stock now uses the same restocking rule as Dashboard, including zero-quantity products, with Out of Stock still labeled separately.
 
 ### File List
 
 - `_bmad-output/implementation-artifacts/4-4-navigate-from-dashboard-to-low-stock-product-list.md`
 - `_bmad-output/implementation-artifacts/sprint-status.yaml`
+- `tindatrack/lib/core/database/daos/products_dao.dart`
+- `tindatrack/lib/features/products/domain/entities/product_list_query.dart`
+- `tindatrack/test/core/database/daos/products_dao_search_filter_test.dart`
 - `tindatrack/lib/features/dashboard/presentation/screens/dashboard_screen.dart`
 - `tindatrack/test/features/dashboard/presentation/screens/dashboard_screen_test.dart`
 - `tindatrack/test/features/products/presentation/screens/product_list_search_filter_screen_test.dart`
@@ -176,3 +186,4 @@ Codex GPT-5
 
 - 2026-07-13: Created Story 4.4 implementation guide and marked it ready for development.
 - 2026-07-13: Implemented Dashboard-to-Low-Stock Products navigation and marked Story 4.4 ready for review.
+- 2026-07-17: Addressed review finding for Low Stock rule consistency and marked Story 4.4 done.

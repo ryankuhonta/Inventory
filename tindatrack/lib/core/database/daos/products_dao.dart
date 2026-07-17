@@ -9,7 +9,7 @@ enum ProductsStockFilterParameter {
   /// Includes every active product.
   all,
 
-  /// Includes positive quantities at or below their threshold.
+  /// Includes zero quantities and positive quantities at or below threshold.
   lowStock,
 
   /// Includes zero quantities.
@@ -142,10 +142,7 @@ class ProductsDao extends DatabaseAccessor<AppDatabase>
         final stockMatches = switch (parameters.stockFilter) {
           ProductsStockFilterParameter.all => const Constant(true),
           ProductsStockFilterParameter.lowStock =>
-            product.quantity.isBiggerThanValue(0) &
-                product.quantity.isSmallerOrEqual(
-                  product.lowStockThreshold,
-                ),
+            product.quantity.isSmallerOrEqual(product.lowStockThreshold),
           ProductsStockFilterParameter.outOfStock => product.quantity.equals(0),
         };
 

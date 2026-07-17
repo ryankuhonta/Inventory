@@ -76,7 +76,7 @@ development_status:
   4-1-create-dashboard-summary-queries: done
   4-2-build-dashboard-screen-with-summary-cards: done
   4-3-show-low-stock-preview-on-dashboard: done
-  4-4-navigate-from-dashboard-to-low-stock-product-list: review
+  4-4-navigate-from-dashboard-to-low-stock-product-list: done
   4-5-show-recent-activity-preview: backlog
   4-6-protect-dashboard-behavior-with-tests: backlog
   epic-4-retrospective: optional

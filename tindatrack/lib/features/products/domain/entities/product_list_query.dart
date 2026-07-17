@@ -3,7 +3,7 @@ enum ProductStockFilter {
   /// Includes every active product.
   all,
 
-  /// Includes active products with positive quantity at or below threshold.
+  /// Includes active products with zero quantity or quantity at/below threshold.
   lowStock,
 
   /// Includes active products with zero quantity.

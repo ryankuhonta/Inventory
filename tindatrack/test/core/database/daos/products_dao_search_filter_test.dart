@@ -78,7 +78,7 @@ void main() {
     expect(rows, isEmpty);
   });
 
-  test('stock filters are disjoint at every threshold boundary', () async {
+  test('low-stock filter includes all products needing restocking', () async {
     await _insert(dao, '0', 'Zero');
     await _insert(dao, '1', 'Threshold zero positive', quantity: 1);
     await _insert(dao, '2', 'Threshold minus one', quantity: 1, threshold: 2);
@@ -102,7 +102,7 @@ void main() {
 
     expect(
       low.map((row) => row.name),
-      ['Threshold', 'Threshold minus one'],
+      ['Threshold', 'Threshold minus one', 'Zero'],
     );
     expect(out.map((row) => row.name), ['Zero']);
   });
