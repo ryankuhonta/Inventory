@@ -4,7 +4,7 @@ baseline_commit: 33083d4
 
 # Story 4.5: Show Recent Activity Preview
 
-Status: ready-for-dev
+Status: review
 
 ## Story
 
@@ -21,47 +21,47 @@ so that I can quickly verify what changed recently.
 
 ## Tasks / Subtasks
 
-- [ ] Task 1: Add a Dashboard recent activity read model (AC: 1-3)
-  - [ ] Add a compact dashboard domain entity for recent activity rows, likely under `tindatrack/lib/features/dashboard/domain/entities/`.
-  - [ ] Include movement id, movement type, product name snapshot, quantity, unit snapshot, optional note, and UTC created timestamp.
-  - [ ] Keep this read-only; do not introduce product quantity changes, stock movement inserts, schema changes, or generated Drift changes for this story.
-  - [ ] Use the same movement type semantics as `StockMovementType` so labels remain `Stock In` and `Stock Out`.
+- [x] Task 1: Add a Dashboard recent activity read model (AC: 1-3)
+  - [x] Add a compact dashboard domain entity for recent activity rows, likely under `tindatrack/lib/features/dashboard/domain/entities/`.
+  - [x] Include movement id, movement type, product name snapshot, quantity, unit snapshot, optional note, and UTC created timestamp.
+  - [x] Keep this read-only; do not introduce product quantity changes, stock movement inserts, schema changes, or generated Drift changes for this story.
+  - [x] Use the same movement type semantics as `StockMovementType` so labels remain `Stock In` and `Stock Out`.
 
-- [ ] Task 2: Extend the Dashboard repository/provider path (AC: 1-3)
-  - [ ] Add a `dashboardRecentActivityPreviewLimit` constant, recommended value `3`, next to the existing dashboard preview limit constants.
-  - [ ] Add `DashboardRepository.watchRecentActivityPreview({int limit = dashboardRecentActivityPreviewLimit})`.
-  - [ ] Implement the Drift repository query against `stock_movements`, sorted newest first by `created_at DESC, id DESC`, limited to the compact preview size.
-  - [ ] Clamp custom limits like the low-stock preview does so negative limits produce no rows and oversized limits stay capped.
-  - [ ] Map persisted stock movement rows into the dashboard preview entity without exposing Drift rows to widgets.
-  - [ ] Add `dashboardRecentActivityPreviewProvider` in `dashboard_providers.dart`.
+- [x] Task 2: Extend the Dashboard repository/provider path (AC: 1-3)
+  - [x] Add a `dashboardRecentActivityPreviewLimit` constant, recommended value `3`, next to the existing dashboard preview limit constants.
+  - [x] Add `DashboardRepository.watchRecentActivityPreview({int limit = dashboardRecentActivityPreviewLimit})`.
+  - [x] Implement the Drift repository query against `stock_movements`, sorted newest first by `created_at DESC, id DESC`, limited to the compact preview size.
+  - [x] Clamp custom limits like the low-stock preview does so negative limits produce no rows and oversized limits stay capped.
+  - [x] Map persisted stock movement rows into the dashboard preview entity without exposing Drift rows to widgets.
+  - [x] Add `dashboardRecentActivityPreviewProvider` in `dashboard_providers.dart`.
 
-- [ ] Task 3: Render recent activity on Dashboard (AC: 1-3)
-  - [ ] Add a `Recent Activity` section below the existing `Needs Restocking` section.
-  - [ ] Render compact rows with movement type, product name snapshot, signed changed quantity, and local display time.
-  - [ ] Show optional note only as short, bounded preview text; do not let notes dominate or overflow the compact dashboard layout.
-  - [ ] Add friendly empty copy such as `No stock movement yet.` plus guidance that Stock In and Stock Out records will appear there.
-  - [ ] Add lightweight loading and friendly error states that do not hide summary cards or low-stock preview.
-  - [ ] Keep Dashboard empty-first-product behavior unchanged: when total products, low stock, and stock changes today are all zero, the first-product empty state remains the only body content.
+- [x] Task 3: Render recent activity on Dashboard (AC: 1-3)
+  - [x] Add a `Recent Activity` section below the existing `Needs Restocking` section.
+  - [x] Render compact rows with movement type, product name snapshot, signed changed quantity, and local display time.
+  - [x] Show optional note only as short, bounded preview text; do not let notes dominate or overflow the compact dashboard layout.
+  - [x] Add friendly empty copy such as `No stock movement yet.` plus guidance that Stock In and Stock Out records will appear there.
+  - [x] Add lightweight loading and friendly error states that do not hide summary cards or low-stock preview.
+  - [x] Keep Dashboard empty-first-product behavior unchanged: when total products, low stock, and stock changes today are all zero, the first-product empty state remains the only body content.
 
-- [ ] Task 4: Add navigation to History (AC: 4)
-  - [ ] Add a compact `View History` action or make the section header/action tappable with a clear 48dp tap target.
-  - [ ] Navigate with `context.go(AppRoute.history.path)`.
-  - [ ] Do not modify movement data, mark items read, add filters, or add a new route/query parameter contract.
-  - [ ] Preserve bottom navigation behavior and existing History route semantics.
+- [x] Task 4: Add navigation to History (AC: 4)
+  - [x] Add a compact `View History` action or make the section header/action tappable with a clear 48dp tap target.
+  - [x] Navigate with `context.go(AppRoute.history.path)`.
+  - [x] Do not modify movement data, mark items read, add filters, or add a new route/query parameter contract.
+  - [x] Preserve bottom navigation behavior and existing History route semantics.
 
-- [ ] Task 5: Add focused tests (AC: 1-4)
-  - [ ] Add repository tests for recent activity preview ordering, limit clamping, field mapping, optional note mapping, and stream re-emission.
-  - [ ] Add Dashboard widget tests for populated rows, empty copy, loading state, error copy, optional note bounded rendering, and first-product empty-state regression.
-  - [ ] Add a navigation widget/router test proving `View History` opens the History branch/path and performs no stock mutation.
-  - [ ] Include a small-screen/high-text-scale test or extend the existing Dashboard screen test so recent activity rows do not overflow.
-  - [ ] Use provider overrides for widget tests where practical; use in-memory Drift repository tests for query behavior.
+- [x] Task 5: Add focused tests (AC: 1-4)
+  - [x] Add repository tests for recent activity preview ordering, limit clamping, field mapping, optional note mapping, and stream re-emission.
+  - [x] Add Dashboard widget tests for populated rows, empty copy, loading state, error copy, optional note bounded rendering, and first-product empty-state regression.
+  - [x] Add a navigation widget/router test proving `View History` opens the History branch/path and performs no stock mutation.
+  - [x] Include a small-screen/high-text-scale test or extend the existing Dashboard screen test so recent activity rows do not overflow.
+  - [x] Use provider overrides for widget tests where practical; use in-memory Drift repository tests for query behavior.
 
-- [ ] Task 6: Verify Story 4.5 completion (AC: 1-4)
-  - [ ] Run Dart format for touched `lib` and `test` files.
-  - [ ] Run focused dashboard/repository/router tests touched by this story.
-  - [ ] Run `dart analyze`.
-  - [ ] Run the full Flutter test suite if focused tests and analyzer pass.
-  - [ ] Run `git diff --check`.
+- [x] Task 6: Verify Story 4.5 completion (AC: 1-4)
+  - [x] Run Dart format for touched `lib` and `test` files.
+  - [x] Run focused dashboard/repository/router tests touched by this story.
+  - [x] Run `dart analyze`.
+  - [x] Run the full Flutter test suite if focused tests and analyzer pass.
+  - [x] Run `git diff --check`.
 
 ## Dev Notes
 
@@ -168,8 +168,33 @@ Codex GPT-5
 
 ### Debug Log References
 
+- 2026-07-17: Focused tests passed in temp copy `C:\tmp\tindatrack-story-4-5-verify-20260717-5`: dashboard repository/screen 30/30.
+- 2026-07-17: `dart analyze` passed with no issues in temp copy `C:\tmp\tindatrack-story-4-5-verify-20260717-5`.
+- 2026-07-17: `git diff --check` passed from the WSL repo.
+- 2026-07-17: Full Flutter suite initially exposed app-level test lifecycle gaps after Dashboard added the recent-activity stream; app smoke/retry tests now override the new provider deterministically. Full suite passed from clean temp copy `C:\tmp\tindatrack-story-4-5-full-20260717-1`: 336/336 with `flutter test --concurrency=1`.
+
 ### Completion Notes List
 
 - Ultimate context engine analysis completed - comprehensive developer guide created.
+- Added a read-only Dashboard recent activity preview backed by a focused Drift stock movement query; no stock mutation, schema, or generated Drift changes were introduced.
+- Added compact Dashboard UI rows with movement type, product snapshot, signed quantity, local time, bounded optional note, inline loading/empty/error states, and History navigation.
+- Added focused repository and widget coverage for ordering, limit clamping, field/note mapping, stream re-emission, UI states, high text scale, first-product regression, and History navigation.
+- Full Flutter suite now passes from a clean Windows temp copy after app-level tests were updated to override the new Dashboard recent activity provider.
 
 ### File List
+
+- `tindatrack/lib/features/dashboard/domain/entities/dashboard_recent_activity_item.dart`
+- `tindatrack/lib/features/dashboard/domain/repositories/dashboard_repository.dart`
+- `tindatrack/lib/features/dashboard/data/repositories/drift_dashboard_repository.dart`
+- `tindatrack/lib/features/dashboard/presentation/providers/dashboard_providers.dart`
+- `tindatrack/lib/features/dashboard/presentation/screens/dashboard_screen.dart`
+- `tindatrack/test/features/dashboard/data/repositories/drift_dashboard_repository_test.dart`
+- `tindatrack/test/features/dashboard/presentation/screens/dashboard_screen_test.dart`
+- `tindatrack/test/app/launch_retry_regression_test.dart`
+- `tindatrack/test/widget_test.dart`
+- `_bmad-output/implementation-artifacts/sprint-status.yaml`
+- `_bmad-output/implementation-artifacts/4-5-show-recent-activity-preview.md`
+
+### Change Log
+
+- 2026-07-17: Implemented Dashboard recent activity preview, fixed app-level Dashboard provider overrides for lifecycle tests, and completed full-suite verification; story moved to review.

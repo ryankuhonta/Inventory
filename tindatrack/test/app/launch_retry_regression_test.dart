@@ -11,6 +11,7 @@ import 'package:tindatrack/core/database/app_database.dart';
 import 'package:tindatrack/core/errors/app_failure.dart';
 import 'package:tindatrack/core/errors/result.dart';
 import 'package:tindatrack/features/dashboard/domain/entities/dashboard_low_stock_preview_item.dart';
+import 'package:tindatrack/features/dashboard/domain/entities/dashboard_recent_activity_item.dart';
 import 'package:tindatrack/features/dashboard/domain/entities/dashboard_summary.dart';
 import 'package:tindatrack/features/dashboard/presentation/providers/dashboard_providers.dart';
 
@@ -137,6 +138,9 @@ void main() {
           dashboardLowStockPreviewProvider.overrideWith(
             (ref) => _emptyLowStockPreviewStream(),
           ),
+          dashboardRecentActivityPreviewProvider.overrideWith(
+            (ref) => _emptyRecentActivityStream(),
+          ),
         ],
         child: const MainApp(),
       ),
@@ -196,4 +200,8 @@ final class _TestDatabase extends AppDatabase {
 
 Stream<List<DashboardLowStockPreviewItem>> _emptyLowStockPreviewStream() {
   return Stream.value(const <DashboardLowStockPreviewItem>[]);
+}
+
+Stream<List<DashboardRecentActivityItem>> _emptyRecentActivityStream() {
+  return Stream.value(const <DashboardRecentActivityItem>[]);
 }

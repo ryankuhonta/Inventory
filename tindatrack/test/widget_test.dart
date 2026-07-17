@@ -16,6 +16,7 @@ import 'package:tindatrack/core/errors/result.dart';
 import 'package:tindatrack/core/widgets/app_error_view.dart';
 import 'package:tindatrack/core/widgets/app_loading_view.dart';
 import 'package:tindatrack/features/dashboard/domain/entities/dashboard_low_stock_preview_item.dart';
+import 'package:tindatrack/features/dashboard/domain/entities/dashboard_recent_activity_item.dart';
 import 'package:tindatrack/features/dashboard/domain/entities/dashboard_summary.dart';
 import 'package:tindatrack/features/dashboard/presentation/providers/dashboard_providers.dart';
 import 'package:tindatrack/features/history/presentation/providers/movement_history_providers.dart';
@@ -57,6 +58,9 @@ void main() {
           ),
           dashboardLowStockPreviewProvider.overrideWith(
             (ref) => _emptyLowStockPreviewStream(),
+          ),
+          dashboardRecentActivityPreviewProvider.overrideWith(
+            (ref) => _emptyRecentActivityStream(),
           ),
         ],
         child: const MainApp(),
@@ -132,6 +136,9 @@ void main() {
           ),
           dashboardLowStockPreviewProvider.overrideWith(
             (ref) => _emptyLowStockPreviewStream(),
+          ),
+          dashboardRecentActivityPreviewProvider.overrideWith(
+            (ref) => _emptyRecentActivityStream(),
           ),
         ],
         child: const MainApp(),
@@ -209,6 +216,9 @@ void main() {
           dashboardLowStockPreviewProvider.overrideWith(
             (ref) => _emptyLowStockPreviewStream(),
           ),
+          dashboardRecentActivityPreviewProvider.overrideWith(
+            (ref) => _emptyRecentActivityStream(),
+          ),
         ],
         child: const MainApp(),
       ),
@@ -268,6 +278,9 @@ void main() {
           ),
           dashboardLowStockPreviewProvider.overrideWith(
             (ref) => _emptyLowStockPreviewStream(),
+          ),
+          dashboardRecentActivityPreviewProvider.overrideWith(
+            (ref) => _emptyRecentActivityStream(),
           ),
           activeProductsProvider.overrideWith(
             (ref) => Stream.value(const []),
@@ -331,6 +344,9 @@ void main() {
             ),
             dashboardLowStockPreviewProvider.overrideWith(
               (ref) => _emptyLowStockPreviewStream(),
+            ),
+            dashboardRecentActivityPreviewProvider.overrideWith(
+              (ref) => _emptyRecentActivityStream(),
             ),
             activeProductsProvider.overrideWith(
               (ref) => Stream.value(const []),
@@ -406,6 +422,9 @@ void main() {
           dashboardLowStockPreviewProvider.overrideWith(
             (ref) => _emptyLowStockPreviewStream(),
           ),
+          dashboardRecentActivityPreviewProvider.overrideWith(
+            (ref) => _emptyRecentActivityStream(),
+          ),
         ],
         child: const MainApp(),
       ),
@@ -454,6 +473,9 @@ void main() {
           ),
           dashboardLowStockPreviewProvider.overrideWith(
             (ref) => _emptyLowStockPreviewStream(),
+          ),
+          dashboardRecentActivityPreviewProvider.overrideWith(
+            (ref) => _emptyRecentActivityStream(),
           ),
           activeProductsProvider.overrideWith(
             (ref) => Stream.value(const []),
@@ -538,4 +560,8 @@ final class _TrackingDatabase extends AppDatabase {
 
 Stream<List<DashboardLowStockPreviewItem>> _emptyLowStockPreviewStream() {
   return Stream.value(const <DashboardLowStockPreviewItem>[]);
+}
+
+Stream<List<DashboardRecentActivityItem>> _emptyRecentActivityStream() {
+  return Stream.value(const <DashboardRecentActivityItem>[]);
 }

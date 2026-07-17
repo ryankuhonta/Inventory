@@ -1,9 +1,11 @@
 import 'package:drift/drift.dart';
 import 'package:tindatrack/core/database/app_database.dart';
 import 'package:tindatrack/features/dashboard/domain/entities/dashboard_low_stock_preview_item.dart';
+import 'package:tindatrack/features/dashboard/domain/entities/dashboard_recent_activity_item.dart';
 import 'package:tindatrack/features/dashboard/domain/entities/dashboard_summary.dart';
 import 'package:tindatrack/features/dashboard/domain/repositories/dashboard_repository.dart';
 import 'package:tindatrack/features/products/domain/entities/product_stock_status.dart';
+import 'package:tindatrack/features/stock/domain/entities/stock_movement.dart';
 
 /// Drift-backed read model for Dashboard data.
 final class DriftDashboardRepository implements DashboardRepository {
@@ -49,6 +51,52 @@ final class DriftDashboardRepository implements DashboardRepository {
                   status: row.read<int>('quantity') == 0
                       ? ProductStockStatus.outOfStock
                       : ProductStockStatus.lowStock,
+                ),
+              )
+              .toList(growable: false),
+        );
+  }
+
+  @override
+  Stream<List<DashboardRecentActivityItem>> watchRecentActivityPreview({
+    int limit = dashboardRecentActivityPreviewLimit,
+  }) {
+    final effectiveLimit = limit.clamp(0, dashboardRecentActivityPreviewLimit);
+
+    return _database
+        .customSelect(
+          '''
+          SELECT
+            id,
+            type,
+            quantity,
+            product_name_snapshot,
+            unit_snapshot,
+            note,
+            created_at
+          FROM stock_movements
+          ORDER BY created_at DESC, id DESC
+          LIMIT ?
+          ''',
+          variables: [Variable<int>(effectiveLimit)],
+          readsFrom: {_database.stockMovements},
+        )
+        .watch()
+        .map(
+          (rows) => rows
+              .map(
+                (row) => DashboardRecentActivityItem(
+                  id: row.read<String>('id'),
+                  type: StockMovementType.fromPersistedValue(
+                    row.read<String>('type'),
+                  ),
+                  quantity: row.read<int>('quantity'),
+                  productNameSnapshot: row.read<String>(
+                    'product_name_snapshot',
+                  ),
+                  unitSnapshot: row.read<String>('unit_snapshot'),
+                  note: row.readNullable<String>('note'),
+                  createdAt: row.read<DateTime>('created_at').toUtc(),
                 ),
               )
               .toList(growable: false),

@@ -276,6 +276,121 @@ void main() {
     },
   );
 
+  test(
+    'recent activity preview orders newest first and limits output',
+    () async {
+      await _insertProduct(productsDao, 'product-1', 'Rice');
+      final sameInstant = DateTime.utc(2026, 7, 11, 9);
+      await _insertMovement(
+        stockMovementsDao,
+        'old',
+        sameInstant.subtract(const Duration(minutes: 1)),
+      );
+      await _insertMovement(stockMovementsDao, 'tie-a', sameInstant);
+      await _insertMovement(stockMovementsDao, 'tie-b', sameInstant);
+      await _insertMovement(
+        stockMovementsDao,
+        'new',
+        sameInstant.add(const Duration(minutes: 1)),
+      );
+
+      final preview = await repository.watchRecentActivityPreview().first;
+
+      expect(preview.map((item) => item.id), ['new', 'tie-b', 'tie-a']);
+    },
+  );
+
+  test(
+    'recent activity preview clamps custom limits',
+    () async {
+      await _insertProduct(productsDao, 'product-1', 'Rice');
+      final instant = DateTime.utc(2026, 7, 11, 9);
+      await _insertMovement(stockMovementsDao, 'one', instant);
+      await _insertMovement(
+        stockMovementsDao,
+        'two',
+        instant.add(const Duration(minutes: 1)),
+      );
+      await _insertMovement(
+        stockMovementsDao,
+        'three',
+        instant.add(const Duration(minutes: 2)),
+      );
+      await _insertMovement(
+        stockMovementsDao,
+        'four',
+        instant.add(const Duration(minutes: 3)),
+      );
+
+      final limited = await repository
+          .watchRecentActivityPreview(limit: 2)
+          .first;
+      final negative = await repository
+          .watchRecentActivityPreview(limit: -1)
+          .first;
+      final oversized = await repository
+          .watchRecentActivityPreview(limit: 99)
+          .first;
+
+      expect(limited.map((item) => item.id), ['four', 'three']);
+      expect(negative, isEmpty);
+      expect(oversized, hasLength(3));
+    },
+  );
+
+  test(
+    'recent activity preview maps movement fields and optional notes',
+    () async {
+      final createdAt = DateTime.utc(2026, 7, 11, 9, 30);
+      await _insertProduct(productsDao, 'product-1', 'Rice');
+      await _insertMovement(
+        stockMovementsDao,
+        'stock-out-1',
+        createdAt,
+        type: 'stock_out',
+        quantity: 4,
+        previousQuantity: 9,
+        newQuantity: 5,
+        productNameSnapshot: 'Bigas snapshot',
+        unitSnapshot: 'sacks',
+        note: 'Customer order',
+      );
+
+      final preview = await repository.watchRecentActivityPreview().first;
+      final item = preview.single;
+
+      expect(item.id, 'stock-out-1');
+      expect(item.type.name, 'stockOut');
+      expect(item.quantity, 4);
+      expect(item.productNameSnapshot, 'Bigas snapshot');
+      expect(item.unitSnapshot, 'sacks');
+      expect(item.note, 'Customer order');
+      expect(item.createdAt, createdAt);
+    },
+  );
+
+  test(
+    'recent activity preview stream re-emits from movement watches',
+    () async {
+      await _insertProduct(productsDao, 'product-1', 'Rice');
+      final stream = repository.watchRecentActivityPreview();
+      final emissions = StreamIterator(stream);
+      addTearDown(emissions.cancel);
+
+      expect(await emissions.moveNext(), isTrue);
+      expect(emissions.current, isEmpty);
+
+      await _insertMovement(
+        stockMovementsDao,
+        'movement-1',
+        DateTime.utc(2026, 7, 11, 9),
+      );
+
+      expect(await emissions.moveNext(), isTrue);
+      expect(emissions.current.map((item) => item.id), ['movement-1']);
+    },
+  );
+
   test('summary stream re-emits from focused table watches', () async {
     final localNow = DateTime(2026, 7, 11, 9);
     final stream = repository.watchSummary(localNow: localNow);
@@ -319,18 +434,26 @@ Future<void> _insertProduct(
 Future<void> _insertMovement(
   StockMovementsDao dao,
   String id,
-  DateTime createdAt,
-) {
+  DateTime createdAt, {
+  String type = 'stock_in',
+  int quantity = 1,
+  int previousQuantity = 5,
+  int newQuantity = 6,
+  String productNameSnapshot = 'Rice',
+  String unitSnapshot = 'pcs',
+  String? note,
+}) {
   return dao.insertMovement(
     StockMovementsCompanion.insert(
       id: id,
       productId: 'product-1',
-      type: 'stock_in',
-      quantity: 1,
-      previousQuantity: 5,
-      newQuantity: 6,
-      productNameSnapshot: 'Rice',
-      unitSnapshot: 'pcs',
+      type: type,
+      quantity: quantity,
+      previousQuantity: previousQuantity,
+      newQuantity: newQuantity,
+      note: Value(note),
+      productNameSnapshot: productNameSnapshot,
+      unitSnapshot: unitSnapshot,
       createdAt: createdAt,
     ),
   );
