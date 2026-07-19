@@ -4,7 +4,7 @@ baseline_commit: 33083d4
 
 # Story 4.5: Show Recent Activity Preview
 
-Status: review
+Status: done
 
 ## Story
 
@@ -162,11 +162,22 @@ Recent Dashboard work keeps feature code under `lib/features/dashboard`, mirrors
 
 ## Dev Agent Record
 
+### Senior Developer Review
+
+### Review Findings
+
+- [x] [Review][Patch] Recent activity can be hidden behind the first-product empty state [tindatrack/lib/features/dashboard/presentation/screens/dashboard_screen.dart:33] - Fixed by considering loaded recent activity before showing the first-product empty state.
+- [x] [Review][Patch] Navigation test does not prove no stock mutation [tindatrack/test/features/dashboard/presentation/screens/dashboard_screen_test.dart:347] - Fixed by asserting action and row History navigation leave movement preview data unchanged.
+
 ### Agent Model Used
 
 Codex GPT-5
 
 ### Debug Log References
+
+- 2026-07-19: BMad code review found and fixed two Story 4.5 gaps: older recent activity hidden by the all-zero first-product empty state, and missing no-mutation/row-tap navigation coverage.
+- 2026-07-19: Targeted Flutter regressions passed from temp copy `C:\tmp\tindatrack-story-4-5-review-fix`: empty-summary recent activity, View History no-mutation navigation, and row-tap no-mutation navigation.
+- 2026-07-19: `dart analyze` passed with no issues from temp copy `C:\tmp\tindatrack-story-4-5-review-fix\tindatrack`.
 
 - 2026-07-17: Focused tests passed in temp copy `C:\tmp\tindatrack-story-4-5-verify-20260717-5`: dashboard repository/screen 30/30.
 - 2026-07-17: `dart analyze` passed with no issues in temp copy `C:\tmp\tindatrack-story-4-5-verify-20260717-5`.

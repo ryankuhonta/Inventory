@@ -25,14 +25,22 @@ class DashboardScreen extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final summary = ref.watch(dashboardSummaryProvider);
+    final recentActivity = ref.watch(dashboardRecentActivityPreviewProvider);
 
     return Scaffold(
       key: const Key('dashboard-screen'),
       body: SafeArea(
         child: summary.when(
-          data: (value) => _isEmptySummary(value)
+          data: (value) =>
+              _shouldShowFirstProductEmptyState(
+                value,
+                recentActivity,
+              )
               ? const _DashboardEmptyState()
-              : _DashboardContent(summary: value),
+              : _DashboardContent(
+                  summary: value,
+                  recentActivity: recentActivity,
+                ),
           error: (_, _) => AppErrorView(
             key: const Key('dashboard-error-state'),
             title: 'Dashboard unavailable',
@@ -57,15 +65,30 @@ bool _isEmptySummary(DashboardSummary summary) {
       summary.stockChangesToday == 0;
 }
 
+bool _shouldShowFirstProductEmptyState(
+  DashboardSummary summary,
+  AsyncValue<List<DashboardRecentActivityItem>> recentActivity,
+) {
+  if (!_isEmptySummary(summary)) return false;
+
+  return recentActivity.maybeWhen(
+    data: (items) => items.isEmpty,
+    orElse: () => false,
+  );
+}
+
 final class _DashboardContent extends ConsumerWidget {
-  const _DashboardContent({required this.summary});
+  const _DashboardContent({
+    required this.summary,
+    required this.recentActivity,
+  });
 
   final DashboardSummary summary;
+  final AsyncValue<List<DashboardRecentActivityItem>> recentActivity;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final lowStockPreview = ref.watch(dashboardLowStockPreviewProvider);
-    final recentActivity = ref.watch(dashboardRecentActivityPreviewProvider);
     final spacing = AppSpacing.of(context);
     final theme = Theme.of(context);
 

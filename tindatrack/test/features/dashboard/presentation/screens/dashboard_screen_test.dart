@@ -117,6 +117,45 @@ void main() {
     },
   );
 
+  testWidgets(
+    'shows older recent activity when summary is otherwise empty',
+    (tester) async {
+      await _pumpDashboard(
+        tester,
+        repository: _DashboardRepository(
+          summaryStream: Stream.value(
+            const DashboardSummary(
+              totalActiveProducts: 0,
+              lowStockProducts: 0,
+              stockChangesToday: 0,
+            ),
+          ),
+          recentActivityStream: Stream.value([
+            DashboardRecentActivityItem(
+              id: 'older-movement',
+              type: StockMovementType.stockOut,
+              quantity: 1,
+              productNameSnapshot: 'Archived Rice',
+              unitSnapshot: 'kg',
+              createdAt: _activityInstant.subtract(const Duration(days: 1)),
+            ),
+          ]),
+        ),
+      );
+
+      expect(find.byKey(const Key('dashboard-empty-state')), findsNothing);
+      expect(
+        find.byKey(const Key('dashboard-recent-activity-section')),
+        findsOneWidget,
+      );
+      expect(
+        find.byKey(const Key('dashboard-recent-activity-item-older-movement')),
+        findsOneWidget,
+      );
+      expect(find.text('Archived Rice'), findsOneWidget);
+    },
+  );
+
   testWidgets('renders low-stock preview rows below summary cards', (
     tester,
   ) async {
@@ -315,37 +354,93 @@ void main() {
     },
   );
 
-  testWidgets('navigates to History from recent activity action', (
-    tester,
-  ) async {
-    await _pumpDashboardRouter(
-      tester,
-      repository: _DashboardRepository(
-        summaryStream: Stream.value(
-          const DashboardSummary(
-            totalActiveProducts: 4,
-            lowStockProducts: 0,
-            stockChangesToday: 1,
+  testWidgets(
+    'navigates to History without modifying stock movements',
+    (tester) async {
+      final movement = DashboardRecentActivityItem(
+        id: 'movement-1',
+        type: StockMovementType.stockIn,
+        quantity: 5,
+        productNameSnapshot: 'Rice',
+        unitSnapshot: 'kg',
+        createdAt: _activityInstant,
+      );
+      final movements = [movement];
+
+      await _pumpDashboardRouter(
+        tester,
+        repository: _DashboardRepository(
+          summaryStream: Stream.value(
+            const DashboardSummary(
+              totalActiveProducts: 4,
+              lowStockProducts: 0,
+              stockChangesToday: 1,
+            ),
           ),
+          recentActivityStream: Stream.value(movements),
         ),
-        recentActivityStream: Stream.value([
-          DashboardRecentActivityItem(
-            id: 'movement-1',
-            type: StockMovementType.stockIn,
-            quantity: 5,
-            productNameSnapshot: 'Rice',
-            unitSnapshot: 'kg',
-            createdAt: _activityInstant,
+      );
+
+      await tester.tap(find.byKey(const Key('dashboard-view-history-action')));
+      await tester.pumpAndSettle();
+
+      expect(
+        find.byKey(const Key('history-route-test-screen')),
+        findsOneWidget,
+      );
+      expect(movements, hasLength(1));
+      expect(identical(movements.single, movement), isTrue);
+      expect(movement.quantity, 5);
+      expect(movement.createdAt, _activityInstant);
+    },
+  );
+
+  testWidgets(
+    'navigates to History from a recent activity row without modifying '
+    'stock movements',
+    (tester) async {
+      final movement = DashboardRecentActivityItem(
+        id: 'movement-1',
+        type: StockMovementType.stockIn,
+        quantity: 5,
+        productNameSnapshot: 'Rice',
+        unitSnapshot: 'kg',
+        createdAt: _activityInstant,
+      );
+      final movements = [movement];
+
+      await _pumpDashboardRouter(
+        tester,
+        repository: _DashboardRepository(
+          summaryStream: Stream.value(
+            const DashboardSummary(
+              totalActiveProducts: 4,
+              lowStockProducts: 0,
+              stockChangesToday: 1,
+            ),
           ),
-        ]),
-      ),
-    );
+          recentActivityStream: Stream.value(movements),
+        ),
+      );
 
-    await tester.tap(find.byKey(const Key('dashboard-view-history-action')));
-    await tester.pumpAndSettle();
+      final activityItem = find.byKey(
+        const Key('dashboard-recent-activity-item-movement-1'),
+      );
+      await tester.drag(find.byType(ListView), const Offset(0, -320));
+      await tester.pumpAndSettle();
+      await tester.tap(activityItem);
+      await tester.pumpAndSettle();
 
-    expect(find.byKey(const Key('history-route-test-screen')), findsOneWidget);
-  });
+      expect(
+        find.byKey(const Key('history-route-test-screen')),
+        findsOneWidget,
+      );
+      expect(movements, hasLength(1));
+      expect(identical(movements.single, movement), isTrue);
+      expect(movement.quantity, 5);
+      expect(movement.createdAt, _activityInstant);
+    },
+  );
 
   testWidgets('recent activity rows fit a small phone with enlarged text', (
     tester,
