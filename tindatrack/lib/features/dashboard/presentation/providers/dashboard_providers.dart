@@ -8,10 +8,22 @@ import 'package:tindatrack/features/dashboard/domain/entities/dashboard_recent_a
 import 'package:tindatrack/features/dashboard/domain/entities/dashboard_summary.dart';
 import 'package:tindatrack/features/dashboard/domain/repositories/dashboard_repository.dart';
 
+/// Starts the timer that refreshes Dashboard summary at the next local
+/// midnight.
+typedef DashboardSummaryRefreshTimer =
+    Timer Function(
+      Duration duration,
+      void Function() callback,
+    );
+
 /// Read-only dashboard repository composed from the app database.
 final dashboardRepositoryProvider = Provider<DashboardRepository>(
   (ref) => DriftDashboardRepository(ref.watch(databaseProvider)),
 );
+
+/// Timer factory for Dashboard summary refresh scheduling.
+final dashboardSummaryRefreshTimerProvider =
+    Provider<DashboardSummaryRefreshTimer>((ref) => Timer.new);
 
 /// Live summary counts for the Dashboard tab.
 final dashboardSummaryProvider = StreamProvider<DashboardSummary>((ref) {
@@ -21,7 +33,7 @@ final dashboardSummaryProvider = StreamProvider<DashboardSummary>((ref) {
     localNow.month,
     localNow.day + 1,
   );
-  final refresh = Timer(
+  final refresh = ref.watch(dashboardSummaryRefreshTimerProvider)(
     nextLocalMidnight.difference(localNow),
     ref.invalidateSelf,
   );

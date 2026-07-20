@@ -105,10 +105,7 @@ final class DriftDashboardRepository implements DashboardRepository {
 
   @override
   Stream<DashboardSummary> watchSummary({required DateTime localNow}) {
-    final localStart = DateTime(localNow.year, localNow.month, localNow.day);
-    final localEnd = DateTime(localNow.year, localNow.month, localNow.day + 1);
-    final startUtc = localStart.toUtc();
-    final endUtc = localEnd.toUtc();
+    final window = dashboardSummaryUtcWindowForLocalDay(localNow);
 
     return _database
         .customSelect(
@@ -130,8 +127,8 @@ final class DriftDashboardRepository implements DashboardRepository {
             ) AS stock_changes_today
           ''',
           variables: [
-            Variable<DateTime>(startUtc),
-            Variable<DateTime>(endUtc),
+            Variable<DateTime>(window.startUtc),
+            Variable<DateTime>(window.endUtc),
           ],
           readsFrom: {_database.products, _database.stockMovements},
         )
@@ -144,4 +141,29 @@ final class DriftDashboardRepository implements DashboardRepository {
           ),
         );
   }
+}
+
+/// UTC query bounds for one visible local dashboard day.
+({DateTime startUtc, DateTime endUtc}) dashboardSummaryUtcWindowForLocalDay(
+  DateTime localNow, {
+  Duration? localOffset,
+}) {
+  if (localOffset != null) {
+    return (
+      startUtc: DateTime.utc(
+        localNow.year,
+        localNow.month,
+        localNow.day,
+      ).subtract(localOffset),
+      endUtc: DateTime.utc(
+        localNow.year,
+        localNow.month,
+        localNow.day + 1,
+      ).subtract(localOffset),
+    );
+  }
+
+  final localStart = DateTime(localNow.year, localNow.month, localNow.day);
+  final localEnd = DateTime(localNow.year, localNow.month, localNow.day + 1);
+  return (startUtc: localStart.toUtc(), endUtc: localEnd.toUtc());
 }

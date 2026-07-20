@@ -6,7 +6,11 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:tindatrack/core/database/app_database.dart';
 import 'package:tindatrack/core/database/daos/products_dao.dart';
 import 'package:tindatrack/core/database/daos/stock_movements_dao.dart';
+import 'package:tindatrack/core/id/id_generator.dart';
+import 'package:tindatrack/core/time/clock.dart';
 import 'package:tindatrack/features/dashboard/data/repositories/drift_dashboard_repository.dart';
+import 'package:tindatrack/features/products/data/repositories/drift_products_repository.dart';
+import 'package:tindatrack/features/products/domain/entities/product_list_query.dart';
 
 void main() {
   late AppDatabase database;
@@ -107,6 +111,29 @@ void main() {
 
     expect(summary.stockChangesToday, 2);
   });
+
+  test(
+    'summary UTC window can prove shifted local days on any host timezone',
+    () {
+      final window = dashboardSummaryUtcWindowForLocalDay(
+        DateTime(2026, 7, 11, 9),
+        localOffset: const Duration(hours: 8),
+      );
+      final insideLocalDayDifferentUtcDay = DateTime.utc(2026, 7, 10, 16, 30);
+      final beforeLocalDay = DateTime.utc(2026, 7, 10, 15, 59, 59, 999);
+      final endBoundary = DateTime.utc(2026, 7, 11, 16);
+
+      expect(window.startUtc, DateTime.utc(2026, 7, 10, 16));
+      expect(window.endUtc, DateTime.utc(2026, 7, 11, 16));
+      expect(
+        !insideLocalDayDifferentUtcDay.isBefore(window.startUtc) &&
+            insideLocalDayDifferentUtcDay.isBefore(window.endUtc),
+        isTrue,
+      );
+      expect(beforeLocalDay.isBefore(window.startUtc), isTrue);
+      expect(endBoundary.isBefore(window.endUtc), isFalse);
+    },
+  );
 
   test(
     'summary uses a local-day window instead of a UTC calendar day',
@@ -250,6 +277,79 @@ void main() {
       expect(limited.map((item) => item.id), ['out-a', 'out-b']);
       expect(negative, isEmpty);
       expect(oversized, hasLength(3));
+    },
+  );
+
+  test(
+    'dashboard and products low-stock rules stay consistent',
+    () async {
+      final productsRepository = DriftProductsRepository(
+        dao: productsDao,
+        idGenerator: const _UnusedIdGenerator(),
+        clock: const _UnusedClock(),
+      );
+      await _insertProduct(
+        productsDao,
+        'zero',
+        'Zero',
+        quantity: 0,
+        threshold: 0,
+      );
+      await _insertProduct(
+        productsDao,
+        'below',
+        'Below',
+        quantity: 1,
+        threshold: 2,
+      );
+      await _insertProduct(
+        productsDao,
+        'equal',
+        'Equal',
+        quantity: 2,
+        threshold: 2,
+      );
+      await _insertProduct(
+        productsDao,
+        'above',
+        'Above',
+        quantity: 3,
+        threshold: 2,
+      );
+      await _insertProduct(
+        productsDao,
+        'archived-low',
+        'Hidden',
+        quantity: 0,
+        threshold: 5,
+        archived: true,
+      );
+
+      final summary = await repository
+          .watchSummary(localNow: DateTime(2026, 7, 11, 9))
+          .first;
+      final preview = await repository.watchLowStockPreview().first;
+      final products = await productsRepository
+          .watchActiveProducts(
+            ProductListQuery(
+              stockFilter: ProductStockFilter.lowStock,
+            ),
+          )
+          .first;
+
+      expect(summary.lowStockProducts, 3);
+      expect(
+        preview.map((item) => item.id),
+        unorderedEquals(['zero', 'below', 'equal']),
+      );
+      expect(
+        products.map((product) => product.id),
+        unorderedEquals(['zero', 'below', 'equal']),
+      );
+      expect(
+        products.map((product) => product.isArchived),
+        everyElement(isFalse),
+      );
     },
   );
 
@@ -457,4 +557,18 @@ Future<void> _insertMovement(
       createdAt: createdAt,
     ),
   );
+}
+
+final class _UnusedIdGenerator implements IdGenerator {
+  const _UnusedIdGenerator();
+
+  @override
+  String generate() => throw UnimplementedError();
+}
+
+final class _UnusedClock implements Clock {
+  const _UnusedClock();
+
+  @override
+  DateTime now() => throw UnimplementedError();
 }

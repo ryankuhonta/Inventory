@@ -1,6 +1,10 @@
+---
+baseline_commit: 4683c9762797d6a31e8dbc5f9f4f08fe6a973d80
+---
+
 # Story 4.6: Protect Dashboard Behavior With Tests
 
-Status: ready-for-dev
+Status: done
 
 ## Story
 
@@ -18,56 +22,62 @@ so that the dashboard stays accurate as inventory features evolve.
 
 ## Tasks / Subtasks
 
-- [ ] Task 1: Audit existing Dashboard test coverage before adding new tests (AC: 1-5)
-  - [ ] Review `tindatrack/test/features/dashboard/data/repositories/drift_dashboard_repository_test.dart` and list which ACs are already covered.
-  - [ ] Review `tindatrack/test/features/dashboard/presentation/screens/dashboard_screen_test.dart`, `tindatrack/test/widget_test.dart`, and `tindatrack/test/app/launch_retry_regression_test.dart` for existing state, navigation, lifecycle, accessibility, and provider override coverage.
-  - [ ] Avoid duplicating equivalent assertions unless duplication protects a different layer or regression path.
+- [x] Task 1: Audit existing Dashboard test coverage before adding new tests (AC: 1-5)
+  - [x] Review `tindatrack/test/features/dashboard/data/repositories/drift_dashboard_repository_test.dart` and list which ACs are already covered.
+  - [x] Review `tindatrack/test/features/dashboard/presentation/screens/dashboard_screen_test.dart`, `tindatrack/test/widget_test.dart`, and `tindatrack/test/app/launch_retry_regression_test.dart` for existing state, navigation, lifecycle, accessibility, and provider override coverage.
+  - [x] Avoid duplicating equivalent assertions unless duplication protects a different layer or regression path.
 
-- [ ] Task 2: Complete repository and cross-feature data guardrails (AC: 1-3, 5)
-  - [ ] Keep repository tests under `tindatrack/test/features/dashboard/data/repositories/drift_dashboard_repository_test.dart` unless a cross-feature test clearly belongs elsewhere.
-  - [ ] Verify total active product count excludes archived products and counts multiple active rows correctly.
-  - [ ] Verify low-stock count includes active products with quantity below threshold, equal to threshold, and zero quantity; excludes archived rows and above-threshold rows.
-  - [ ] Add a cross-feature low-stock consistency test proving Dashboard summary count, Dashboard preview, and Products low-stock filter apply the same rule for zero, equal-threshold, below-threshold, above-threshold, and archived products.
-  - [ ] Verify Stock Changes Today includes local-day start, excludes just-before-start and exact-end movements, and uses UTC query boundaries derived from a local day.
-  - [ ] Strengthen local-day boundary coverage so it does not silently skip in UTC environments; prefer deterministic constructed DateTime/zone expectations or isolate any environment-dependent assertion with a separate always-running boundary test.
-  - [ ] Preserve existing low-stock preview and recent activity preview tests for ordering, clamping, mapping, and stream re-emission; extend only if a missing acceptance gap remains.
+- [x] Task 2: Complete repository and cross-feature data guardrails (AC: 1-3, 5)
+  - [x] Keep repository tests under `tindatrack/test/features/dashboard/data/repositories/drift_dashboard_repository_test.dart` unless a cross-feature test clearly belongs elsewhere.
+  - [x] Verify total active product count excludes archived products and counts multiple active rows correctly.
+  - [x] Verify low-stock count includes active products with quantity below threshold, equal to threshold, and zero quantity; excludes archived rows and above-threshold rows.
+  - [x] Add a cross-feature low-stock consistency test proving Dashboard summary count, Dashboard preview, and Products low-stock filter apply the same rule for zero, equal-threshold, below-threshold, above-threshold, and archived products.
+  - [x] Verify Stock Changes Today includes local-day start, excludes just-before-start and exact-end movements, and uses UTC query boundaries derived from a local day.
+  - [x] Strengthen local-day boundary coverage so it does not silently skip in UTC environments; prefer deterministic constructed DateTime/zone expectations or isolate any environment-dependent assertion with a separate always-running boundary test.
+  - [x] Preserve existing low-stock preview and recent activity preview tests for ordering, clamping, mapping, and stream re-emission; extend only if a missing acceptance gap remains.
 
-- [ ] Task 3: Protect Dashboard provider composition and time refresh behavior (AC: 1-4)
-  - [ ] Add focused provider tests under `tindatrack/test/features/dashboard/presentation/providers/dashboard_providers_test.dart` if no equivalent file exists.
-  - [ ] Verify `dashboardRecentActivityPreviewProvider` delegates to `DashboardRepository.watchRecentActivityPreview` and emits repository data without touching Drift directly.
-  - [ ] Use the existing `clockProvider` override pattern; do not call `DateTime.now()` directly in tests or production.
-  - [ ] Verify `dashboardSummaryProvider` asks the repository for the current local day and invalidates at the next local midnight, or document why this is already covered and lower-risk than repository boundary tests.
-  - [ ] Avoid real-time sleeps such as `Future.delayed(...)`; use fake clocks, provider invalidation, or fake async patterns where practical.
-  - [ ] Ensure provider tests do not leave live timers or streams that keep Flutter tests hanging.
+- [x] Task 3: Protect Dashboard provider composition and time refresh behavior (AC: 1-4)
+  - [x] Add focused provider tests under `tindatrack/test/features/dashboard/presentation/providers/dashboard_providers_test.dart` if no equivalent file exists.
+  - [x] Verify `dashboardRecentActivityPreviewProvider` delegates to `DashboardRepository.watchRecentActivityPreview` and emits repository data without touching Drift directly.
+  - [x] Use the existing `clockProvider` override pattern; do not call `DateTime.now()` directly in tests or production.
+  - [x] Verify `dashboardSummaryProvider` asks the repository for the current local day and invalidates at the next local midnight, or document why this is already covered and lower-risk than repository boundary tests.
+  - [x] Avoid real-time sleeps such as `Future.delayed(...)`; use fake clocks, provider invalidation, or fake async patterns where practical.
+  - [x] Ensure provider tests do not leave live timers or streams that keep Flutter tests hanging.
 
-- [ ] Task 4: Complete Dashboard widget state and retry guardrails (AC: 4)
-  - [ ] Keep widget tests under `tindatrack/test/features/dashboard/presentation/screens/dashboard_screen_test.dart` unless app-shell behavior belongs in `tindatrack/test/widget_test.dart`.
-  - [ ] Verify summary loading, summary error, all-zero first-product empty state, populated summary cards, low-stock preview states, and recent activity preview states remain user-friendly.
-  - [ ] Verify raw diagnostics such as `PRIVATE_SQL_FAILURE`, Drift messages, or SQL snippets are not visible in dashboard summary, low-stock preview, or recent activity errors.
-  - [ ] Add retry interaction tests for Dashboard summary, low-stock preview, and recent activity preview errors: tap Retry, verify the provider/repository is re-read, and verify friendly copy recovers.
-  - [ ] Add a visible timestamp assertion for recent activity rows so `_formatActivityDateTime(item.createdAt.toLocal())` remains locked by user-visible behavior, not just row presence.
-  - [ ] Preserve the Story 4.5 regression where older recent activity still appears even when summary counts are all zero.
+- [x] Task 4: Complete Dashboard widget state and retry guardrails (AC: 4)
+  - [x] Keep widget tests under `tindatrack/test/features/dashboard/presentation/screens/dashboard_screen_test.dart` unless app-shell behavior belongs in `tindatrack/test/widget_test.dart`.
+  - [x] Verify summary loading, summary error, all-zero first-product empty state, populated summary cards, low-stock preview states, and recent activity preview states remain user-friendly.
+  - [x] Verify raw diagnostics such as `PRIVATE_SQL_FAILURE`, Drift messages, or SQL snippets are not visible in dashboard summary, low-stock preview, or recent activity errors.
+  - [x] Add retry interaction tests for Dashboard summary, low-stock preview, and recent activity preview errors: tap Retry, verify the provider/repository is re-read, and verify friendly copy recovers.
+  - [x] Add a visible timestamp assertion for recent activity rows so `_formatActivityDateTime(item.createdAt.toLocal())` remains locked by user-visible behavior, not just row presence.
+  - [x] Preserve the Story 4.5 regression where older recent activity still appears even when summary counts are all zero.
 
-- [ ] Task 5: Complete Dashboard navigation and offline shell guardrails (AC: 5)
-  - [ ] Verify `View Low Stock` uses `context.go(AppRoute.products.path)` and the existing `ProductStockFilter.lowStock` controller path.
-  - [ ] Verify Products opens with the Low Stock filter visibly selected after Dashboard navigation.
-  - [ ] Add an app-shell regression using the real `createAppRouter`/bottom navigation path, not only the lightweight fake router, so Dashboard -> Products low-stock navigation works in the real shell.
-  - [ ] In the app-shell regression, assert the Products branch is selected and the user can reset the Products filter from Low Stock back to All.
-  - [ ] Verify the navigation test runs entirely with local provider overrides or an in-memory database; it must not require network, login, cloud sync, or a remote API.
-  - [ ] Keep History navigation tests from Story 4.5 intact; do not add new routes or query parameters for Story 4.6.
+- [x] Task 5: Complete Dashboard navigation and offline shell guardrails (AC: 5)
+  - [x] Verify `View Low Stock` uses `context.go(AppRoute.products.path)` and the existing `ProductStockFilter.lowStock` controller path.
+  - [x] Verify Products opens with the Low Stock filter visibly selected after Dashboard navigation.
+  - [x] Add an app-shell regression using the real `createAppRouter`/bottom navigation path, not only the lightweight fake router, so Dashboard -> Products low-stock navigation works in the real shell.
+  - [x] In the app-shell regression, assert the Products branch is selected and the user can reset the Products filter from Low Stock back to All.
+  - [x] Verify the navigation test runs entirely with local provider overrides or an in-memory database; it must not require network, login, cloud sync, or a remote API.
+  - [x] Keep History navigation tests from Story 4.5 intact; do not add new routes or query parameters for Story 4.6.
 
-- [ ] Task 6: Add responsive/accessibility guardrails only where gaps remain (AC: 4-5)
-  - [ ] Preserve small-phone/high-text-scale tests for Dashboard summary, low-stock preview, and recent activity rows.
-  - [ ] Add one populated small-phone/high-text-scale test covering summary cards plus both preview sections together with large counts and long product names.
-  - [ ] Add targeted accessibility assertions for stable user behavior: low-stock row semantics, recent activity row button semantics, loading semantics labels, and `View Low Stock` / `View History` tap targets where not already covered.
-  - [ ] Do not assert brittle exact pixel positions or private widget structure beyond stable keys and user-visible behavior.
+- [x] Task 6: Add responsive/accessibility guardrails only where gaps remain (AC: 4-5)
+  - [x] Preserve small-phone/high-text-scale tests for Dashboard summary, low-stock preview, and recent activity rows.
+  - [x] Add one populated small-phone/high-text-scale test covering summary cards plus both preview sections together with large counts and long product names.
+  - [x] Add targeted accessibility assertions for stable user behavior: low-stock row semantics, recent activity row button semantics, loading semantics labels, and `View Low Stock` / `View History` tap targets where not already covered.
+  - [x] Do not assert brittle exact pixel positions or private widget structure beyond stable keys and user-visible behavior.
 
-- [ ] Task 7: Verify Story 4.6 completion (AC: 1-5)
-  - [ ] Run Dart format for touched test files.
-  - [ ] Run focused Dashboard repository/provider/widget tests.
-  - [ ] Run `dart analyze`.
-  - [ ] Run the full Flutter test suite if focused tests and analyzer pass.
-  - [ ] Run `git diff --check`.
+- [x] Task 7: Verify Story 4.6 completion (AC: 1-5)
+  - [x] Run Dart format for touched test files.
+  - [x] Run focused Dashboard repository/provider/widget tests.
+  - [x] Run `dart analyze`.
+  - [x] Run the full Flutter test suite if focused tests and analyzer pass.
+  - [x] Run `git diff --check`.
+
+### Review Findings
+
+- [x] [Review][Patch] Add non-skipping timezone boundary coverage [tindatrack/test/features/dashboard/data/repositories/drift_dashboard_repository_test.dart:121]
+- [x] [Review][Patch] Replace real-time sleep in midnight refresh provider test [tindatrack/test/features/dashboard/presentation/providers/dashboard_providers_test.dart:194]
+- [x] [Review][Patch] Verify app-shell low-stock navigation drives the products query, not only chip state [tindatrack/test/widget_test.dart:351]
 
 ## Dev Notes
 
@@ -170,12 +180,34 @@ Codex GPT-5
 
 ### Debug Log References
 
+- `C:\src\flutter\bin\flutter.bat test test\features\dashboard\data\repositories\drift_dashboard_repository_test.dart test\features\dashboard\presentation\providers\dashboard_providers_test.dart test\features\dashboard\presentation\screens\dashboard_screen_test.dart test\widget_test.dart` from `C:\tmp\tindatrack-story-4-6`: passed.
+- `C:\src\flutter\bin\cache\dart-sdk\bin\dart.exe analyze` from `C:\tmp\tindatrack-story-4-6`: no issues found.
+- `C:\src\flutter\bin\flutter.bat test` from `C:\tmp\tindatrack-story-4-6`: all 346 tests passed.
+- `git diff --check`: clean.
+
 ### Completion Notes List
 
 - Ultimate context engine analysis completed - comprehensive developer guide created.
+- Audited existing Dashboard repository, provider, widget, launch, and app-shell coverage before adding Story 4.6 tests.
+- Added cross-feature low-stock consistency coverage across Dashboard summary, Dashboard preview, and Products low-stock filtering.
+- Added Dashboard provider composition coverage for recent activity delegation.
+- Retained the existing short midnight-refresh timer test and covered local-day correctness mainly through deterministic repository boundary tests; no new real-time sleeps were added.
+- Added Dashboard widget guardrails for retry recovery, visible recent activity timestamp formatting, accessibility/tap targets, and populated small-phone/high-text-scale layout.
+- Added app-shell Dashboard to Products Low Stock navigation coverage with the real router and branch shell.
+- No dependencies were changed; review fixes added small Dashboard UTC-window and refresh-timer seams to make boundary behavior deterministic under test.
+- Resolved Story 4.6 code review findings with deterministic timezone boundary coverage, manual midnight refresh timer testing, and app-shell Products query verification.
 
 ### File List
+
+- `_bmad-output/implementation-artifacts/4-6-protect-dashboard-behavior-with-tests.md`
+- `_bmad-output/implementation-artifacts/sprint-status.yaml`
+- `tindatrack/test/features/dashboard/data/repositories/drift_dashboard_repository_test.dart`
+- `tindatrack/test/features/dashboard/presentation/providers/dashboard_providers_test.dart`
+- `tindatrack/test/features/dashboard/presentation/screens/dashboard_screen_test.dart`
+- `tindatrack/test/widget_test.dart`
 
 ### Change Log
 
 - 2026-07-19: Created Story 4.6 developer context from Epic 4, architecture, UX specs, current Dashboard code/tests, and Story 4.5 review learnings.
+- 2026-07-20: Completed Story 4.6 dashboard behavior guardrail tests and moved story to review.
+- 2026-07-20: Resolved Story 4.6 review findings and moved story to done.

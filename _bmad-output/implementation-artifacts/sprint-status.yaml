@@ -1,5 +1,5 @@
 # generated: 2026-06-01
-# last_updated: 2026-07-19
+# last_updated: 2026-07-20
 # project: Inventory
 # project_key: NOKEY
 # tracking_system: file-system
@@ -35,7 +35,7 @@
 # - Dev moves story to 'review', then runs code-review (fresh context, different LLM recommended)
 
 generated: 2026-06-01
-last_updated: 2026-07-19
+last_updated: 2026-07-20
 project: Inventory
 project_key: NOKEY
 tracking_system: file-system
@@ -72,14 +72,14 @@ development_status:
   3-8-protect-stock-movement-reliability-with-tests: done
   epic-3-retrospective: optional
 
-  epic-4: in-progress
+  epic-4: done
   4-1-create-dashboard-summary-queries: done
   4-2-build-dashboard-screen-with-summary-cards: done
   4-3-show-low-stock-preview-on-dashboard: done
   4-4-navigate-from-dashboard-to-low-stock-product-list: done
   4-5-show-recent-activity-preview: done
-  4-6-protect-dashboard-behavior-with-tests: ready-for-dev
-  epic-4-retrospective: optional
+  4-6-protect-dashboard-behavior-with-tests: done
+  epic-4-retrospective: done
 
   epic-5: backlog
   5-1-build-settings-screen: backlog

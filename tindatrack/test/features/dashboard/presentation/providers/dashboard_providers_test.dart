@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:drift/native.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -6,7 +8,12 @@ import 'package:tindatrack/core/database/app_database.dart';
 import 'package:tindatrack/core/database/daos/products_dao.dart';
 import 'package:tindatrack/core/database/daos/stock_movements_dao.dart';
 import 'package:tindatrack/core/time/clock.dart';
+import 'package:tindatrack/features/dashboard/domain/entities/dashboard_low_stock_preview_item.dart';
+import 'package:tindatrack/features/dashboard/domain/entities/dashboard_recent_activity_item.dart';
+import 'package:tindatrack/features/dashboard/domain/entities/dashboard_summary.dart';
+import 'package:tindatrack/features/dashboard/domain/repositories/dashboard_repository.dart';
 import 'package:tindatrack/features/dashboard/presentation/providers/dashboard_providers.dart';
+import 'package:tindatrack/features/stock/domain/entities/stock_movement.dart';
 
 void main() {
   test('dashboard summary provider uses app database and clock', () async {
@@ -93,6 +100,42 @@ void main() {
     expect(preview.single.status.name, 'lowStock');
   });
 
+  test('recent activity preview provider delegates to repository', () async {
+    final item = DashboardRecentActivityItem(
+      id: 'movement-1',
+      type: StockMovementType.stockIn,
+      quantity: 3,
+      productNameSnapshot: 'Rice',
+      unitSnapshot: 'kg',
+      createdAt: DateTime.utc(2026, 7, 11, 9),
+    );
+    final repository = _RecordingDashboardRepository(
+      recentActivityStream: Stream.value([item]),
+    );
+    final container = ProviderContainer.test(
+      overrides: [
+        dashboardRepositoryProvider.overrideWithValue(repository),
+      ],
+    );
+    addTearDown(container.dispose);
+
+    final subscription = container.listen(
+      dashboardRecentActivityPreviewProvider,
+      (_, _) {},
+      fireImmediately: true,
+    );
+    addTearDown(subscription.close);
+
+    final preview = await container.read(
+      dashboardRecentActivityPreviewProvider.future,
+    );
+
+    expect(preview, [item]);
+    expect(repository.recentActivityCalls, 1);
+    expect(repository.summaryCalls, 0);
+    expect(repository.lowStockPreviewCalls, 0);
+  });
+
   test('dashboard summary provider refreshes after local midnight', () async {
     final database = AppDatabase(NativeDatabase.memory());
     final productsDao = ProductsDao(database);
@@ -126,10 +169,14 @@ void main() {
       DateTime(2026, 7, 12, 1).toUtc(),
     );
     final clock = _MutableClock(DateTime(2026, 7, 11, 23, 59, 59, 950));
+    final refreshTimers = _ManualRefreshTimers();
     final container = ProviderContainer.test(
       overrides: [
         databaseProvider.overrideWithValue(database),
         clockProvider.overrideWithValue(clock),
+        dashboardSummaryRefreshTimerProvider.overrideWithValue(
+          refreshTimers.start,
+        ),
       ],
     );
     addTearDown(() async {
@@ -149,12 +196,58 @@ void main() {
     );
     expect(beforeMidnight.stockChangesToday, 2);
 
+    expect(refreshTimers.lastDuration, const Duration(milliseconds: 50));
+
     clock.instant = DateTime(2026, 7, 12, 0, 0, 0, 10);
-    await Future<void>.delayed(const Duration(milliseconds: 80));
+    refreshTimers.fireLast();
 
     final afterMidnight = await container.read(dashboardSummaryProvider.future);
     expect(afterMidnight.stockChangesToday, 1);
   });
+}
+
+final class _ManualRefreshTimers {
+  final _timers = <_ManualTimer>[];
+
+  Duration get lastDuration => _timers.last.duration;
+
+  Timer start(Duration duration, void Function() callback) {
+    final timer = _ManualTimer(duration, callback);
+    _timers.add(timer);
+    return timer;
+  }
+
+  void fireLast() => _timers.last.fire();
+}
+
+final class _ManualTimer implements Timer {
+  _ManualTimer(this.duration, this._callback);
+
+  final Duration duration;
+  void Function()? _callback;
+  var _isActive = true;
+  var _tick = 0;
+
+  void fire() {
+    if (!_isActive) return;
+    _isActive = false;
+    _tick = 1;
+    final callback = _callback;
+    _callback = null;
+    callback?.call();
+  }
+
+  @override
+  void cancel() {
+    _isActive = false;
+    _callback = null;
+  }
+
+  @override
+  bool get isActive => _isActive;
+
+  @override
+  int get tick => _tick;
 }
 
 final class _FixedClock implements Clock {
@@ -193,4 +286,41 @@ Future<void> _insertMovement(
       createdAt: createdAt,
     ),
   );
+}
+
+final class _RecordingDashboardRepository implements DashboardRepository {
+  _RecordingDashboardRepository({required this.recentActivityStream});
+
+  final Stream<List<DashboardRecentActivityItem>> recentActivityStream;
+  int summaryCalls = 0;
+  int lowStockPreviewCalls = 0;
+  int recentActivityCalls = 0;
+
+  @override
+  Stream<DashboardSummary> watchSummary({required DateTime localNow}) {
+    summaryCalls++;
+    return Stream.value(
+      const DashboardSummary(
+        totalActiveProducts: 0,
+        lowStockProducts: 0,
+        stockChangesToday: 0,
+      ),
+    );
+  }
+
+  @override
+  Stream<List<DashboardLowStockPreviewItem>> watchLowStockPreview({
+    int limit = dashboardLowStockPreviewLimit,
+  }) {
+    lowStockPreviewCalls++;
+    return Stream.value(const []);
+  }
+
+  @override
+  Stream<List<DashboardRecentActivityItem>> watchRecentActivityPreview({
+    int limit = dashboardRecentActivityPreviewLimit,
+  }) {
+    recentActivityCalls++;
+    return recentActivityStream;
+  }
 }

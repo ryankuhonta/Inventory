@@ -1,4 +1,5 @@
 import 'dart:async';
+
 import 'package:drift/native.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -20,6 +21,13 @@ import 'package:tindatrack/features/dashboard/domain/entities/dashboard_recent_a
 import 'package:tindatrack/features/dashboard/domain/entities/dashboard_summary.dart';
 import 'package:tindatrack/features/dashboard/presentation/providers/dashboard_providers.dart';
 import 'package:tindatrack/features/history/presentation/providers/movement_history_providers.dart';
+import 'package:tindatrack/features/products/domain/entities/create_product_input.dart';
+import 'package:tindatrack/features/products/domain/entities/product.dart'
+    as product_entity;
+import 'package:tindatrack/features/products/domain/entities/product_list_query.dart';
+import 'package:tindatrack/features/products/domain/entities/product_stock_status.dart';
+import 'package:tindatrack/features/products/domain/entities/update_product_input.dart';
+import 'package:tindatrack/features/products/domain/repositories/products_repository.dart';
 import 'package:tindatrack/features/products/presentation/providers/product_providers.dart';
 
 void main() {
@@ -309,6 +317,95 @@ void main() {
   });
 
   testWidgets(
+    'Dashboard opens Products with Low Stock selected in the app shell',
+    (tester) async {
+      late GoRouter router;
+      final productRepository = _RecordingProductRepository();
+
+      await tester.pumpWidget(
+        ProviderScope(
+          overrides: [
+            appRouterProvider.overrideWith((ref) {
+              router = createAppRouter();
+              ref.onDispose(router.dispose);
+              return router;
+            }),
+            bootstrapProvider.overrideWith(
+              (ref) async => const Success<void>(null),
+            ),
+            dashboardSummaryProvider.overrideWith(
+              (ref) => Stream.value(
+                const DashboardSummary(
+                  totalActiveProducts: 4,
+                  lowStockProducts: 2,
+                  stockChangesToday: 1,
+                ),
+              ),
+            ),
+            dashboardLowStockPreviewProvider.overrideWith(
+              (ref) => Stream.value(const [
+                DashboardLowStockPreviewItem(
+                  id: 'low-1',
+                  name: 'Rice',
+                  quantity: 1,
+                  unit: 'kg',
+                  status: ProductStockStatus.lowStock,
+                ),
+              ]),
+            ),
+            dashboardRecentActivityPreviewProvider.overrideWith(
+              (ref) => _emptyRecentActivityStream(),
+            ),
+            productRepositoryProvider.overrideWithValue(productRepository),
+          ],
+          child: const MainApp(),
+        ),
+      );
+      await tester.pumpAndSettle();
+
+      await tester.tap(
+        find.byKey(const Key('dashboard-view-low-stock-action')),
+      );
+      await tester.pumpAndSettle();
+
+      expect(router.routeInformationProvider.value.uri.path, '/products');
+      expect(find.byKey(const Key('products-screen')), findsOneWidget);
+      expect(
+        tester.widget<NavigationBar>(find.byType(NavigationBar)).selectedIndex,
+        1,
+      );
+      expect(
+        tester
+            .widget<ChoiceChip>(
+              find.byKey(const ValueKey('product-filter-lowStock')),
+            )
+            .selected,
+        isTrue,
+      );
+      expect(
+        productRepository.queries.map((query) => query.stockFilter),
+        contains(ProductStockFilter.lowStock),
+      );
+
+      await tester.tap(find.byKey(const ValueKey('product-filter-all')));
+      await tester.pumpAndSettle();
+
+      expect(
+        tester
+            .widget<ChoiceChip>(
+              find.byKey(const ValueKey('product-filter-all')),
+            )
+            .selected,
+        isTrue,
+      );
+      expect(
+        productRepository.queries.last.stockFilter,
+        ProductStockFilter.all,
+      );
+    },
+  );
+
+  testWidgets(
     'Android Back keeps default root behavior and '
     'app lifecycles stable',
     (tester) async {
@@ -509,6 +606,36 @@ Finder _navigationLabel(String label) {
     of: find.byType(NavigationBar),
     matching: find.text(label),
   );
+}
+
+final class _RecordingProductRepository implements ProductRepository {
+  final queries = <ProductListQuery>[];
+
+  @override
+  Stream<List<product_entity.Product>> watchActiveProducts(
+    ProductListQuery query,
+  ) {
+    queries.add(query);
+    return Stream.value(const []);
+  }
+
+  @override
+  Future<Result<void>> archiveProduct(String id) => throw UnimplementedError();
+
+  @override
+  Future<Result<product_entity.Product>> createProduct(
+    CreateProductInput input,
+  ) => throw UnimplementedError();
+
+  @override
+  Future<Result<product_entity.Product>> getProduct(String id) =>
+      throw UnimplementedError();
+
+  @override
+  Future<Result<product_entity.Product>> updateProduct(
+    String id,
+    UpdateProductInput input,
+  ) => throw UnimplementedError();
 }
 
 Stream<DashboardSummary> _dashboardSummaryStream() {

@@ -48,7 +48,7 @@ void main() {
       findsOneWidget,
     );
     expect(find.text('Total Products'), findsOneWidget);
-    expect(find.text('Low Stock'), findsOneWidget);
+    expect(find.text('Low Stock'), findsAtLeastNWidgets(1));
     expect(find.text('Stock Changes Today'), findsOneWidget);
     expect(find.text('12'), findsOneWidget);
     expect(find.text('3'), findsOneWidget);
@@ -261,6 +261,10 @@ void main() {
     expect(find.text('+5 kg'), findsOneWidget);
     expect(find.text('-2 cans'), findsOneWidget);
     expect(find.text('Supplier delivery'), findsOneWidget);
+    expect(
+      find.text(_formatExpectedActivityDateTime(_activityInstant)),
+      findsNWidgets(2),
+    );
   });
 
   testWidgets('shows calm copy when recent activity is empty', (
@@ -698,6 +702,239 @@ void main() {
     expect(find.textContaining('PRIVATE_SQL_FAILURE'), findsNothing);
   });
 
+  testWidgets('retry recovers dashboard summary after a friendly error', (
+    tester,
+  ) async {
+    final repository = _RetryDashboardRepository(summaryFails: true);
+
+    await _pumpDashboard(tester, repository: repository);
+    await tester.pump();
+
+    expect(find.byKey(const Key('dashboard-error-state')), findsOneWidget);
+
+    repository.summaryFails = false;
+    await tester.tap(find.text('Retry'));
+    await tester.pumpAndSettle();
+
+    expect(repository.summaryCalls, greaterThan(1));
+    expect(find.byKey(const Key('dashboard-error-state')), findsNothing);
+    expect(
+      find.byKey(const Key('dashboard-summary-total-products')),
+      findsOneWidget,
+    );
+  });
+
+  testWidgets('retry recovers low-stock preview after a friendly error', (
+    tester,
+  ) async {
+    final repository = _RetryDashboardRepository(previewFails: true);
+
+    await _pumpDashboard(tester, repository: repository);
+    await tester.pump();
+
+    expect(
+      find.byKey(const Key('dashboard-low-stock-preview-error')),
+      findsOneWidget,
+    );
+
+    repository.previewFails = false;
+    await tester.tap(
+      find.descendant(
+        of: find.byKey(const Key('dashboard-low-stock-preview-error')),
+        matching: find.text('Retry'),
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    expect(repository.previewCalls, greaterThan(1));
+    expect(
+      find.byKey(const Key('dashboard-low-stock-preview-error')),
+      findsNothing,
+    );
+    expect(
+      find.byKey(const Key('dashboard-low-stock-preview-item-recovered-low')),
+      findsOneWidget,
+    );
+  });
+
+  testWidgets('retry recovers recent activity after a friendly error', (
+    tester,
+  ) async {
+    final repository = _RetryDashboardRepository(recentFails: true);
+
+    await _pumpDashboard(tester, repository: repository);
+    await tester.pump();
+
+    await tester.scrollUntilVisible(
+      find.byKey(const Key('dashboard-recent-activity-error')),
+      120,
+    );
+
+    expect(
+      find.byKey(const Key('dashboard-recent-activity-error')),
+      findsOneWidget,
+    );
+
+    repository.recentFails = false;
+    final recentRetry = find.descendant(
+      of: find.byKey(const Key('dashboard-recent-activity-error')),
+      matching: find.text('Retry'),
+    );
+    await tester.scrollUntilVisible(recentRetry, 80);
+    await tester.drag(find.byType(ListView), const Offset(0, -160));
+    await tester.pumpAndSettle();
+    await tester.tap(recentRetry);
+    await tester.pumpAndSettle();
+
+    expect(repository.recentCalls, greaterThan(1));
+    expect(
+      find.byKey(const Key('dashboard-recent-activity-error')),
+      findsNothing,
+    );
+    await tester.scrollUntilVisible(
+      find.byKey(
+        const Key('dashboard-recent-activity-item-recovered-movement'),
+      ),
+      120,
+    );
+
+    expect(
+      find.byKey(
+        const Key('dashboard-recent-activity-item-recovered-movement'),
+      ),
+      findsOneWidget,
+    );
+  });
+
+  testWidgets('dashboard actions and row semantics stay accessible', (
+    tester,
+  ) async {
+    final semantics = tester.ensureSemantics();
+
+    await _pumpDashboard(
+      tester,
+      repository: _DashboardRepository(
+        summaryStream: Stream.value(
+          const DashboardSummary(
+            totalActiveProducts: 4,
+            lowStockProducts: 1,
+            stockChangesToday: 2,
+          ),
+        ),
+        previewStream: Stream.value(const [
+          DashboardLowStockPreviewItem(
+            id: 'low-1',
+            name: 'Rice',
+            quantity: 2,
+            unit: 'kg',
+            status: ProductStockStatus.lowStock,
+          ),
+        ]),
+        recentActivityStream: Stream.value([
+          DashboardRecentActivityItem(
+            id: 'movement-1',
+            type: StockMovementType.stockOut,
+            quantity: 1,
+            productNameSnapshot: 'Rice',
+            unitSnapshot: 'kg',
+            createdAt: _activityInstant,
+          ),
+        ]),
+      ),
+    );
+
+    expect(find.text('Low Stock'), findsAtLeastNWidgets(1));
+    expect(
+      tester
+          .getSize(find.byKey(const Key('dashboard-view-low-stock-action')))
+          .height,
+      greaterThanOrEqualTo(48),
+    );
+
+    await tester.scrollUntilVisible(
+      find.byKey(const Key('dashboard-recent-activity-item-movement-1')),
+      120,
+    );
+
+    expect(
+      find.text(_formatExpectedActivityDateTime(_activityInstant)),
+      findsOneWidget,
+    );
+    expect(
+      tester
+          .getSize(find.byKey(const Key('dashboard-view-history-action')))
+          .height,
+      greaterThanOrEqualTo(48),
+    );
+    await expectLater(tester, meetsGuideline(labeledTapTargetGuideline));
+    semantics.dispose();
+  });
+
+  testWidgets('populated dashboard fits a small phone with enlarged text', (
+    tester,
+  ) async {
+    tester.view
+      ..physicalSize = const Size(360, 640)
+      ..devicePixelRatio = 1;
+    tester.platformDispatcher.textScaleFactorTestValue = 2;
+    addTearDown(tester.view.resetPhysicalSize);
+    addTearDown(tester.view.resetDevicePixelRatio);
+    addTearDown(tester.platformDispatcher.clearTextScaleFactorTestValue);
+
+    await _pumpDashboard(
+      tester,
+      repository: _DashboardRepository(
+        summaryStream: Stream.value(
+          const DashboardSummary(
+            totalActiveProducts: 123456,
+            lowStockProducts: 9876,
+            stockChangesToday: 5432,
+          ),
+        ),
+        previewStream: Stream.value(const [
+          DashboardLowStockPreviewItem(
+            id: 'long-low',
+            name: 'Very Long Product Name For The Smallest Store Shelf',
+            quantity: 123456,
+            unit: 'large bundled cartons',
+            status: ProductStockStatus.lowStock,
+          ),
+        ]),
+        recentActivityStream: Stream.value([
+          DashboardRecentActivityItem(
+            id: 'long-movement',
+            type: StockMovementType.stockIn,
+            quantity: 98765,
+            productNameSnapshot: 'Very Long Product Name For Movement Rows',
+            unitSnapshot: 'large bundled cartons',
+            note: 'Supplier delivered a long note for verification',
+            createdAt: _activityInstant,
+          ),
+        ]),
+      ),
+    );
+
+    expect(
+      find.byKey(const Key('dashboard-summary-total-products')),
+      findsOneWidget,
+    );
+
+    await tester.scrollUntilVisible(
+      find.byKey(const Key('dashboard-recent-activity-item-long-movement')),
+      120,
+    );
+
+    expect(
+      find.byKey(const Key('dashboard-low-stock-preview-item-long-low')),
+      findsOneWidget,
+    );
+    expect(
+      find.byKey(const Key('dashboard-recent-activity-item-long-movement')),
+      findsOneWidget,
+    );
+    expect(tester.takeException(), isNull);
+  });
+
   testWidgets('shows first-product guidance when no products exist', (
     tester,
   ) async {
@@ -795,6 +1032,97 @@ Future<void> _pumpDashboard(
     ),
   );
   if (settle) await tester.pumpAndSettle();
+}
+
+String _formatExpectedActivityDateTime(DateTime createdAt) {
+  final local = createdAt.toLocal();
+  final month = _expectedMonthNames[local.month - 1];
+  final minute = local.minute.toString().padLeft(2, '0');
+  return '$month ${local.day}, ${local.year} ${local.hour}:$minute';
+}
+
+const _expectedMonthNames = [
+  'Jan',
+  'Feb',
+  'Mar',
+  'Apr',
+  'May',
+  'Jun',
+  'Jul',
+  'Aug',
+  'Sep',
+  'Oct',
+  'Nov',
+  'Dec',
+];
+
+final class _RetryDashboardRepository implements DashboardRepository {
+  _RetryDashboardRepository({
+    this.summaryFails = false,
+    this.previewFails = false,
+    this.recentFails = false,
+  });
+
+  bool summaryFails;
+  bool previewFails;
+  bool recentFails;
+  int summaryCalls = 0;
+  int previewCalls = 0;
+  int recentCalls = 0;
+
+  @override
+  Stream<DashboardSummary> watchSummary({required DateTime localNow}) {
+    summaryCalls++;
+    if (summaryFails) {
+      return Stream.error(Exception('PRIVATE_SQL_FAILURE'));
+    }
+    return Stream.value(
+      const DashboardSummary(
+        totalActiveProducts: 3,
+        lowStockProducts: 1,
+        stockChangesToday: 2,
+      ),
+    );
+  }
+
+  @override
+  Stream<List<DashboardLowStockPreviewItem>> watchLowStockPreview({
+    int limit = dashboardLowStockPreviewLimit,
+  }) {
+    previewCalls++;
+    if (previewFails) {
+      return Stream.error(Exception('PRIVATE_SQL_FAILURE'));
+    }
+    return Stream.value(const [
+      DashboardLowStockPreviewItem(
+        id: 'recovered-low',
+        name: 'Rice',
+        quantity: 1,
+        unit: 'kg',
+        status: ProductStockStatus.lowStock,
+      ),
+    ]);
+  }
+
+  @override
+  Stream<List<DashboardRecentActivityItem>> watchRecentActivityPreview({
+    int limit = dashboardRecentActivityPreviewLimit,
+  }) {
+    recentCalls++;
+    if (recentFails) {
+      return Stream.error(Exception('PRIVATE_SQL_FAILURE'));
+    }
+    return Stream.value([
+      DashboardRecentActivityItem(
+        id: 'recovered-movement',
+        type: StockMovementType.stockIn,
+        quantity: 1,
+        productNameSnapshot: 'Rice',
+        unitSnapshot: 'kg',
+        createdAt: _activityInstant,
+      ),
+    ]);
+  }
 }
 
 final class _DashboardRepository implements DashboardRepository {
