@@ -1,61 +1,134 @@
 import 'package:flutter/material.dart';
+import 'package:tindatrack/core/ui/app_dimensions.dart';
 import 'package:tindatrack/core/ui/app_spacing.dart';
 
-/// Placeholder root for the Settings branch.
+/// Root screen for local-only app settings.
 class SettingsScreen extends StatelessWidget {
-  /// Creates the Settings placeholder.
+  /// Creates the Settings screen.
   const SettingsScreen({super.key});
-
-  @override
-  Widget build(BuildContext context) {
-    return const _PlaceholderScreen(
-      screenKey: Key('settings-screen'),
-      title: 'Settings',
-      message: 'Settings are coming in a later story.',
-    );
-  }
-}
-
-class _PlaceholderScreen extends StatelessWidget {
-  const _PlaceholderScreen({
-    required this.screenKey,
-    required this.title,
-    required this.message,
-  });
-
-  final Key screenKey;
-  final String title;
-  final String message;
 
   @override
   Widget build(BuildContext context) {
     final spacing = AppSpacing.of(context);
     final theme = Theme.of(context);
+
     return Scaffold(
-      key: screenKey,
+      key: const Key('settings-screen'),
       body: SafeArea(
-        child: Center(
-          child: SingleChildScrollView(
-            padding: EdgeInsets.all(spacing.lg),
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Text(
-                  title,
-                  style: theme.textTheme.titleLarge,
-                  textAlign: TextAlign.center,
-                ),
-                SizedBox(height: spacing.sm),
-                Text(
-                  message,
-                  style: theme.textTheme.bodyMedium?.copyWith(
-                    color: theme.colorScheme.onSurfaceVariant,
-                  ),
-                  textAlign: TextAlign.center,
-                ),
-              ],
+        child: ListView(
+          padding: EdgeInsets.all(spacing.md),
+          children: [
+            Text(
+              'Settings',
+              style: theme.textTheme.headlineSmall?.copyWith(
+                color: theme.colorScheme.onSurface,
+                fontWeight: FontWeight.w700,
+              ),
             ),
-          ),
+            SizedBox(height: spacing.md),
+            const _SettingsSection(
+              key: Key('settings-currency-section'),
+              icon: Icons.payments_outlined,
+              title: 'Currency',
+              value: 'PHP',
+              description: 'Amounts are shown for Philippine Peso pricing.',
+            ),
+            SizedBox(height: spacing.md),
+            const _SettingsSection(
+              key: Key('settings-backup-export-section'),
+              icon: Icons.file_upload_outlined,
+              title: 'Backup / Export',
+              value: 'Coming soon',
+              description:
+                  'A simple file option will be added in a future update.',
+            ),
+            SizedBox(height: spacing.md),
+            const _SettingsSection(
+              key: Key('settings-app-version-section'),
+              icon: Icons.info_outline,
+              title: 'App Version',
+              value: 'MVP preview',
+              description: 'Version details will be shown here before release.',
+            ),
+            SizedBox(height: spacing.md),
+            const _SettingsSection(
+              key: Key('settings-local-data-section'),
+              icon: Icons.phone_android_outlined,
+              title: 'Local Data',
+              value: 'This device',
+              description:
+                  'Inventory data is stored on this device for the MVP.',
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class _SettingsSection extends StatelessWidget {
+  const _SettingsSection({
+    required this.icon,
+    required this.title,
+    required this.value,
+    required this.description,
+    super.key,
+  });
+
+  final IconData icon;
+  final String title;
+  final String value;
+  final String description;
+
+  @override
+  Widget build(BuildContext context) {
+    final spacing = AppSpacing.of(context);
+    final theme = Theme.of(context);
+    final colorScheme = theme.colorScheme;
+
+    return DecoratedBox(
+      decoration: BoxDecoration(
+        color: colorScheme.surface,
+        border: Border.all(color: colorScheme.outlineVariant),
+        borderRadius: BorderRadius.circular(AppDimensions.componentRadius),
+      ),
+      child: Padding(
+        padding: EdgeInsets.all(spacing.md),
+        child: Row(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Icon(icon, color: colorScheme.primary),
+            SizedBox(width: spacing.md),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    title,
+                    style: theme.textTheme.titleMedium?.copyWith(
+                      color: colorScheme.onSurface,
+                      fontWeight: FontWeight.w700,
+                    ),
+                  ),
+                  SizedBox(height: spacing.xs),
+                  Text(
+                    value,
+                    style: theme.textTheme.bodyLarge?.copyWith(
+                      color: colorScheme.onSurface,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                  SizedBox(height: spacing.xs),
+                  Text(
+                    description,
+                    style: theme.textTheme.bodyMedium?.copyWith(
+                      color: colorScheme.onSurfaceVariant,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ],
         ),
       ),
     );

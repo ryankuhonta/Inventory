@@ -81,8 +81,8 @@ development_status:
   4-6-protect-dashboard-behavior-with-tests: done
   epic-4-retrospective: done
 
-  epic-5: backlog
-  5-1-build-settings-screen: backlog
+  epic-5: in-progress
+  5-1-build-settings-screen: review
   5-2-show-php-currency-context: backlog
   5-3-add-honest-backup-export-placeholder: backlog
   5-4-show-app-version-from-pubspec: backlog
