@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:tindatrack/core/formatters/currency_formatter.dart';
 import 'package:tindatrack/core/ui/app_dimensions.dart';
 import 'package:tindatrack/core/ui/app_spacing.dart';
 
@@ -11,6 +12,7 @@ class SettingsScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     final spacing = AppSpacing.of(context);
     final theme = Theme.of(context);
+    const currencyFormatter = CurrencyFormatter.php();
 
     return Scaffold(
       key: const Key('settings-screen'),
@@ -26,12 +28,13 @@ class SettingsScreen extends StatelessWidget {
               ),
             ),
             SizedBox(height: spacing.md),
-            const _SettingsSection(
-              key: Key('settings-currency-section'),
+            _SettingsSection(
+              key: const Key('settings-currency-section'),
               icon: Icons.payments_outlined,
               title: 'Currency',
-              value: 'PHP',
-              description: 'Amounts are shown for Philippine Peso pricing.',
+              value: currencyFormatter.currencyCode,
+              description:
+                  'Philippine Peso is the MVP currency for product prices.',
             ),
             SizedBox(height: spacing.md),
             const _SettingsSection(

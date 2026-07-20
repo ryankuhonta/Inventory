@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:tindatrack/core/formatters/currency_formatter.dart';
 import 'package:tindatrack/core/ui/app_spacing.dart';
 import 'package:tindatrack/features/products/domain/entities/product.dart';
 import 'package:tindatrack/features/products/domain/entities/product_stock_status.dart';
@@ -31,7 +32,9 @@ class ProductListItem extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final spacing = AppSpacing.of(context);
+    const currencyFormatter = CurrencyFormatter.php();
     final quantity = '${product.quantity} ${product.unit}';
+    final price = 'Price: ${currencyFormatter.format(product.sellingPrice)}';
     final metadata = product.category ?? product.unit;
     final status = product.stockStatus;
     final statusLabel = status.label;
@@ -39,6 +42,7 @@ class ProductListItem extends StatelessWidget {
       product.name,
       if (product.category != null) metadata,
       quantity,
+      price,
       ?statusLabel,
     ].join(', ');
 
@@ -70,6 +74,11 @@ class ProductListItem extends StatelessWidget {
                     maxLines: 2,
                     overflow: TextOverflow.ellipsis,
                     style: Theme.of(context).textTheme.titleMedium,
+                  ),
+                  Text(
+                    price,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
                   ),
                   if (status != ProductStockStatus.inStock)
                     Padding(

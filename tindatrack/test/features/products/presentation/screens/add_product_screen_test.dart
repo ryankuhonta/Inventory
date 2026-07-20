@@ -27,6 +27,7 @@ void main() {
     expect(find.byKey(const Key('category-field')), findsOneWidget);
     expect(find.byKey(const Key('unit-field')), findsOneWidget);
     expect(find.byKey(const Key('selling-price-field')), findsOneWidget);
+    expect(find.text('Selling price (PHP, optional)'), findsOneWidget);
     expect(find.byKey(const Key('starting-quantity-field')), findsOneWidget);
     expect(
       find.byKey(const Key('low-stock-threshold-field')),

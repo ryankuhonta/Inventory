@@ -1,6 +1,10 @@
+---
+baseline_commit: 1e39a1393585e90759fa6afdf96b1f721ecd27db
+---
+
 # Story 5.2: Show PHP Currency Context
 
-Status: ready-for-dev
+Status: review
 
 <!-- Note: Validation is optional. Run validate-create-story for quality check before dev-story. -->
 
@@ -18,40 +22,40 @@ so that product prices feel familiar and clear.
 
 ## Tasks / Subtasks
 
-- [ ] Task 1: Add a centralized PHP currency formatter/context (AC: 2, 3)
-  - [ ] Create `tindatrack/lib/core/formatters/currency_formatter.dart`; create the `core/formatters` folder if needed.
-  - [ ] Keep the formatter dependency-free; do not add `intl` or any package for Story 5.2.
-  - [ ] Expose a small API for the MVP PHP context, such as `CurrencyFormatter.php()` plus constants/fields for code `PHP` and symbol `?`.
-  - [ ] Format non-negative prices consistently for display, with two decimal places and thousands separators.
-  - [ ] Keep parsing and validation ownership in existing product form/controller code; this story is about display formatting and currency context, not input validation rules.
+- [x] Task 1: Add a centralized PHP currency formatter/context (AC: 2, 3)
+  - [x] Create `tindatrack/lib/core/formatters/currency_formatter.dart`; create the `core/formatters` folder if needed.
+  - [x] Keep the formatter dependency-free; do not add `intl` or any package for Story 5.2.
+  - [x] Expose a small API for the MVP PHP context, such as `CurrencyFormatter.php()` plus constants/fields for code `PHP` and symbol represented in Dart as `\u20B1`.
+  - [x] Format non-negative prices consistently for display, with two decimal places and thousands separators.
+  - [x] Keep parsing and validation ownership in existing product form/controller code; this story is about display formatting and currency context, not input validation rules.
 
-- [ ] Task 2: Update Settings currency copy to consume the centralized context (AC: 1-3)
-  - [ ] Update `tindatrack/lib/features/settings/presentation/screens/settings_screen.dart`.
-  - [ ] Preserve `Key('settings-screen')` and `Key('settings-currency-section')`.
-  - [ ] Continue showing `PHP` as the MVP currency context.
-  - [ ] Do not add a dropdown, segmented control, editable selector, settings persistence, or `app_settings` Drift schema for currency.
-  - [ ] Keep the existing local-only Settings screen and four-tab app shell unchanged.
+- [x] Task 2: Update Settings currency copy to consume the centralized context (AC: 1-3)
+  - [x] Update `tindatrack/lib/features/settings/presentation/screens/settings_screen.dart`.
+  - [x] Preserve `Key('settings-screen')` and `Key('settings-currency-section')`.
+  - [x] Continue showing `PHP` as the MVP currency context.
+  - [x] Do not add a dropdown, segmented control, editable selector, settings persistence, or `app_settings` Drift schema for currency.
+  - [x] Keep the existing local-only Settings screen and four-tab app shell unchanged.
 
-- [ ] Task 3: Apply centralized PHP formatting to visible product price surfaces (AC: 2)
-  - [ ] Find current visible product price surfaces before editing; do not invent new screens.
-  - [ ] Update product UI labels/help text where useful so price context is clear, for example selling price fields can mention PHP.
-  - [ ] If a read-only product price is displayed in product rows or other product surfaces, format it through the centralized formatter.
-  - [ ] Do not change stored numeric values, Drift columns, repository contracts, product validation, or save behavior.
-  - [ ] Do not introduce cost price, accounting/profit, POS, reporting, supplier, scanner, cloud sync, account, or login behavior.
+- [x] Task 3: Apply centralized PHP formatting to visible product price surfaces (AC: 2)
+  - [x] Find current visible product price surfaces before editing; do not invent new screens.
+  - [x] Update product UI labels/help text where useful so price context is clear, for example selling price fields can mention PHP.
+  - [x] If a read-only product price is displayed in product rows or other product surfaces, format it through the centralized formatter.
+  - [x] Do not change stored numeric values, Drift columns, repository contracts, product validation, or save behavior.
+  - [x] Do not introduce cost price, accounting/profit, POS, reporting, supplier, scanner, cloud sync, account, or login behavior.
 
-- [ ] Task 4: Add focused formatter and UI tests (AC: 1-3)
-  - [ ] Add `tindatrack/test/core/formatters/currency_formatter_test.dart`.
-  - [ ] Test PHP code/symbol context and stable formatting, including zero, whole pesos, centavos, and thousands separators.
-  - [ ] Update Settings tests to prove the currency section uses the PHP context and still has no editable multi-currency selector.
-  - [ ] Update product presentation tests for any visible price-context copy or formatted price output changed by this story.
-  - [ ] Include a small-phone/high-text-scale regression if product or settings visible copy changes could affect layout.
+- [x] Task 4: Add focused formatter and UI tests (AC: 1-3)
+  - [x] Add `tindatrack/test/core/formatters/currency_formatter_test.dart`.
+  - [x] Test PHP code/symbol context and stable formatting, including zero, whole pesos, centavos, and thousands separators.
+  - [x] Update Settings tests to prove the currency section uses the PHP context and still has no editable multi-currency selector.
+  - [x] Update product presentation tests for any visible price-context copy or formatted price output changed by this story.
+  - [x] Include a small-phone/high-text-scale regression if product or settings visible copy changes could affect layout.
 
-- [ ] Task 5: Verify Story 5.2 completion (AC: 1-3)
-  - [ ] Run Dart format for touched `lib` and `test` files.
-  - [ ] Run focused currency/settings/product tests.
-  - [ ] Run `dart analyze`.
-  - [ ] Run the full Flutter test suite if focused tests and analyzer pass.
-  - [ ] Run `git diff --check`.
+- [x] Task 5: Verify Story 5.2 completion (AC: 1-3)
+  - [x] Run Dart format for touched `lib` and `test` files.
+  - [x] Run focused currency/settings/product tests.
+  - [x] Run `dart analyze`.
+  - [x] Run the full Flutter test suite if focused tests and analyzer pass.
+  - [x] Run `git diff --check`.
 
 ## Dev Notes
 
@@ -103,17 +107,17 @@ so that product prices feel familiar and clear.
   - `tindatrack/lib/features/products/presentation/widgets/product_list_item.dart` and its tests only if the implementation chooses to display read-only selling price in product rows.
 - Prefer a small immutable class or abstract-final utility that is easy to extend later, for example:
   - `currencyCode == 'PHP'`
-  - `currencySymbol == '?'`
-  - `format(num amount) => '?1,234.50'`
+  - `currencySymbol == '\\u20B1'`
+  - `format(num amount) => '\\u20B11,234.50'`
 - Keep formatter behavior deterministic and independent of device locale unless a later story explicitly scopes localization.
 
 ### Testing Requirements
 
 - Formatter tests should be pure Dart tests and cover exact strings for representative values:
-  - `0` -> `?0.00`
-  - `1` -> `?1.00`
-  - `12.5` -> `?12.50`
-  - `1234.56` -> `?1,234.56`
+  - `0` -> `\u20B10.00`
+  - `1` -> `\u20B11.00`
+  - `12.5` -> `\u20B112.50`
+  - `1234.56` -> `\u20B11,234.56`
   - a larger thousands example
 - Settings widget tests should still assert all four MVP sections render and should assert no editable selector exists in the Currency section.
 - Product tests should assert any changed price labels/copy and any formatted price text or semantics. Keep existing save/validation tests passing.
@@ -167,8 +171,36 @@ Codex GPT-5
 
 ### Debug Log References
 
+- 2026-07-20: Red focused test run from `C:\tmp\Inventory-tindatrack-story-5-2-red` failed on missing `CurrencyFormatter` and missing PHP product/settings UI expectations.
+- 2026-07-20: Focused currency/settings/product tests passed from `C:\tmp\Inventory-tindatrack-story-5-2-verify2`.
+- 2026-07-20: `dart analyze` passed from `C:\tmp\Inventory-tindatrack-story-5-2-verify2` with no issues.
+- 2026-07-20: Full Flutter test suite passed from `C:\tmp\Inventory-tindatrack-story-5-2-verify2`.
+- 2026-07-20: `git diff --check` passed from the workspace.
+
 ### Completion Notes List
 
 - Ultimate context engine analysis completed - comprehensive developer guide created.
+- Added a dependency-free centralized PHP currency formatter under `core/formatters` with exact formatting tests.
+- Updated Settings currency copy to consume the centralized PHP context while preserving the local-only, non-editable Settings UI.
+- Updated product price surfaces by labeling selling price fields with PHP context and displaying formatted read-only selling prices in product rows and semantics.
+- Preserved product validation, persistence, Drift schema, repository contracts, save behavior, routes, and MVP exclusions.
 
 ### File List
+
+- `_bmad-output/implementation-artifacts/5-2-show-php-currency-context.md`
+- `_bmad-output/implementation-artifacts/sprint-status.yaml`
+- `tindatrack/lib/core/formatters/currency_formatter.dart`
+- `tindatrack/lib/features/products/presentation/screens/add_product_screen.dart`
+- `tindatrack/lib/features/products/presentation/screens/edit_product_screen.dart`
+- `tindatrack/lib/features/products/presentation/widgets/product_list_item.dart`
+- `tindatrack/lib/features/settings/presentation/screens/settings_screen.dart`
+- `tindatrack/test/core/formatters/currency_formatter_test.dart`
+- `tindatrack/test/features/products/presentation/screens/add_product_screen_test.dart`
+- `tindatrack/test/features/products/presentation/screens/edit_product_screen_test.dart`
+- `tindatrack/test/features/products/presentation/screens/product_list_screen_test.dart`
+- `tindatrack/test/features/products/presentation/widgets/product_list_item_test.dart`
+- `tindatrack/test/features/settings/presentation/screens/settings_screen_test.dart`
+
+### Change Log
+
+- 2026-07-20: Implemented Story 5.2 PHP currency context and focused tests; marked story ready for review.

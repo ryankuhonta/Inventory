@@ -30,6 +30,7 @@ void main() {
     expect(_text(tester, 'edit-category-field'), 'Staples');
     expect(_text(tester, 'edit-unit-field'), 'pcs');
     expect(_text(tester, 'edit-selling-price-field'), '50.0');
+    expect(find.text('Selling price (PHP, optional)'), findsOneWidget);
     expect(_text(tester, 'edit-low-stock-threshold-field'), '2');
     expect(_text(tester, 'edit-barcode-field'), '123');
     expect(find.text('Current quantity: 8 pcs'), findsOneWidget);

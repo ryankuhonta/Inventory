@@ -29,6 +29,7 @@ void main() {
     expect(find.text('App Version'), findsOneWidget);
     expect(find.text('Local Data'), findsOneWidget);
     expect(find.text('PHP'), findsOneWidget);
+    expect(find.textContaining('Philippine Peso'), findsOneWidget);
     expect(find.text('Coming soon'), findsOneWidget);
     expect(find.text('MVP preview'), findsOneWidget);
     expect(
@@ -111,6 +112,13 @@ void main() {
     expect(find.byType(NavigationBar), findsOneWidget);
     expect(find.byKey(const Key('settings-screen')), findsOneWidget);
     expect(find.byKey(const Key('settings-currency-section')), findsOneWidget);
+    expect(
+      find.descendant(
+        of: find.byKey(const Key('settings-currency-section')),
+        matching: find.byType(DropdownButton<Object>),
+      ),
+      findsNothing,
+    );
   });
 }
 

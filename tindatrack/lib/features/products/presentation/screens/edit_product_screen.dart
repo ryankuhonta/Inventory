@@ -193,7 +193,7 @@ final class _EditProductFormState extends ConsumerState<_EditProductForm> {
                     key: const Key('edit-selling-price-field'),
                     controller: _sellingPriceController,
                     focusNode: _sellingPriceFocus,
-                    label: 'Selling price (optional)',
+                    label: 'Selling price (PHP, optional)',
                     enabled: fieldsEnabled,
                     error: state.errorFor(ProductField.sellingPrice),
                     keyboardType: const TextInputType.numberWithOptions(

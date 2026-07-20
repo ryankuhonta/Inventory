@@ -247,7 +247,7 @@ void main() {
       findsOneWidget,
     );
     expect(
-      find.bySemanticsLabel('Rice, 2 pcs, Low Stock'),
+      find.bySemanticsLabel('Rice, 2 pcs, Price: \u20B110.00, Low Stock'),
       findsOneWidget,
     );
     expect(find.bySemanticsLabel('Edit Rice'), findsOneWidget);
@@ -265,7 +265,7 @@ void main() {
       findsOneWidget,
     );
     expect(
-      find.bySemanticsLabel('Rice, 0 pcs, Out of Stock'),
+      find.bySemanticsLabel('Rice, 0 pcs, Price: \u20B110.00, Out of Stock'),
       findsOneWidget,
     );
     expect(find.bySemanticsLabel('Edit Rice'), findsOneWidget);
@@ -324,7 +324,8 @@ void main() {
     expect(tester.takeException(), isNull);
     expect(
       find.bySemanticsLabel(
-        'A readable product with a longer name, Staples, 4 pcs',
+        'A readable product with a longer name, Staples, 4 pcs, '
+        'Price: \u20B110.00',
       ),
       findsOneWidget,
     );
@@ -361,7 +362,8 @@ void main() {
     }
     expect(
       find.bySemanticsLabel(
-        'A readable product with a longer name, Staples, 4 pcs',
+        'A readable product with a longer name, Staples, 4 pcs, '
+        'Price: \u20B110.00',
       ),
       findsOneWidget,
     );

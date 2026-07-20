@@ -105,7 +105,7 @@ final class _AddProductScreenState extends ConsumerState<AddProductScreen> {
                     key: const Key('selling-price-field'),
                     controller: _sellingPriceController,
                     focusNode: _sellingPriceFocus,
-                    label: 'Selling price (optional)',
+                    label: 'Selling price (PHP, optional)',
                     enabled: fieldsEnabled,
                     error: state.errorFor(ProductField.sellingPrice),
                     keyboardType: const TextInputType.numberWithOptions(

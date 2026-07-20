@@ -26,7 +26,11 @@ void main() {
     expect(find.text('Rice'), findsOneWidget);
     expect(find.text('Staples'), findsOneWidget);
     expect(find.text('4 pcs'), findsOneWidget);
-    expect(find.bySemanticsLabel('Rice, Staples, 4 pcs'), findsOneWidget);
+    expect(find.text('Price: \u20B150.00'), findsOneWidget);
+    expect(
+      find.bySemanticsLabel('Rice, Staples, 4 pcs, Price: \u20B150.00'),
+      findsOneWidget,
+    );
     expect(tester.widget<ListTile>(find.byType(ListTile)).onTap, isNull);
     expect(
       find.byKey(const ValueKey('product-stock-in-action-product-1')),
@@ -56,7 +60,11 @@ void main() {
 
     expect(find.text('pcs'), findsOneWidget);
     expect(find.text('4 pcs'), findsOneWidget);
-    expect(find.bySemanticsLabel('Rice, 4 pcs'), findsOneWidget);
+    expect(find.text('Price: \u20B150.00'), findsOneWidget);
+    expect(
+      find.bySemanticsLabel('Rice, 4 pcs, Price: \u20B150.00'),
+      findsOneWidget,
+    );
   });
 
   testWidgets('shows Low Stock in the row and merged semantics', (
@@ -77,7 +85,9 @@ void main() {
     expect(find.text('Low Stock'), findsOneWidget);
     expect(find.text('Out of Stock'), findsNothing);
     expect(
-      find.bySemanticsLabel('Rice, Staples, 2 pcs, Low Stock'),
+      find.bySemanticsLabel(
+        'Rice, Staples, 2 pcs, Price: \u20B150.00, Low Stock',
+      ),
       findsOneWidget,
     );
   });
@@ -97,7 +107,10 @@ void main() {
     expect(find.text('0 pcs'), findsOneWidget);
     expect(find.text('Out of Stock'), findsOneWidget);
     expect(find.text('Low Stock'), findsNothing);
-    expect(find.bySemanticsLabel('Rice, 0 pcs, Out of Stock'), findsOneWidget);
+    expect(
+      find.bySemanticsLabel('Rice, 0 pcs, Price: \u20B150.00, Out of Stock'),
+      findsOneWidget,
+    );
     expect(find.bySemanticsLabel('Stock Out Rice'), findsOneWidget);
   });
 
@@ -135,12 +148,15 @@ void main() {
         ),
       );
 
-      expect(find.bySemanticsLabel('Rice, 4 pcs'), findsOneWidget);
+      expect(
+        find.bySemanticsLabel('Rice, 4 pcs, Price: \u20B150.00'),
+        findsOneWidget,
+      );
       expect(find.bySemanticsLabel('Stock In Rice'), findsOneWidget);
       expect(find.bySemanticsLabel('Stock Out Rice'), findsOneWidget);
       expect(find.bySemanticsLabel('Edit Rice'), findsOneWidget);
       expect(
-        find.bySemanticsLabel('Rice, 4 pcs, Stock In Rice'),
+        find.bySemanticsLabel('Rice, 4 pcs, Price: \u20B150.00, Stock In Rice'),
         findsNothing,
       );
 
@@ -202,7 +218,7 @@ void main() {
     expect(find.text('1 $unit'), findsOneWidget);
     expect(find.text('Low Stock'), findsOneWidget);
     expect(
-      find.bySemanticsLabel('$name, 1 $unit, Low Stock'),
+      find.bySemanticsLabel('$name, 1 $unit, Price: \u20B150.00, Low Stock'),
       findsOneWidget,
     );
     for (final key in [
