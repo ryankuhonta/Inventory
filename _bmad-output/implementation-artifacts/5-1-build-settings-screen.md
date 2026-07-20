@@ -4,7 +4,7 @@ baseline_commit: 4683c9762797d6a31e8dbc5f9f4f08fe6a973d80
 
 # Story 5.1: Build Settings Screen
 
-Status: review
+Status: done
 
 ## Story
 
