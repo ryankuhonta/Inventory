@@ -4,7 +4,7 @@ baseline_commit: 1e39a1393585e90759fa6afdf96b1f721ecd27db
 
 # Story 5.2: Show PHP Currency Context
 
-Status: review
+Status: done
 
 <!-- Note: Validation is optional. Run validate-create-story for quality check before dev-story. -->
 
