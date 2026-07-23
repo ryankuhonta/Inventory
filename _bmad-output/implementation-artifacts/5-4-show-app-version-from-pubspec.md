@@ -4,7 +4,7 @@ baseline_commit: 2f3c602071ae900258f80429fb8a26bff0457d1d
 
 # Story 5.4: Show App Version From Pubspec
 
-Status: ready-for-dev
+Status: review
 
 <!-- Note: Validation is optional. Run validate-create-story for quality check before dev-story. -->
 
@@ -22,41 +22,41 @@ so that support and testing can identify which build is installed.
 
 ## Tasks / Subtasks
 
-- [ ] Task 1: Replace hardcoded Settings app-version copy with canonical version data (AC: 1, 2)
-  - [ ] Update `tindatrack/lib/features/settings/presentation/screens/settings_screen.dart`; do not create a parallel Settings screen or route.
-  - [ ] Preserve `Key('settings-screen')` and `Key('settings-app-version-section')`.
-  - [ ] Keep the section title `App Version` unless there is a strong local UI reason to adjust punctuation only.
-  - [ ] Replace the current value `MVP preview` with the canonical app version from `tindatrack/pubspec.yaml` (`0.1.0+1` at story creation time) or package metadata derived from that version.
-  - [ ] Keep the visible value suitable for support/testing, preferably including both version and build number such as `0.1.0+1`.
-  - [ ] Do not duplicate the version as an unrelated UI-only constant that can drift from `pubspec.yaml`.
+- [x] Task 1: Replace hardcoded Settings app-version copy with canonical version data (AC: 1, 2)
+  - [x] Update `tindatrack/lib/features/settings/presentation/screens/settings_screen.dart`; do not create a parallel Settings screen or route.
+  - [x] Preserve `Key('settings-screen')` and `Key('settings-app-version-section')`.
+  - [x] Keep the section title `App Version` unless there is a strong local UI reason to adjust punctuation only.
+  - [x] Replace the current value `MVP preview` with the canonical app version from `tindatrack/pubspec.yaml` (`0.1.0+1` at story creation time) or package metadata derived from that version.
+  - [x] Keep the visible value suitable for support/testing, preferably including both version and build number such as `0.1.0+1`.
+  - [x] Do not duplicate the version as an unrelated UI-only constant that can drift from `pubspec.yaml`.
 
-- [ ] Task 2: Keep implementation local, simple, and offline (AC: 1-3)
-  - [ ] Prefer the smallest implementation that keeps `pubspec.yaml` as the canonical source.
-  - [ ] If reading `pubspec.yaml` at runtime, include only the minimum asset/configuration needed and parse only the top-level `version:` field.
-  - [ ] If using package metadata instead, keep the dependency/platform integration justified and tested; do not add release-channel, analytics, crash reporting, or network behavior.
-  - [ ] Preserve the synchronous/lightweight Settings layout where possible; if async loading is needed, show stable, friendly copy and no raw technical errors.
-  - [ ] Do not add Drift schema changes, settings repositories, providers, migrations, remote clients, login/account routes, Android permissions, or app-shell routes for this story.
+- [x] Task 2: Keep implementation local, simple, and offline (AC: 1-3)
+  - [x] Prefer the smallest implementation that keeps `pubspec.yaml` as the canonical source.
+  - [x] If reading `pubspec.yaml` at runtime, include only the minimum asset/configuration needed and parse only the top-level `version:` field.
+  - [x] If using package metadata instead, keep the dependency/platform integration justified and tested; do not add release-channel, analytics, crash reporting, or network behavior.
+  - [x] Preserve the synchronous/lightweight Settings layout where possible; if async loading is needed, show stable, friendly copy and no raw technical errors.
+  - [x] Do not add Drift schema changes, settings repositories, providers, migrations, remote clients, login/account routes, Android permissions, or app-shell routes for this story.
 
-- [ ] Task 3: Preserve existing Settings and app shell behavior (AC: 1-3)
-  - [ ] Keep the four Settings sections visible: Currency, Backup / Export, App Version, and Local Data.
-  - [ ] Preserve PHP currency context from `CurrencyFormatter.php()`.
-  - [ ] Preserve Story 5.3 Backup / Export copy, including local-device and no-account/no-internet wording.
-  - [ ] Preserve the existing four-tab app shell: Dashboard, Products, History, Settings.
-  - [ ] Do not alter product, stock, history, dashboard, currency formatter, router, database, generated migrations, or Android platform files unless strictly required by the chosen version-source mechanism.
+- [x] Task 3: Preserve existing Settings and app shell behavior (AC: 1-3)
+  - [x] Keep the four Settings sections visible: Currency, Backup / Export, App Version, and Local Data.
+  - [x] Preserve PHP currency context from `CurrencyFormatter.php()`.
+  - [x] Preserve Story 5.3 Backup / Export copy, including local-device and no-account/no-internet wording.
+  - [x] Preserve the existing four-tab app shell: Dashboard, Products, History, Settings.
+  - [x] Do not alter product, stock, history, dashboard, currency formatter, router, database, generated migrations, or Android platform files unless strictly required by the chosen version-source mechanism.
 
-- [ ] Task 4: Add focused Settings tests (AC: 1-3)
-  - [ ] Update `tindatrack/test/features/settings/presentation/screens/settings_screen_test.dart`.
-  - [ ] Assert the App Version section renders the canonical `pubspec.yaml` version (`0.1.0+1` at story creation time) or injected package metadata equivalent.
-  - [ ] Assert stale placeholder text such as `MVP preview` is no longer used as the App Version value.
-  - [ ] Keep assertions for Currency, Backup / Export, Local Data, MVP exclusion copy, small-phone/high-text-scale layout, and offline app-shell route access.
-  - [ ] If version loading is async, test the loading/success path without requiring network or platform channels in widget tests.
+- [x] Task 4: Add focused Settings tests (AC: 1-3)
+  - [x] Update `tindatrack/test/features/settings/presentation/screens/settings_screen_test.dart`.
+  - [x] Assert the App Version section renders the canonical `pubspec.yaml` version (`0.1.0+1` at story creation time) or injected package metadata equivalent.
+  - [x] Assert stale placeholder text such as `MVP preview` is no longer used as the App Version value.
+  - [x] Keep assertions for Currency, Backup / Export, Local Data, MVP exclusion copy, small-phone/high-text-scale layout, and offline app-shell route access.
+  - [x] If version loading is async, test the loading/success path without requiring network or platform channels in widget tests.
 
-- [ ] Task 5: Verify Story 5.4 completion (AC: 1-3)
-  - [ ] Run Dart format for touched `lib`, `test`, and config files.
-  - [ ] Run focused Settings tests.
-  - [ ] Run `dart analyze`.
-  - [ ] Run the full Flutter test suite if focused tests and analyzer pass.
-  - [ ] Run `git diff --check`.
+- [x] Task 5: Verify Story 5.4 completion (AC: 1-3)
+  - [x] Run Dart format for touched `lib`, `test`, and config files.
+  - [x] Run focused Settings tests.
+  - [x] Run `dart analyze`.
+  - [x] Run the full Flutter test suite if focused tests and analyzer pass.
+  - [x] Run `git diff --check`.
 
 ## Dev Notes
 
@@ -165,8 +165,25 @@ Codex GPT-5
 
 ### Debug Log References
 
+- 2026-07-23: Red focused Settings test run from `C:\tmp\Inventory-tindatrack-story-5-4-red-0723b` failed as expected because `0.1.0+1` from `pubspec.yaml` was not visible while the UI still showed `MVP preview`.
+- 2026-07-23: Focused Settings tests passed from `C:\tmp\Inventory-tindatrack-story-5-4-green-0723a` after loading the app version from the bundled `pubspec.yaml` asset.
+- 2026-07-23: Review verification from `C:\tmp\Inventory-tindatrack-story-5-4-verify-0723a` passed: formatter run, focused Settings tests passed, `dart analyze` passed with no issues, full Flutter suite passed with 354 tests, and `git diff --check` passed.
+
 ### Completion Notes List
 
 - Ultimate context engine analysis completed - comprehensive developer guide created.
+- Loaded `pubspec.yaml` as a local Flutter asset and displayed its top-level `version` value in the existing Settings App Version section.
+- Replaced stale `MVP preview` app-version copy with canonical version display while preserving Settings keys, sections, Backup / Export copy, PHP currency context, and app-shell behavior.
+- Updated focused Settings tests to derive the expected version from `pubspec.yaml` and reject the stale placeholder value.
 
 ### File List
+
+- `_bmad-output/implementation-artifacts/5-4-show-app-version-from-pubspec.md`
+- `_bmad-output/implementation-artifacts/sprint-status.yaml`
+- `tindatrack/pubspec.yaml`
+- `tindatrack/lib/features/settings/presentation/screens/settings_screen.dart`
+- `tindatrack/test/features/settings/presentation/screens/settings_screen_test.dart`
+
+### Change Log
+
+- 2026-07-23: Implemented Story 5.4 app version display from `pubspec.yaml` and marked story ready for review.

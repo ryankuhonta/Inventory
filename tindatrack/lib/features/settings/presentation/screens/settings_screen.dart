@@ -1,12 +1,20 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:tindatrack/core/formatters/currency_formatter.dart';
 import 'package:tindatrack/core/ui/app_dimensions.dart';
 import 'package:tindatrack/core/ui/app_spacing.dart';
 
 /// Root screen for local-only app settings.
-class SettingsScreen extends StatelessWidget {
+class SettingsScreen extends StatefulWidget {
   /// Creates the Settings screen.
   const SettingsScreen({super.key});
+
+  @override
+  State<SettingsScreen> createState() => _SettingsScreenState();
+}
+
+class _SettingsScreenState extends State<SettingsScreen> {
+  late final Future<String> _appVersion = _loadAppVersion();
 
   @override
   Widget build(BuildContext context) {
@@ -49,12 +57,24 @@ class SettingsScreen extends StatelessWidget {
                   'update.',
             ),
             SizedBox(height: spacing.md),
-            const _SettingsSection(
-              key: Key('settings-app-version-section'),
-              icon: Icons.info_outline,
-              title: 'App Version',
-              value: 'MVP preview',
-              description: 'Version details will be shown here before release.',
+            FutureBuilder<String>(
+              future: _appVersion,
+              builder: (context, snapshot) {
+                final version = switch (snapshot.connectionState) {
+                  ConnectionState.done => snapshot.data ?? 'Unavailable',
+                  _ => 'Loading...',
+                };
+
+                return _SettingsSection(
+                  key: const Key('settings-app-version-section'),
+                  icon: Icons.info_outline,
+                  title: 'App Version',
+                  value: version,
+                  description:
+                      'Shown from the app package version for '
+                      'support and testing.',
+                );
+              },
             ),
             SizedBox(height: spacing.md),
             const _SettingsSection(
@@ -70,6 +90,18 @@ class SettingsScreen extends StatelessWidget {
       ),
     );
   }
+}
+
+Future<String> _loadAppVersion() async {
+  final pubspec = await rootBundle.loadString('pubspec.yaml');
+  return _versionFromPubspec(pubspec);
+}
+
+String _versionFromPubspec(String pubspec) {
+  final versionLine = pubspec
+      .split('\n')
+      .firstWhere((line) => line.trimLeft().startsWith('version:'));
+  return versionLine.split(':').last.trim();
 }
 
 class _SettingsSection extends StatelessWidget {

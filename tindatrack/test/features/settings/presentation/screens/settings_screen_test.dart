@@ -1,3 +1,5 @@
+import 'dart:io';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:tindatrack/app/router/app_router.dart';
@@ -39,7 +41,9 @@ void main() {
       ),
       findsOneWidget,
     );
-    expect(find.text('MVP preview'), findsOneWidget);
+    final pubspecVersion = _pubspecVersion();
+    expect(find.text(pubspecVersion), findsOneWidget);
+    expect(find.text('MVP preview'), findsNothing);
     expect(
       find.text('Inventory data is stored on this device for the MVP.'),
       findsOneWidget,
@@ -137,6 +141,14 @@ void main() {
       findsNothing,
     );
   });
+}
+
+String _pubspecVersion() {
+  final pubspec = File('pubspec.yaml').readAsStringSync();
+  final versionLine = pubspec
+      .split('\n')
+      .firstWhere((line) => line.startsWith('version:'));
+  return versionLine.split(':').last.trim();
 }
 
 Future<void> _pumpSettings(WidgetTester tester) async {
