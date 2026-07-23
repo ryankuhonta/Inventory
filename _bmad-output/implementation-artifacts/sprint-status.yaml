@@ -85,7 +85,7 @@ development_status:
   5-1-build-settings-screen: done
   5-2-show-php-currency-context: done
   5-3-add-honest-backup-export-placeholder: done
-  5-4-show-app-version-from-pubspec: backlog
+  5-4-show-app-version-from-pubspec: ready-for-dev
   5-5-complete-mvp-ux-polish-and-accessibility-pass: backlog
   5-6-complete-mvp-release-readiness-checks: backlog
   epic-5-retrospective: optional
