@@ -43,7 +43,8 @@ class SettingsScreen extends StatelessWidget {
               title: 'Backup / Export',
               value: 'Coming soon',
               description:
-                  'A simple file option will be added in a future update.',
+                  'For now, inventory data stays on this device. '
+                  'Backup and export will be added in a future update.',
             ),
             SizedBox(height: spacing.md),
             const _SettingsSection(

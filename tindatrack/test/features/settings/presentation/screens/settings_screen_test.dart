@@ -31,6 +31,13 @@ void main() {
     expect(find.text('PHP'), findsOneWidget);
     expect(find.textContaining('Philippine Peso'), findsOneWidget);
     expect(find.text('Coming soon'), findsOneWidget);
+    expect(
+      find.text(
+        'For now, inventory data stays on this device. '
+        'Backup and export will be added in a future update.',
+      ),
+      findsOneWidget,
+    );
     expect(find.text('MVP preview'), findsOneWidget);
     expect(
       find.text('Inventory data is stored on this device for the MVP.'),
@@ -56,6 +63,11 @@ void main() {
       'barcode scanner',
       'accounting',
       'active export',
+      'backed up',
+      'exported',
+      'sync enabled',
+      'remote api',
+      'export complete',
     ]) {
       expect(visibleText, isNot(contains(forbidden)));
     }

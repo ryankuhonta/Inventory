@@ -2,9 +2,9 @@
 baseline_commit: 06b6e7e4028b0ec21f255ef4055c789dd9b70a8a
 ---
 
-# Story 5.3: Add Honest Backup/Export Placeholde
+# Story 5.3: Add Honest Backup/Export Placeholder
 
-Status: ready-for-dev
+Status: review
 
 <!-- Note: Validation is optional. Run validate-create-story for quality check before dev-story. -->
 
@@ -22,42 +22,42 @@ so that I am not misled about data protection.
 
 ## Tasks / Subtasks
 
-- [ ] Task 1: Strengthen the Settings Backup / Export placeholder copy (AC: 1, 2)
-  - [ ] Update `tindatrack/lib/features/settings/presentation/screens/settings_screen.dart`; do not create a parallel Settings screen or route.
-  - [ ] Preserve `Key('settings-screen')` and `Key('settings-backup-export-section')`.
-  - [ ] Keep the section title `Backup / Export` unless there is a strong local UI reason to adjust punctuation only.
-  - [ ] Keep the value as `Coming soon` or equally plain future-state copy.
-  - [ ] Update the description so it explicitly says MVP inventory data stays on this device/local device for now.
-  - [ ] Make the copy honest and Filipino-friendly; avoid jargon like sync provider, remote client, or cloud account.
+- [x] Task 1: Strengthen the Settings Backup / Export placeholder copy (AC: 1, 2)
+  - [x] Update `tindatrack/lib/features/settings/presentation/screens/settings_screen.dart`; do not create a parallel Settings screen or route.
+  - [x] Preserve `Key('settings-screen')` and `Key('settings-backup-export-section')`.
+  - [x] Keep the section title `Backup / Export` unless there is a strong local UI reason to adjust punctuation only.
+  - [x] Keep the value as `Coming soon` or equally plain future-state copy.
+  - [x] Update the description so it explicitly says MVP inventory data stays on this device/local device for now.
+  - [x] Make the copy honest and Filipino-friendly; avoid jargon like sync provider, remote client, or cloud account.
 
-- [ ] Task 2: Add non-fake explanatory behavior only if useful (AC: 2, 3)
-  - [ ] The current synchronous Settings screen may satisfy "views" with visible row copy; do not add tap behavior unless it improves clarity without scope creep.
-  - [ ] If adding tap behavior, keep it local-only, such as a Material dialog/bottom sheet with explanatory copy.
-  - [ ] If a dialog/sheet is added, use stable keys such as `Key('settings-backup-export-details')` and ensure it requires no provider, login, network call, permission, or file picker.
-  - [ ] Do not add an enabled Export button that creates, downloads, shares, or writes a file.
-  - [ ] Do not add cloud sync, backup schedule, auth, account setup, remote API, or storage service placeholders that look active.
+- [x] Task 2: Add non-fake explanatory behavior only if useful (AC: 2, 3)
+  - [x] The current synchronous Settings screen may satisfy "views" with visible row copy; do not add tap behavior unless it improves clarity without scope creep.
+  - [x] If adding tap behavior, keep it local-only, such as a Material dialog/bottom sheet with explanatory copy.
+  - [x] If a dialog/sheet is added, use stable keys such as `Key('settings-backup-export-details')` and ensure it requires no provider, login, network call, permission, or file picker.
+  - [x] Do not add an enabled Export button that creates, downloads, shares, or writes a file.
+  - [x] Do not add cloud sync, backup schedule, auth, account setup, remote API, or storage service placeholders that look active.
 
-- [ ] Task 3: Preserve existing Settings and app shell behavior (AC: 1-3)
-  - [ ] Keep the four Settings sections visible: Currency, Backup / Export, App Version, and Local Data.
-  - [ ] Preserve current PHP currency context from `CurrencyFormatter.php()` and do not change product price behavior.
-  - [ ] Preserve the existing four-tab app shell: Dashboard, Products, History, Settings.
-  - [ ] Do not add Drift schema, `app_settings` table, migrations, repositories, or providers for this placeholder unless implementation proves synchronous copy is impossible.
-  - [ ] Do not add dependencies or Android permissions.
+- [x] Task 3: Preserve existing Settings and app shell behavior (AC: 1-3)
+  - [x] Keep the four Settings sections visible: Currency, Backup / Export, App Version, and Local Data.
+  - [x] Preserve current PHP currency context from `CurrencyFormatter.php()` and do not change product price behavior.
+  - [x] Preserve the existing four-tab app shell: Dashboard, Products, History, Settings.
+  - [x] Do not add Drift schema, `app_settings` table, migrations, repositories, or providers for this placeholder unless implementation proves synchronous copy is impossible.
+  - [x] Do not add dependencies or Android permissions.
 
-- [ ] Task 4: Add focused Settings tests (AC: 1-3)
-  - [ ] Update `tindatrack/test/features/settings/presentation/screens/settings_screen_test.dart`.
-  - [ ] Assert the Backup / Export section renders future-state copy and local-device explanatory copy.
-  - [ ] Assert visible Settings copy does not imply active backup/export, cloud sync, login, account management, remote API, file creation, or export success.
-  - [ ] If tap behavior is added, test the tap opens only explanatory UI and does not navigate away from Settings.
-  - [ ] Keep or extend the small-phone/high-text-scale Settings regression so longer placeholder copy does not overflow.
-  - [ ] Keep the app-shell Settings route test passing offline.
+- [x] Task 4: Add focused Settings tests (AC: 1-3)
+  - [x] Update `tindatrack/test/features/settings/presentation/screens/settings_screen_test.dart`.
+  - [x] Assert the Backup / Export section renders future-state copy and local-device explanatory copy.
+  - [x] Assert visible Settings copy does not imply active backup/export, cloud sync, login, account management, remote API, file creation, or export success.
+  - [x] If tap behavior is added, test the tap opens only explanatory UI and does not navigate away from Settings.
+  - [x] Keep or extend the small-phone/high-text-scale Settings regression so longer placeholder copy does not overflow.
+  - [x] Keep the app-shell Settings route test passing offline.
 
-- [ ] Task 5: Verify Story 5.3 completion (AC: 1-3)
-  - [ ] Run Dart format for touched `lib` and `test` files.
-  - [ ] Run focused Settings tests.
-  - [ ] Run `dart analyze`.
-  - [ ] Run the full Flutter test suite if focused tests and analyzer pass.
-  - [ ] Run `git diff --check`.
+- [x] Task 5: Verify Story 5.3 completion (AC: 1-3)
+  - [x] Run Dart format for touched `lib` and `test` files.
+  - [x] Run focused Settings tests.
+  - [x] Run `dart analyze`.
+  - [x] Run the full Flutter test suite if focused tests and analyzer pass.
+  - [x] Run `git diff --check`.
 
 ## Dev Notes
 
@@ -169,8 +169,28 @@ Codex GPT-5
 
 ### Debug Log References
 
+- 2026-07-23: Red focused Settings test run from `C:\tmp\Inventory-tindatrack-story-5-3-red-0723a` failed on missing local-device Backup / Export explanatory copy.
+- 2026-07-23: Focused Settings tests passed from `C:\tmp\Inventory-tindatrack-story-5-3-green-0723a`.
+- 2026-07-23: Formatted touched Settings files from the workspace; formatter reported 0 changed files.
+- 2026-07-23: Focused Settings tests passed from `C:\tmp\Inventory-tindatrack-story-5-3-verify-0723a`.
+- 2026-07-23: `dart analyze` passed from `C:\tmp\Inventory-tindatrack-story-5-3-verify-0723a` with no issues.
+- 2026-07-23: Full Flutter test suite passed from `C:\tmp\Inventory-tindatrack-story-5-3-verify-0723a` with 354 tests.
+
 ### Completion Notes List
 
 - Ultimate context engine analysis completed - comprehensive developer guide created.
+- Strengthened the Settings Backup / Export placeholder with explicit local-device MVP data copy.
+- Preserved the synchronous local-only Settings screen, stable Settings keys, PHP currency context, and four-tab app shell.
+- Avoided export files, cloud sync, login/account routes, remote API clients, dependencies, Android permissions, providers, persistence, and Drift schema changes.
+- Updated Settings widget tests to assert honest Backup / Export copy, active-scope exclusions, small-phone/high-text-scale behavior, and offline app-shell access.
 
 ### File List
+
+- `_bmad-output/implementation-artifacts/5-3-add-honest-backup-export-placeholder.md`
+- `_bmad-output/implementation-artifacts/sprint-status.yaml`
+- `tindatrack/lib/features/settings/presentation/screens/settings_screen.dart`
+- `tindatrack/test/features/settings/presentation/screens/settings_screen_test.dart`
+
+### Change Log
+
+- 2026-07-23: Implemented Story 5.3 honest Backup / Export placeholder and focused Settings tests; marked story ready for review.
