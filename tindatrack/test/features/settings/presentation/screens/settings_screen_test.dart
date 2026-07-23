@@ -34,7 +34,8 @@ void main() {
     expect(
       find.text(
         'For now, inventory data stays on this device. '
-        'Backup and export will be added in a future update.',
+        'No account or internet connection is needed to view this '
+        'placeholder. Backup and export will be added in a future update.',
       ),
       findsOneWidget,
     );
@@ -65,6 +66,10 @@ void main() {
       'active export',
       'backed up',
       'exported',
+      'backup enabled',
+      'cloud backup',
+      'export available',
+      'data is protected',
       'sync enabled',
       'remote api',
       'export complete',

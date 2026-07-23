@@ -44,7 +44,9 @@ class SettingsScreen extends StatelessWidget {
               value: 'Coming soon',
               description:
                   'For now, inventory data stays on this device. '
-                  'Backup and export will be added in a future update.',
+                  'No account or internet connection is needed to view this '
+                  'placeholder. Backup and export will be added in a future '
+                  'update.',
             ),
             SizedBox(height: spacing.md),
             const _SettingsSection(

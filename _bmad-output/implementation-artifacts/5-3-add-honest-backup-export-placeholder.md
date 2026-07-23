@@ -4,7 +4,7 @@ baseline_commit: 06b6e7e4028b0ec21f255ef4055c789dd9b70a8a
 
 # Story 5.3: Add Honest Backup/Export Placeholder
 
-Status: review
+Status: done
 
 <!-- Note: Validation is optional. Run validate-create-story for quality check before dev-story. -->
 
@@ -58,6 +58,10 @@ so that I am not misled about data protection.
   - [x] Run `dart analyze`.
   - [x] Run the full Flutter test suite if focused tests and analyzer pass.
   - [x] Run `git diff --check`.
+
+### Review Findings
+
+- [x] [Review][Patch] Backup / Export copy omits the required no-login/no-network explanation [tindatrack/lib/features/settings/presentation/screens/settings_screen.dart:45]
 
 ## Dev Notes
 
@@ -175,6 +179,8 @@ Codex GPT-5
 - 2026-07-23: Focused Settings tests passed from `C:\tmp\Inventory-tindatrack-story-5-3-verify-0723a`.
 - 2026-07-23: `dart analyze` passed from `C:\tmp\Inventory-tindatrack-story-5-3-verify-0723a` with no issues.
 - 2026-07-23: Full Flutter test suite passed from `C:\tmp\Inventory-tindatrack-story-5-3-verify-0723a` with 354 tests.
+- 2026-07-23: BMAD code review found one AC2 copy gap: Backup / Export did not explicitly explain no login/network requirement.
+- 2026-07-23: Review fix verification passed from `C:\tmp\Inventory-tindatrack-story-5-3-review-fix-0723a`: formatter 0 changed, focused Settings tests passed, `dart analyze` passed, full Flutter suite passed with 354 tests, and `git diff --check` passed.
 
 ### Completion Notes List
 
@@ -183,6 +189,7 @@ Codex GPT-5
 - Preserved the synchronous local-only Settings screen, stable Settings keys, PHP currency context, and four-tab app shell.
 - Avoided export files, cloud sync, login/account routes, remote API clients, dependencies, Android permissions, providers, persistence, and Drift schema changes.
 - Updated Settings widget tests to assert honest Backup / Export copy, active-scope exclusions, small-phone/high-text-scale behavior, and offline app-shell access.
+- Addressed BMAD review finding by clarifying the placeholder requires no account or internet connection and broadening misleading backup/export phrase guards.
 
 ### File List
 
@@ -194,3 +201,4 @@ Codex GPT-5
 ### Change Log
 
 - 2026-07-23: Implemented Story 5.3 honest Backup / Export placeholder and focused Settings tests; marked story ready for review.
+- 2026-07-23: Completed BMAD code review fix and marked Story 5.3 done.
