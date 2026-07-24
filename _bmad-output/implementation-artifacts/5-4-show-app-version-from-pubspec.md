@@ -4,7 +4,7 @@ baseline_commit: 2f3c602071ae900258f80429fb8a26bff0457d1d
 
 # Story 5.4: Show App Version From Pubspec
 
-Status: review
+Status: done
 
 <!-- Note: Validation is optional. Run validate-create-story for quality check before dev-story. -->
 
@@ -57,6 +57,10 @@ so that support and testing can identify which build is installed.
   - [x] Run `dart analyze`.
   - [x] Run the full Flutter test suite if focused tests and analyzer pass.
   - [x] Run `git diff --check`.
+
+### Review Findings
+
+- [x] [Review][Patch] Pubspec version extraction should only accept the top-level scalar and ignore inline comments [tindatrack/lib/features/settings/presentation/screens/settings_screen.dart:102]
 
 ## Dev Notes
 
@@ -168,6 +172,7 @@ Codex GPT-5
 - 2026-07-23: Red focused Settings test run from `C:\tmp\Inventory-tindatrack-story-5-4-red-0723b` failed as expected because `0.1.0+1` from `pubspec.yaml` was not visible while the UI still showed `MVP preview`.
 - 2026-07-23: Focused Settings tests passed from `C:\tmp\Inventory-tindatrack-story-5-4-green-0723a` after loading the app version from the bundled `pubspec.yaml` asset.
 - 2026-07-23: Review verification from `C:\tmp\Inventory-tindatrack-story-5-4-verify-0723a` passed: formatter run, focused Settings tests passed, `dart analyze` passed with no issues, full Flutter suite passed with 354 tests, and `git diff --check` passed.
+- 2026-07-25: Code review patch verification from `C:\tmp\Inventory-story-5-4-review-fix-0725a` passed: format check, focused Settings tests, `dart analyze`, and full Flutter suite with 355 tests.
 
 ### Completion Notes List
 
@@ -175,6 +180,7 @@ Codex GPT-5
 - Loaded `pubspec.yaml` as a local Flutter asset and displayed its top-level `version` value in the existing Settings App Version section.
 - Replaced stale `MVP preview` app-version copy with canonical version display while preserving Settings keys, sections, Backup / Export copy, PHP currency context, and app-shell behavior.
 - Updated focused Settings tests to derive the expected version from `pubspec.yaml` and reject the stale placeholder value.
+- Resolved code review patch by extracting only the top-level pubspec version scalar, ignoring inline YAML comments, and returning friendly fallback copy when absent.
 
 ### File List
 
@@ -187,3 +193,4 @@ Codex GPT-5
 ### Change Log
 
 - 2026-07-23: Implemented Story 5.4 app version display from `pubspec.yaml` and marked story ready for review.
+- 2026-07-25: Resolved code review patch and marked Story 5.4 done.

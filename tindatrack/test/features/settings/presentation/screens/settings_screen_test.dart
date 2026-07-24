@@ -50,6 +50,18 @@ void main() {
     );
   });
 
+  test('extracts only the top-level pubspec version scalar', () {
+    expect(
+      versionFromPubspec(
+        'name: app\n'
+        '  version: nested\n'
+        'version: 0.1.0+1 # release\n',
+      ),
+      '0.1.0+1',
+    );
+    expect(versionFromPubspec('name: app\n'), 'Unavailable');
+  });
+
   testWidgets('visible copy stays inside MVP scope', (tester) async {
     await _pumpSettings(tester);
 

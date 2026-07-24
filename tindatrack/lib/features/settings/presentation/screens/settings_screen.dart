@@ -94,14 +94,27 @@ class _SettingsScreenState extends State<SettingsScreen> {
 
 Future<String> _loadAppVersion() async {
   final pubspec = await rootBundle.loadString('pubspec.yaml');
-  return _versionFromPubspec(pubspec);
+  return versionFromPubspec(pubspec);
 }
 
-String _versionFromPubspec(String pubspec) {
+/// Extracts the top-level app version from pubspec contents.
+@visibleForTesting
+String versionFromPubspec(String pubspec) {
   final versionLine = pubspec
       .split('\n')
-      .firstWhere((line) => line.trimLeft().startsWith('version:'));
-  return versionLine.split(':').last.trim();
+      .firstWhere(
+        (line) => line.startsWith('version:'),
+        orElse: () => '',
+      );
+  if (versionLine.isEmpty) {
+    return 'Unavailable';
+  }
+  final version = versionLine
+      .substring('version:'.length)
+      .split('#')
+      .first
+      .trim();
+  return version.isEmpty ? 'Unavailable' : version;
 }
 
 class _SettingsSection extends StatelessWidget {
