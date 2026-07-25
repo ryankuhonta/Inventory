@@ -965,6 +965,33 @@ void main() {
     expect(find.textContaining('login'), findsNothing);
     expect(find.textContaining('cloud'), findsNothing);
   });
+
+  testWidgets('first-product dashboard action opens Add Product', (
+    tester,
+  ) async {
+    await _pumpDashboardRouter(
+      tester,
+      repository: _DashboardRepository(
+        summaryStream: Stream.value(
+          const DashboardSummary(
+            totalActiveProducts: 0,
+            lowStockProducts: 0,
+            stockChangesToday: 0,
+          ),
+        ),
+      ),
+    );
+
+    expect(find.byKey(const Key('dashboard-empty-state')), findsOneWidget);
+
+    await tester.tap(find.text('Add your first product'));
+    await tester.pumpAndSettle();
+
+    expect(
+      find.byKey(const Key('add-product-route-test-screen')),
+      findsOneWidget,
+    );
+  });
 }
 
 Future<void> _pumpDashboardRouter(
@@ -989,6 +1016,15 @@ Future<void> _pumpDashboardRouter(
             );
           },
         ),
+        routes: [
+          GoRoute(
+            path: ProductRoute.addProduct.segment,
+            builder: (_, _) => const Scaffold(
+              key: Key('add-product-route-test-screen'),
+              body: Text('add product route'),
+            ),
+          ),
+        ],
       ),
       GoRoute(
         path: AppRoute.history.path,

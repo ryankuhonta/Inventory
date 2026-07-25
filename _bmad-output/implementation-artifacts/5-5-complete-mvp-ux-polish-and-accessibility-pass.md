@@ -4,7 +4,7 @@ baseline_commit: d493eea470c16a9f8f649c60cf94d22253c89830
 
 # Story 5.5: Complete MVP UX Polish And Accessibility Pass
 
-Status: ready-for-dev
+Status: done
 
 <!-- Note: Validation is optional. Run validate-create-story for quality check before dev-story. -->
 
@@ -23,48 +23,54 @@ so that I can use it confidently during daily store work.
 
 ## Tasks / Subtasks
 
-- [ ] Task 1: Audit and polish user-facing copy across MVP screens (AC: 1, 2, 4)
-  - [ ] Review Dashboard, Products, Add Product, Edit Product, Stock In, Stock Out, History, and Settings visible copy.
-  - [ ] Remove or prevent user-visible technical wording such as raw SQL/Drift/database diagnostics, exception text, "entity," "inventory mutation," "remote API," or other developer terms.
-  - [ ] Keep copy plain, helpful, and action-oriented; prefer approved terms such as `Add Product`, `Record Stock In`, `Record Stock Out`, `Low Stock`, `Out of Stock`, `Not enough stock available`, and `Saved`.
-  - [ ] Preserve established Settings copy from Stories 5.1-5.4, including PHP currency context, honest Backup / Export copy, local-device/no-account/no-internet wording, and `pubspec.yaml` app version display.
-  - [ ] Do not add ads, login, cloud sync prompts, monetization, analytics, remote config, network behavior, or future-feature routes.
+- [x] Task 1: Audit and polish user-facing copy across MVP screens (AC: 1, 2, 4)
+  - [x] Review Dashboard, Products, Add Product, Edit Product, Stock In, Stock Out, History, and Settings visible copy.
+  - [x] Remove or prevent user-visible technical wording such as raw SQL/Drift/database diagnostics, exception text, "entity," "inventory mutation," "remote API," or other developer terms.
+  - [x] Keep copy plain, helpful, and action-oriented; prefer approved terms such as `Add Product`, `Record Stock In`, `Record Stock Out`, `Low Stock`, `Out of Stock`, `Not enough stock available`, and `Saved`.
+  - [x] Preserve established Settings copy from Stories 5.1-5.4, including PHP currency context, honest Backup / Export copy, local-device/no-account/no-internet wording, and `pubspec.yaml` app version display.
+  - [x] Do not add ads, login, cloud sync prompts, monetization, analytics, remote config, network behavior, or future-feature routes.
 
-- [ ] Task 2: Polish common UI states and next-step behavior (AC: 2, 4)
-  - [ ] Reuse shared state widgets in `tindatrack/lib/core/widgets/app_empty_state.dart`, `app_error_view.dart`, and `app_loading_view.dart` where appropriate.
-  - [ ] Ensure loading, empty, error, validation, and success states use friendly recovery or next-step copy and never expose raw diagnostics.
-  - [ ] Verify Dashboard empty state behavior: if an "Add your first product" action is visible, it must navigate to Add Product or be made non-actionable with honest copy.
-  - [ ] Preserve retry provider invalidation behavior on Dashboard, Products, History, and product/stock unavailable states.
-  - [ ] Preserve save/confirm flow behavior: forms dismiss keyboard on save, prevent duplicate submits while saving, and show button-level progress.
+- [x] Task 2: Polish common UI states and next-step behavior (AC: 2, 4)
+  - [x] Reuse shared state widgets in `tindatrack/lib/core/widgets/app_empty_state.dart`, `app_error_view.dart`, and `app_loading_view.dart` where appropriate.
+  - [x] Ensure loading, empty, error, validation, and success states use friendly recovery or next-step copy and never expose raw diagnostics.
+  - [x] Verify Dashboard empty state behavior: if an "Add your first product" action is visible, it must navigate to Add Product or be made non-actionable with honest copy.
+  - [x] Preserve retry provider invalidation behavior on Dashboard, Products, History, and product/stock unavailable states.
+  - [x] Preserve save/confirm flow behavior: forms dismiss keyboard on save, prevent duplicate submits while saving, and show button-level progress.
 
-- [ ] Task 3: Improve accessibility and screen-reader clarity where gaps are found (AC: 3)
-  - [ ] Keep Material 3, `AppSpacing`, `AppDimensions`, 8dp component radii, and `AppDimensions.minimumTapTarget` patterns.
-  - [ ] Confirm common tappable controls meet the 48dp floor, especially product row actions, dashboard actions, bottom navigation, Settings sections if made tappable, and form submit buttons.
-  - [ ] Confirm low-stock/out-of-stock warnings are label-based, not color-only; preserve `StockBadge` visible labels and semantics.
-  - [ ] Add or refine semantics where rows are fragmented for assistive tech, especially History movement rows.
-  - [ ] Keep screens usable at small phone dimensions and high system text scaling; prefer scrollable layouts and wrapping over fixed-width text assumptions.
+- [x] Task 3: Improve accessibility and screen-reader clarity where gaps are found (AC: 3)
+  - [x] Keep Material 3, `AppSpacing`, `AppDimensions`, 8dp component radii, and `AppDimensions.minimumTapTarget` patterns.
+  - [x] Confirm common tappable controls meet the 48dp floor, especially product row actions, dashboard actions, bottom navigation, Settings sections if made tappable, and form submit buttons.
+  - [x] Confirm low-stock/out-of-stock warnings are label-based, not color-only; preserve `StockBadge` visible labels and semantics.
+  - [x] Add or refine semantics where rows are fragmented for assistive tech, especially History movement rows.
+  - [x] Keep screens usable at small phone dimensions and high system text scaling; prefer scrollable layouts and wrapping over fixed-width text assumptions.
 
-- [ ] Task 4: Preserve operational flow boundaries and existing behavior (AC: 1-4)
-  - [ ] Preserve the four-tab app shell: Dashboard, Products, History, Settings.
-  - [ ] Preserve Products search/filter behavior, search length limiting, filter-chip state, and product row navigation guards.
-  - [ ] Preserve Add/Edit Product validation, focus-first-invalid behavior, scroll-to-invalid behavior, numeric keyboard types, and no direct post-creation quantity editing.
-  - [ ] Preserve Stock In/Out digits-only quantity input, 9-character quantity limit, product refresh invalidations, friendly success messages, and no stock movement without a valid active product.
-  - [ ] Preserve History as read-only and newest-first.
-  - [ ] Preserve all stable keys used by existing widget tests unless there is a strong reason and tests are updated intentionally.
+- [x] Task 4: Preserve operational flow boundaries and existing behavior (AC: 1-4)
+  - [x] Preserve the four-tab app shell: Dashboard, Products, History, Settings.
+  - [x] Preserve Products search/filter behavior, search length limiting, filter-chip state, and product row navigation guards.
+  - [x] Preserve Add/Edit Product validation, focus-first-invalid behavior, scroll-to-invalid behavior, numeric keyboard types, and no direct post-creation quantity editing.
+  - [x] Preserve Stock In/Out digits-only quantity input, 9-character quantity limit, product refresh invalidations, friendly success messages, and no stock movement without a valid active product.
+  - [x] Preserve History as read-only and newest-first.
+  - [x] Preserve all stable keys used by existing widget tests unless there is a strong reason and tests are updated intentionally.
 
-- [ ] Task 5: Add focused UX/accessibility regression coverage (AC: 1-4)
-  - [ ] Add or update tests that scan visible text across MVP screens for forbidden technical/MVP-exclusion terms.
-  - [ ] Add or update tests for small phone/high text scale coverage on any screen that changes.
-  - [ ] Add or update tests for 48dp tap targets and semantics using existing patterns from `app_state_views_test.dart`, `product_row_actions_test.dart`, and screen tests.
-  - [ ] Add or update tests for warnings not relying on color alone, reusing `stock_badge_test.dart` patterns when relevant.
-  - [ ] Add or update tests for Dashboard first-product empty action behavior if changed.
+- [x] Task 5: Add focused UX/accessibility regression coverage (AC: 1-4)
+  - [x] Add or update tests that scan visible text across MVP screens for forbidden technical/MVP-exclusion terms.
+  - [x] Add or update tests for small phone/high text scale coverage on any screen that changes.
+  - [x] Add or update tests for 48dp tap targets and semantics using existing patterns from `app_state_views_test.dart`, `product_row_actions_test.dart`, and screen tests.
+  - [x] Add or update tests for warnings not relying on color alone, reusing `stock_badge_test.dart` patterns when relevant.
+  - [x] Add or update tests for Dashboard first-product empty action behavior if changed.
 
-- [ ] Task 6: Verify Story 5.5 completion (AC: 1-4)
-  - [ ] Run Dart format for touched `lib` and `test` files.
-  - [ ] Run focused tests for touched screens/widgets.
-  - [ ] Run `dart analyze`.
-  - [ ] Run the full Flutter test suite if focused tests and analyzer pass.
-  - [ ] Run `git diff --check`.
+- [x] Task 6: Verify Story 5.5 completion (AC: 1-4)
+  - [x] Run Dart format for touched `lib` and `test` files.
+  - [x] Run focused tests for touched screens/widgets.
+  - [x] Run `dart analyze`.
+  - [x] Run the full Flutter test suite if focused tests and analyzer pass.
+  - [x] Run `git diff --check`.
+
+
+### Review Findings
+
+- [x] [Review][Patch] Guardrail omits required forbidden terms [tindatrack/test/ux/mvp_visible_copy_guardrail_test.dart:127]
+- [x] [Review][Patch] Copy guardrail scans source literals instead of visible screen text [tindatrack/test/ux/mvp_visible_copy_guardrail_test.dart:93]
 
 ## Dev Notes
 
@@ -180,8 +186,31 @@ Codex GPT-5
 
 ### Debug Log References
 
+- 2026-07-25: Red focused tests failed from `C:\tmp\tindatrack-story-5-5` for Dashboard first-product CTA navigation and History row semantics before production fixes.
+- 2026-07-25: Focused Story 5.5 tests passed from `C:\tmp\tindatrack-story-5-5`:
+  - `flutter test test/features/dashboard/presentation/screens/dashboard_screen_test.dart test/features/history/presentation/screens/movement_history_screen_test.dart test/ux/mvp_visible_copy_guardrail_test.dart`
+- 2026-07-25: `dart analyze` passed from `C:\tmp\tindatrack-story-5-5` with no issues.
+- 2026-07-25: Full Flutter test suite passed from `C:\tmp\tindatrack-story-5-5` with 358 tests passing.
+- 2026-07-25: git diff --check passed from the workspace.
+- 2026-07-25: Code review patches applied; focused tests passed from `C:\tmp\tindatrack-story-5-5-review-fix` and `dart analyze` passed with no issues.
+
 ### Completion Notes List
 
-- Ultimate context engine analysis completed - comprehensive developer guide created
+- Audited MVP screen copy and added a widget-level visible-copy guardrail over MVP screens to block technical and out-of-scope terms, including login and ad copy.
+- Fixed the Dashboard first-product empty-state action so the visible CTA opens Add Product instead of acting as a no-op.
+- Added a consolidated History movement row semantics label so assistive tech hears one clear movement summary, including product, signed quantity, quantity change, date, and note.
+- Preserved the four-tab shell, Products search/filter behavior, stock flow boundaries, Settings copy, warnings with visible labels, and existing stable keys.
 
 ### File List
+
+- `_bmad-output/implementation-artifacts/5-5-complete-mvp-ux-polish-and-accessibility-pass.md`
+- `_bmad-output/implementation-artifacts/sprint-status.yaml`
+- `tindatrack/lib/features/dashboard/presentation/screens/dashboard_screen.dart`
+- `tindatrack/lib/features/history/presentation/screens/movement_history_screen.dart`
+- `tindatrack/test/features/dashboard/presentation/screens/dashboard_screen_test.dart`
+- `tindatrack/test/features/history/presentation/screens/movement_history_screen_test.dart`
+- `tindatrack/test/ux/mvp_visible_copy_guardrail_test.dart`
+
+### Change Log
+
+- 2026-07-25: Implemented Story 5.5 MVP UX polish and accessibility pass; marked ready for review.

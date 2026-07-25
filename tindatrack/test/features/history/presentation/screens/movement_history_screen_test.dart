@@ -71,6 +71,39 @@ void main() {
     expect(find.byType(FilledButton), findsNothing);
   });
 
+  testWidgets('movement rows expose one clear screen-reader summary', (
+    tester,
+  ) async {
+    final semantics = tester.ensureSemantics();
+
+    await _pumpHistory(
+      tester,
+      movements: [
+        _movement(
+          id: 'movement-a11y',
+          type: StockMovementType.stockOut,
+          quantity: 2,
+          previousQuantity: 8,
+          newQuantity: 6,
+          productNameSnapshot: 'Coke 1L snapshot',
+          unitSnapshot: 'bottle',
+          note: 'broken bottle',
+          createdAt: DateTime(2026, 7, 10, 12, 30),
+        ),
+      ],
+    );
+
+    expect(
+      find.bySemanticsLabel(
+        'Stock Out, Coke 1L snapshot, -2 bottle, quantity changed from 8 '
+        'to 6 bottle, Jul 10, 2026 12:30, note: broken bottle',
+      ),
+      findsOneWidget,
+    );
+
+    semantics.dispose();
+  });
+
   testWidgets('shows friendly empty state', (tester) async {
     await _pumpHistory(tester, movements: const []);
 

@@ -121,66 +121,75 @@ final class _MovementRow extends StatelessWidget {
     final quantityTransition =
         '${movement.previousQuantity} -> ${movement.newQuantity} '
         '${movement.unitSnapshot}';
+    final semanticsLabel = _movementSemanticsLabel(
+      movement: movement,
+      label: label,
+      signedQuantity: signedQuantity,
+    );
 
-    return Card(
-      key: Key('history-row-${movement.id}'),
-      child: Padding(
-        padding: EdgeInsets.all(spacing.md),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Row(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(label, style: theme.textTheme.labelLarge),
-                      SizedBox(height: spacing.xs),
-                      Text(
-                        movement.productNameSnapshot,
-                        style: theme.textTheme.titleMedium,
-                      ),
-                    ],
+    return Semantics(
+      label: semanticsLabel,
+      excludeSemantics: true,
+      child: Card(
+        key: Key('history-row-${movement.id}'),
+        child: Padding(
+          padding: EdgeInsets.all(spacing.md),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(label, style: theme.textTheme.labelLarge),
+                        SizedBox(height: spacing.xs),
+                        Text(
+                          movement.productNameSnapshot,
+                          style: theme.textTheme.titleMedium,
+                        ),
+                      ],
+                    ),
                   ),
-                ),
-                SizedBox(width: spacing.md),
-                Text(
-                  signedQuantity,
-                  style: theme.textTheme.titleMedium?.copyWith(
-                    color: isStockIn
-                        ? theme.colorScheme.primary
-                        : theme.colorScheme.error,
+                  SizedBox(width: spacing.md),
+                  Text(
+                    signedQuantity,
+                    style: theme.textTheme.titleMedium?.copyWith(
+                      color: isStockIn
+                          ? theme.colorScheme.primary
+                          : theme.colorScheme.error,
+                    ),
+                    textAlign: TextAlign.end,
                   ),
-                  textAlign: TextAlign.end,
-                ),
-              ],
-            ),
-            SizedBox(height: spacing.sm),
-            Wrap(
-              spacing: spacing.md,
-              runSpacing: spacing.xs,
-              children: [
-                _MetaText(text: quantityTransition),
-                _MetaText(text: _formatMovementDateTime(movement.createdAt)),
-              ],
-            ),
-            if (movement.note case final note? when note.isNotEmpty) ...[
-              SizedBox(height: spacing.sm),
-              Container(
-                width: double.infinity,
-                padding: EdgeInsets.all(spacing.sm),
-                decoration: BoxDecoration(
-                  color: theme.colorScheme.surfaceContainer,
-                  borderRadius: BorderRadius.circular(
-                    AppDimensions.componentRadius,
-                  ),
-                ),
-                child: Text(note),
+                ],
               ),
+              SizedBox(height: spacing.sm),
+              Wrap(
+                spacing: spacing.md,
+                runSpacing: spacing.xs,
+                children: [
+                  _MetaText(text: quantityTransition),
+                  _MetaText(text: _formatMovementDateTime(movement.createdAt)),
+                ],
+              ),
+              if (movement.note case final note? when note.isNotEmpty) ...[
+                SizedBox(height: spacing.sm),
+                Container(
+                  width: double.infinity,
+                  padding: EdgeInsets.all(spacing.sm),
+                  decoration: BoxDecoration(
+                    color: theme.colorScheme.surfaceContainer,
+                    borderRadius: BorderRadius.circular(
+                      AppDimensions.componentRadius,
+                    ),
+                  ),
+                  child: Text(note),
+                ),
+              ],
             ],
-          ],
+          ),
         ),
       ),
     );
@@ -207,6 +216,26 @@ final class _MetaText extends StatelessWidget {
 String _signedQuantity(StockMovement movement) {
   final sign = movement.type == StockMovementType.stockIn ? '+' : '-';
   return '$sign${movement.quantity} ${movement.unitSnapshot}';
+}
+
+String _movementSemanticsLabel({
+  required StockMovement movement,
+  required String label,
+  required String signedQuantity,
+}) {
+  final quantityChange =
+      'quantity changed from ${movement.previousQuantity} '
+      'to ${movement.newQuantity} ${movement.unitSnapshot}';
+  final parts = [
+    label,
+    movement.productNameSnapshot,
+    signedQuantity,
+    quantityChange,
+    _formatMovementDateTime(movement.createdAt),
+    if (movement.note case final note? when note.trim().isNotEmpty)
+      'note: ${note.trim()}',
+  ];
+  return parts.join(', ');
 }
 
 String _formatMovementDateTime(DateTime createdAt) {

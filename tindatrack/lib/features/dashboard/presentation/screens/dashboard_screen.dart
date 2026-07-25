@@ -684,14 +684,14 @@ final class _DashboardEmptyState extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return const KeyedSubtree(
-      key: Key('dashboard-empty-state'),
+    return KeyedSubtree(
+      key: const Key('dashboard-empty-state'),
       child: AppEmptyState(
         title: 'No products yet',
         message: 'Add your first product to start seeing inventory totals.',
         icon: Icons.inventory_2_outlined,
         actionLabel: 'Add your first product',
-        onAction: _noop,
+        onAction: () => context.go(ProductRoute.addProduct.path),
       ),
     );
   }
@@ -703,5 +703,3 @@ void _openLowStockProducts(BuildContext context, WidgetRef ref) {
       .stockFilterChanged(ProductStockFilter.lowStock);
   context.go(AppRoute.products.path);
 }
-
-void _noop() {}
