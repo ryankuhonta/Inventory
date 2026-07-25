@@ -1,6 +1,10 @@
+---
+baseline_commit: 25face47798b04babb3a258e02570d277a9ace40
+---
+
 # Story 5.6: Complete MVP Release Readiness Checks
 
-Status: ready-for-dev
+Status: done
 
 <!-- Note: Validation is optional. Run validate-create-story for quality check before dev-story. -->
 
@@ -19,38 +23,42 @@ so that the app is stable enough for testing or first distribution.
 
 ## Tasks / Subtasks
 
-- [ ] Task 1: Run and preserve release quality gates (AC: 1)
-  - [ ] Run `dart analyze` from a Windows temp copy if UNC Flutter tooling blocks direct execution.
-  - [ ] Run the full Flutter test suite, including repository transaction tests, widget tests, and Drift migration tests.
-  - [ ] Run `flutter build apk --debug` as an Android build sanity check.
-  - [ ] Run `git diff --check` from the repository workspace.
-  - [ ] Address any failing analyzer, test, build, or whitespace issue before marking this task complete.
+- [x] Task 1: Run and preserve release quality gates (AC: 1)
+  - [x] Run `dart analyze` from a Windows temp copy if UNC Flutter tooling blocks direct execution.
+  - [x] Run the full Flutter test suite, including repository transaction tests, widget tests, and Drift migration tests.
+  - [x] Run `flutter build apk --debug` as an Android build sanity check.
+  - [x] Run `git diff --check` from the repository workspace.
+  - [x] Address any failing analyzer, test, build, or whitespace issue before marking this task complete.
 
-- [ ] Task 2: Add release-readiness regression checks for MVP scope and user-visible safety (AC: 2, 3, 4)
-  - [ ] Add deterministic tests that inspect the production route graph and confirm only Dashboard, Products, Add Product, Edit Product, Stock In, Stock Out, History, and Settings routes are present.
-  - [ ] Add or extend guardrail coverage to assert forbidden scope terms and future-feature routes remain absent from user-visible MVP surfaces.
-  - [ ] Verify Settings app version copy still reads from bundled `pubspec.yaml` and is not hardcoded separately.
-  - [ ] Ensure the tests do not require network, login, cloud services, analytics, ads, remote config, barcode scanner packages, POS, supplier, accounting, staff roles, or multi-branch code.
+- [x] Task 2: Add release-readiness regression checks for MVP scope and user-visible safety (AC: 2, 3, 4)
+  - [x] Add deterministic tests that inspect the production route graph and confirm only Dashboard, Products, Add Product, Edit Product, Stock In, Stock Out, History, and Settings routes are present.
+  - [x] Add or extend guardrail coverage to assert forbidden scope terms and future-feature routes remain absent from user-visible MVP surfaces.
+  - [x] Verify Settings app version copy still reads from bundled `pubspec.yaml` and is not hardcoded separately.
+  - [x] Ensure the tests do not require network, login, cloud services, analytics, ads, remote config, barcode scanner packages, POS, supplier, accounting, staff roles, or multi-branch code.
 
-- [ ] Task 3: Review Android release/build configuration without expanding scope (AC: 1, 3)
-  - [ ] Inspect `tindatrack/android/app/build.gradle.kts`, `AndroidManifest.xml`, and `pubspec.yaml` for release-readiness blockers.
-  - [ ] Remove template-only TODO comments if they would be embarrassing or misleading in a release-readiness handoff, but do not invent production signing or distribution credentials.
-  - [ ] Preserve current Android-first package identity unless an explicit requirement says to rename it.
-  - [ ] Confirm no extra Android permissions, internet dependency, ad SDK, analytics SDK, scanner dependency, or cloud SDK is introduced.
+- [x] Task 3: Review Android release/build configuration without expanding scope (AC: 1, 3)
+  - [x] Inspect `tindatrack/android/app/build.gradle.kts`, `AndroidManifest.xml`, and `pubspec.yaml` for release-readiness blockers.
+  - [x] Remove template-only TODO comments if they would be embarrassing or misleading in a release-readiness handoff, but do not invent production signing or distribution credentials.
+  - [x] Preserve current Android-first package identity unless an explicit requirement says to rename it.
+  - [x] Confirm no extra Android permissions, internet dependency, ad SDK, analytics SDK, scanner dependency, or cloud SDK is introduced.
 
-- [ ] Task 4: Document release-readiness outcome for handoff (AC: 1-4)
-  - [ ] Create or update a concise implementation artifact documenting quality gate results, Android build result, MVP scope checks, known limitations, and release-channel assumptions.
-  - [ ] Explicitly call out that release signing / Play Store distribution remains a separate release-management decision if not configured.
-  - [ ] Record any unresolved release-readiness risks as action items rather than silently passing them.
-  - [ ] Keep documentation in `_bmad-output/implementation-artifacts` unless the codebase already has a more specific release checklist location.
+- [x] Task 4: Document release-readiness outcome for handoff (AC: 1-4)
+  - [x] Create or update a concise implementation artifact documenting quality gate results, Android build result, MVP scope checks, known limitations, and release-channel assumptions.
+  - [x] Explicitly call out that release signing / Play Store distribution remains a separate release-management decision if not configured.
+  - [x] Record any unresolved release-readiness risks as action items rather than silently passing them.
+  - [x] Keep documentation in `_bmad-output/implementation-artifacts` unless the codebase already has a more specific release checklist location.
 
-- [ ] Task 5: Verify Story 5.6 completion (AC: 1-4)
-  - [ ] Run Dart format for touched `lib` and `test` files.
-  - [ ] Re-run focused tests added or changed for release readiness.
-  - [ ] Re-run `dart analyze`.
-  - [ ] Re-run the full Flutter test suite.
-  - [ ] Re-run Android debug build validation.
-  - [ ] Re-run `git diff --check`.
+- [x] Task 5: Verify Story 5.6 completion (AC: 1-4)
+  - [x] Run Dart format for touched `lib` and `test` files.
+  - [x] Re-run focused tests added or changed for release readiness.
+  - [x] Re-run `dart analyze`.
+  - [x] Re-run the full Flutter test suite.
+  - [x] Re-run Android debug build validation.
+  - [x] Re-run `git diff --check`.
+
+### Review Findings
+
+- [x] [Review][Patch] Route guardrail does not inspect the production route graph [tindatrack/test/app/router/app_router_test.dart:49]
 
 ## Dev Notes
 
@@ -155,14 +163,34 @@ Codex GPT-5
 
 ### Debug Log References
 
+- 2026-07-25: Focused release-readiness tests passed from `C:\tmp\tindatrack-story-5-6`:
+  - `flutter test test/app/router/app_router_test.dart test/ux/release_readiness_guardrail_test.dart`
+- 2026-07-25: `dart analyze` passed from `C:\tmp\tindatrack-story-5-6` with no issues.
+- 2026-07-25: Full Flutter test suite passed from `C:\tmp\tindatrack-story-5-6` with 363 tests passing.
+- 2026-07-25: `flutter build apk --debug` passed from `C:\tmp\tindatrack-story-5-6` and produced `build/app/outputs/flutter-apk/app-debug.apk`.
+- 2026-07-25: `git diff --check` passed from the workspace.
+- 2026-07-25: Story 5.6 review-fix focused release-readiness tests passed from `C:\tmp\tindatrack-story-5-6-review-fix`:
+  - `flutter test test/app/router/app_router_test.dart test/ux/release_readiness_guardrail_test.dart`
+- 2026-07-25: Story 5.6 review-fix `dart analyze` passed from `C:\tmp\tindatrack-story-5-6-review-fix` with no issues.
+
 ### Completion Notes List
 
-- Ultimate context engine analysis completed - comprehensive developer guide created.
+- Added release-readiness route and scope guardrails covering MVP routes, feature folders, package dependencies, Android permissions, and Android build config placeholders.
+- Cleaned Flutter template TODO comments from Android build configuration without changing application ID, version source, or debug-signing smoke-test behavior.
+- Documented MVP release-readiness results, known distribution limitations, and external-distribution action items.
+- Verified analyzer, focused tests, full test suite, Android debug build, and workspace whitespace checks.
+- Addressed code review finding by inspecting the actual production route graph in the release route guardrail test.
 
 ### File List
 
 - `_bmad-output/implementation-artifacts/5-6-complete-mvp-release-readiness-checks.md`
+- `_bmad-output/implementation-artifacts/5-6-mvp-release-readiness-checklist.md`
+- `_bmad-output/implementation-artifacts/sprint-status.yaml`
+- `tindatrack/android/app/build.gradle.kts`
+- `tindatrack/test/app/router/app_router_test.dart`
+- `tindatrack/test/ux/release_readiness_guardrail_test.dart`
 
 ### Change Log
 
 - 2026-07-25: Created Story 5.6 release readiness context; marked ready for dev.
+- 2026-07-25: Implemented Story 5.6 release-readiness guardrails and verification artifact; marked ready for review.

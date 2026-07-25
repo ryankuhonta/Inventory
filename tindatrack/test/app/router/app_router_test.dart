@@ -9,6 +9,23 @@ import 'package:tindatrack/app/router/app_routes.dart';
 import 'package:tindatrack/features/dashboard/domain/entities/dashboard_summary.dart';
 import 'package:tindatrack/features/dashboard/presentation/providers/dashboard_providers.dart';
 
+const _forbiddenReleaseRouteTerms = [
+  'login',
+  'account',
+  'cloud',
+  'sync',
+  'pos',
+  'supplier',
+  'accounting',
+  'profit',
+  'barcode',
+  'scanner',
+  'staff',
+  'branch',
+  'remote',
+  'api',
+];
+
 void main() {
   test('declares only the four authorized root routes', () {
     expect(
@@ -22,6 +39,74 @@ void main() {
     );
   });
 
+  test('release route registry exposes only MVP routes', () {
+    final router = createAppRouter();
+    addTearDown(router.dispose);
+
+    expect(AppRoute.values, hasLength(4));
+    expect(ProductRoute.values, hasLength(4));
+
+    final registeredRoutes = _releaseRoutesFrom(router);
+
+    expect(
+      registeredRoutes.map((route) => route.name),
+      [
+        'dashboard',
+        'products',
+        'addProduct',
+        'editProduct',
+        'stockIn',
+        'stockOut',
+        'history',
+        'settings',
+      ],
+    );
+    expect(
+      registeredRoutes.map((route) => route.path),
+      [
+        '/dashboard',
+        '/products',
+        '/products/add',
+        '/products/:productId/edit',
+        '/products/:productId/stock-in',
+        '/products/:productId/stock-out',
+        '/history',
+        '/settings',
+      ],
+    );
+
+    for (final route in registeredRoutes) {
+      final routeCopy = '${route.name ?? ''} ${route.path}'.toLowerCase();
+      for (final forbidden in _forbiddenReleaseRouteTerms) {
+        expect(
+          routeCopy,
+          isNot(contains(forbidden)),
+          reason: 'Release route ${route.name} should not expose $forbidden.',
+        );
+      }
+    }
+
+    for (final route in AppRoute.values) {
+      expect(router.namedLocation(route.name), route.path);
+    }
+    expect(
+      router.namedLocation(ProductRoute.addProduct.name),
+      ProductRoute.addProduct.path,
+    );
+    for (final route in [
+      ProductRoute.editProduct,
+      ProductRoute.stockIn,
+      ProductRoute.stockOut,
+    ]) {
+      expect(
+        router.namedLocation(
+          route.name,
+          pathParameters: const <String, String>{'productId': 'product 1'},
+        ),
+        route.path.replaceFirst(':productId', 'product%201'),
+      );
+    }
+  });
   test('declares Add Product as a secondary Products route', () {
     expect(ProductRoute.addProduct.name, 'addProduct');
     expect(ProductRoute.addProduct.path, '/products/add');
@@ -71,6 +156,19 @@ void main() {
       router.namedLocation(ProductRoute.addProduct.name),
       ProductRoute.addProduct.path,
     );
+    for (final route in [
+      ProductRoute.editProduct,
+      ProductRoute.stockIn,
+      ProductRoute.stockOut,
+    ]) {
+      expect(
+        router.namedLocation(
+          route.name,
+          pathParameters: const <String, String>{'productId': 'product 1'},
+        ),
+        route.path.replaceFirst(':productId', 'product%201'),
+      );
+    }
   });
 
   testWidgets('maps Stock In product ID under the Products branch', (
@@ -381,6 +479,42 @@ Finder _navigationLabel(String label) {
     of: find.byType(NavigationBar),
     matching: find.text(label),
   );
+}
+
+typedef _ReleaseRouteRecord = ({String? name, String path});
+
+List<_ReleaseRouteRecord> _releaseRoutesFrom(GoRouter router) {
+  final records = <_ReleaseRouteRecord>[];
+  _collectReleaseRoutes(router.configuration.routes, records);
+  return records;
+}
+
+void _collectReleaseRoutes(
+  List<RouteBase> routes,
+  List<_ReleaseRouteRecord> records, [
+  String parentPath = '',
+]) {
+  for (final route in routes) {
+    if (route is GoRoute) {
+      final path = _joinRoutePath(parentPath, route.path);
+      records.add((name: route.name, path: path));
+      _collectReleaseRoutes(route.routes, records, path);
+    } else if (route is StatefulShellRoute) {
+      for (final branch in route.branches) {
+        _collectReleaseRoutes(branch.routes, records, parentPath);
+      }
+    }
+  }
+}
+
+String _joinRoutePath(String parentPath, String routePath) {
+  if (routePath.startsWith('/')) {
+    return routePath;
+  }
+  if (parentPath.isEmpty || parentPath == '/') {
+    return '/$routePath';
+  }
+  return '$parentPath/$routePath';
 }
 
 final class _RouterTestApp extends StatelessWidget {
