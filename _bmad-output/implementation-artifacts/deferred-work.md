@@ -27,3 +27,13 @@
 ## Deferred from: code review of 2-8-prepare-product-row-action-pattern.md (2026-07-07)
 
 - Harden `_openEditProduct` so `_openingProductId` is cleared if `context.pushNamed(ProductRoute.editProduct.name, ...)` throws. The guard predates Story 2.8 and should be handled as focused navigation hardening.
+
+## Deferred From Private APK Feedback Split - 2026-07-27
+
+The user chose to split the feedback implementation batch and start with navigation/back behavior only. Deferred items:
+
+- Add barcode field to Add Product, matching Edit Product validation and duplicate behavior.
+- Format app version display as `Version 0.1.0 (Build 1)` instead of raw `0.1.0+1`.
+- Create and configure a custom TindaTrack Android launcher icon.
+- Revisit Settings naming/content because the current screen is mostly app info, not editable settings.
+- Add local-only same-field autocomplete suggestions for repeated text-entry values.

@@ -78,6 +78,61 @@ void main() {
     );
     expect(find.byKey(const Key('dashboard-screen')), findsOneWidget);
   });
+  testWidgets('back from History returns to Dashboard before app exit', (
+    tester,
+  ) async {
+    final router = _createShellTestRouter();
+    addTearDown(router.dispose);
+
+    await tester.pumpWidget(_RouterTestApp(router: router));
+    await tester.pumpAndSettle();
+
+    await tester.tap(_navigationLabel(AppRoute.history.label));
+    await tester.pumpAndSettle();
+    expect(
+      router.routeInformationProvider.value.uri.path,
+      AppRoute.history.path,
+    );
+
+    await tester.binding.handlePopRoute();
+    await tester.pumpAndSettle();
+
+    expect(
+      router.routeInformationProvider.value.uri.path,
+      AppRoute.dashboard.path,
+    );
+    expect(
+      tester.widget<NavigationBar>(find.byType(NavigationBar)).selectedIndex,
+      0,
+    );
+    expect(find.byKey(const Key('dashboard-screen')), findsOneWidget);
+  });
+
+  testWidgets('back from Dashboard asks for exit confirmation', (tester) async {
+    final router = _createShellTestRouter();
+    addTearDown(router.dispose);
+
+    await tester.pumpWidget(_RouterTestApp(router: router));
+    await tester.pumpAndSettle();
+
+    await tester.binding.handlePopRoute();
+    await tester.pumpAndSettle();
+
+    expect(find.text('Exit TindaTrack?'), findsOneWidget);
+    expect(
+      find.text('Are you sure you want to close the app?'),
+      findsOneWidget,
+    );
+
+    await tester.tap(find.text('Cancel'));
+    await tester.pumpAndSettle();
+
+    expect(find.text('Exit TindaTrack?'), findsNothing);
+    expect(
+      router.routeInformationProvider.value.uri.path,
+      AppRoute.dashboard.path,
+    );
+  });
 }
 
 GoRouter _createShellTestRouter() {
