@@ -255,6 +255,11 @@ final class _StockRepository implements StockRepository {
   }
 
   @override
+  Future<Result<List<String>>> listRecentNotes({
+    required StockMovementType type,
+    int limit = 8,
+  }) async => const Success<List<String>>(<String>[]);
+  @override
   Stream<List<StockMovement>> watchMovementHistory({String? productId}) {
     return Stream.value([_movement()]);
   }

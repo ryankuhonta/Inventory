@@ -49,6 +49,28 @@ void main() {
     );
   });
 
+  testWidgets('note autocomplete suggests previous stock-out notes', (
+    tester,
+  ) async {
+    final stockRepository = _StockRepository(recentNotes: ['consumed']);
+    await _pumpStockOut(
+      tester,
+      productRepository: _ProductRepository(),
+      stockRepository: stockRepository,
+    );
+
+    await tester.enterText(find.byKey(const Key('stock-out-note-field')), 'co');
+    await tester.pumpAndSettle();
+
+    expect(stockRepository.lastRecentNotesType, StockMovementType.stockOut);
+    expect(find.text('consumed'), findsOneWidget);
+
+    await tester.tap(find.text('consumed'));
+    await tester.pumpAndSettle();
+
+    expect(_noteText(tester, 'stock-out-note-field'), 'consumed');
+  });
+
   testWidgets('invalid quantity shows inline validation and does not save', (
     tester,
   ) async {
@@ -286,8 +308,9 @@ Future<void> _pumpStockOut(
     ProviderScope(
       overrides: [
         getProductProvider.overrideWithValue(GetProduct(productRepository)),
-        if (stockRepository != null)
-          stockRepositoryProvider.overrideWithValue(stockRepository),
+        stockRepositoryProvider.overrideWithValue(
+          stockRepository ?? _StockRepository(),
+        ),
       ],
       child: MaterialApp.router(
         theme: AppTheme.light,
@@ -327,12 +350,14 @@ final class _ProductRepository implements ProductRepository {
 }
 
 final class _StockRepository implements StockRepository {
-  _StockRepository({this.onStockOut});
+  _StockRepository({this.onStockOut, this.recentNotes = const <String>[]});
 
   final Future<Result<StockMovement>> Function(RecordStockOutInput input)?
   onStockOut;
+  final List<String> recentNotes;
   int stockOutCalls = 0;
   RecordStockOutInput? lastInput;
+  StockMovementType? lastRecentNotesType;
 
   @override
   Future<Result<StockMovement>> recordStockOut(RecordStockOutInput input) {
@@ -357,6 +382,15 @@ final class _StockRepository implements StockRepository {
   }) => throw UnimplementedError();
 
   @override
+  Future<Result<List<String>>> listRecentNotes({
+    required StockMovementType type,
+    int limit = 8,
+  }) async {
+    lastRecentNotesType = type;
+    return Success<List<String>>(recentNotes.take(limit).toList());
+  }
+
+  @override
   Stream<List<StockMovement>> watchMovementHistory({String? productId}) =>
       const Stream.empty();
 }
@@ -378,6 +412,18 @@ Product _product({int quantity = 5}) {
 }
 
 Product _productFixture() => _product();
+
+String _noteText(WidgetTester tester, String key) {
+  return tester
+      .widget<EditableText>(
+        find.descendant(
+          of: find.byKey(Key(key)),
+          matching: find.byType(EditableText),
+        ),
+      )
+      .controller
+      .text;
+}
 
 StockMovement _movement({required int newQuantity}) {
   return StockMovement(

@@ -467,6 +467,70 @@ void main() {
     expect(watched.map((item) => item.note), ['newer', 'older']);
   });
 
+  test(
+    'listRecentNotes returns distinct recent notes by movement type',
+    () async {
+      await repository.recordMovementRow(
+        _input(note: ' restock '),
+      );
+      repository = DriftStockRepository(
+        productsDao: productsDao,
+        stockMovementsDao: StockMovementsDao(database),
+        idGenerator: ids,
+        clock: _FixedClock(instant.add(const Duration(minutes: 1))),
+      );
+      await repository.recordMovementRow(
+        _input(type: StockMovementType.stockOut, note: ' consumed '),
+      );
+      repository = DriftStockRepository(
+        productsDao: productsDao,
+        stockMovementsDao: StockMovementsDao(database),
+        idGenerator: ids,
+        clock: _FixedClock(instant.add(const Duration(minutes: 2))),
+      );
+      await repository.recordMovementRow(
+        _input(note: 'Delivery'),
+      );
+      repository = DriftStockRepository(
+        productsDao: productsDao,
+        stockMovementsDao: StockMovementsDao(database),
+        idGenerator: ids,
+        clock: _FixedClock(instant.add(const Duration(minutes: 3))),
+      );
+      await repository.recordMovementRow(
+        _input(note: ' delivery '),
+      );
+      await repository.recordMovementRow(
+        _input(note: '   '),
+      );
+
+      final stockInNotes = await repository.listRecentNotes(
+        type: StockMovementType.stockIn,
+      );
+      final limitedStockInNotes = await repository.listRecentNotes(
+        type: StockMovementType.stockIn,
+        limit: 1,
+      );
+      final negativeLimitNotes = await repository.listRecentNotes(
+        type: StockMovementType.stockIn,
+        limit: -1,
+      );
+      final stockOutNotes = await repository.listRecentNotes(
+        type: StockMovementType.stockOut,
+      );
+
+      expect((stockInNotes as Success<List<String>>).value, [
+        'delivery',
+        'restock',
+      ]);
+      expect((limitedStockInNotes as Success<List<String>>).value, [
+        'delivery',
+      ]);
+      expect((negativeLimitNotes as Success<List<String>>).value, isEmpty);
+      expect((stockOutNotes as Success<List<String>>).value, ['consumed']);
+    },
+  );
+
   test('list and watch filter movement history by product ID', () async {
     await productsDao.insertProduct(_product(id: 'product-2', name: 'Sugar'));
     await repository.recordMovementRow(_input(note: 'rice'));

@@ -204,6 +204,11 @@ final class _StockRepository implements StockRepository {
   }) => throw UnimplementedError();
 
   @override
+  Future<Result<List<String>>> listRecentNotes({
+    required StockMovementType type,
+    int limit = 8,
+  }) async => const Success<List<String>>(<String>[]);
+  @override
   Stream<List<StockMovement>> watchMovementHistory({String? productId}) =>
       const Stream.empty();
 }

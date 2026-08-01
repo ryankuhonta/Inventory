@@ -11,6 +11,8 @@ import 'package:tindatrack/features/products/domain/failures/product_failure.dar
 import 'package:tindatrack/features/products/presentation/providers/product_providers.dart';
 import 'package:tindatrack/features/stock/domain/entities/stock_movement.dart';
 import 'package:tindatrack/features/stock/presentation/controllers/stock_out_controller.dart';
+import 'package:tindatrack/features/stock/presentation/providers/stock_providers.dart';
+import 'package:tindatrack/features/stock/presentation/widgets/stock_note_autocomplete_field.dart';
 
 const _maxStockOutQuantityLength = 9;
 
@@ -112,6 +114,12 @@ final class _StockOutFormState extends ConsumerState<_StockOutForm> {
     final state = ref.watch(provider);
     final spacing = AppSpacing.of(context);
     final fieldsEnabled = !state.isSaving && !state.isUnavailable;
+    final noteSuggestions = switch (ref.watch(
+      stockNoteSuggestionsProvider(StockMovementType.stockOut),
+    )) {
+      AsyncData<List<String>>(:final value) => value,
+      _ => const <String>[],
+    };
 
     return PopScope(
       canPop: !state.isSaving,
@@ -164,18 +172,13 @@ final class _StockOutFormState extends ConsumerState<_StockOutForm> {
                   onFieldSubmitted: (_) => _noteFocus.requestFocus(),
                 ),
                 SizedBox(height: spacing.md),
-                TextFormField(
-                  key: const Key('stock-out-note-field'),
+                StockNoteAutocompleteField(
+                  fieldKey: const Key('stock-out-note-field'),
                   controller: _noteController,
                   focusNode: _noteFocus,
                   enabled: fieldsEnabled,
-                  decoration: const InputDecoration(
-                    labelText: 'Note (optional)',
-                  ),
-                  minLines: 1,
-                  maxLines: 3,
-                  textInputAction: TextInputAction.done,
-                  onFieldSubmitted: (_) => _submit(),
+                  suggestions: noteSuggestions,
+                  onSubmitted: _submit,
                 ),
                 SizedBox(height: spacing.lg),
                 FilledButton(

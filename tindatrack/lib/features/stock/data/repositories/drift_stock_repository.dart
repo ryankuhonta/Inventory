@@ -54,6 +54,24 @@ final class DriftStockRepository implements StockRepository {
   }
 
   @override
+  Future<Result<List<String>>> listRecentNotes({
+    required domain.StockMovementType type,
+    int limit = 8,
+  }) async {
+    try {
+      final notes = await _stockMovementsDao.listRecentNotes(
+        type: type.persistedValue,
+        limit: limit,
+      );
+      return Success<List<String>>(notes);
+    } on Object catch (error) {
+      return FailureResult<List<String>>(
+        PersistenceFailure(debugMessage: error.toString()),
+      );
+    }
+  }
+
+  @override
   Future<Result<domain.StockMovement>> recordMovementRow(
     CreateStockMovementInput input,
   ) async {

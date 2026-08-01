@@ -22,6 +22,12 @@ abstract interface class StockRepository {
   /// Lists movement history newest first.
   Future<Result<List<StockMovement>>> listMovementHistory({String? productId});
 
+  /// Lists distinct recent non-empty notes for one stock movement type.
+  Future<Result<List<String>>> listRecentNotes({
+    required StockMovementType type,
+    int limit = 8,
+  });
+
   /// Watches movement history newest first.
   Stream<List<StockMovement>> watchMovementHistory({String? productId});
 }

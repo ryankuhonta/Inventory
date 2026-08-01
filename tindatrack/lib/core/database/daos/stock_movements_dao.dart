@@ -39,6 +39,33 @@ class StockMovementsDao extends DatabaseAccessor<AppDatabase>
     return _historyQuery(query).watch();
   }
 
+  /// Lists distinct recent non-empty notes for one persisted movement [type].
+  Future<List<String>> listRecentNotes({required String type, int limit = 8}) {
+    final safeLimit = limit <= 0 ? 0 : limit;
+    return customSelect(
+      '''
+      SELECT suggestion
+      FROM (
+        SELECT
+          TRIM(note) AS suggestion,
+          created_at AS latest_created_at,
+          id AS latest_id,
+          ROW_NUMBER() OVER (
+            PARTITION BY LOWER(TRIM(note))
+            ORDER BY created_at DESC, id DESC
+          ) AS note_rank
+        FROM stock_movements
+        WHERE type = ? AND note IS NOT NULL AND TRIM(note) <> ''
+      )
+      WHERE note_rank = 1
+      ORDER BY latest_created_at DESC, latest_id DESC
+      LIMIT ?
+      ''',
+      variables: [Variable<String>(type), Variable<int>(safeLimit)],
+      readsFrom: {stockMovements},
+    ).map((row) => row.read<String>('suggestion')).get();
+  }
+
   SimpleSelectStatement<$StockMovementsTable, StockMovement> _historyQuery(
     StockMovementHistoryQuery query,
   ) {
