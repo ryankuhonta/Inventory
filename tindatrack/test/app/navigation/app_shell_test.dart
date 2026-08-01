@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:go_router/go_router.dart';
+import 'package:tindatrack/app/navigation/app_back_button_dispatcher.dart';
 import 'package:tindatrack/app/router/app_router.dart';
 import 'package:tindatrack/app/router/app_routes.dart';
 import 'package:tindatrack/features/dashboard/domain/entities/dashboard_summary.dart';
@@ -78,6 +79,37 @@ void main() {
     );
     expect(find.byKey(const Key('dashboard-screen')), findsOneWidget);
   });
+
+  testWidgets('back from Products returns to Dashboard before app exit', (
+    tester,
+  ) async {
+    final router = _createShellTestRouter();
+    addTearDown(router.dispose);
+
+    await tester.pumpWidget(_RouterTestApp(router: router));
+    await tester.pumpAndSettle();
+
+    await tester.tap(_navigationLabel(AppRoute.products.label));
+    await tester.pumpAndSettle();
+    expect(
+      router.routeInformationProvider.value.uri.path,
+      AppRoute.products.path,
+    );
+
+    await tester.binding.handlePopRoute();
+    await tester.pumpAndSettle();
+
+    expect(
+      router.routeInformationProvider.value.uri.path,
+      AppRoute.dashboard.path,
+    );
+    expect(
+      tester.widget<NavigationBar>(find.byType(NavigationBar)).selectedIndex,
+      0,
+    );
+    expect(find.byKey(const Key('dashboard-screen')), findsOneWidget);
+  });
+
   testWidgets('back from History returns to Dashboard before app exit', (
     tester,
   ) async {
@@ -162,7 +194,7 @@ Finder _navigationLabel(String label) {
 final class _RouterTestApp extends StatelessWidget {
   const _RouterTestApp({required this.router});
 
-  final RouterConfig<Object> router;
+  final GoRouter router;
 
   @override
   Widget build(BuildContext context) {
@@ -178,7 +210,15 @@ final class _RouterTestApp extends StatelessWidget {
           );
         }),
       ],
-      child: MaterialApp.router(routerConfig: router),
+      child: MaterialApp.router(
+        routeInformationProvider: router.routeInformationProvider,
+        routeInformationParser: router.routeInformationParser,
+        routerDelegate: router.routerDelegate,
+        backButtonDispatcher: AppBackButtonDispatcher(
+          router: router,
+          navigatorKey: appRootNavigatorKey,
+        ),
+      ),
     );
   }
 }

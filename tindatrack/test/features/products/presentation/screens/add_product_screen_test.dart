@@ -12,6 +12,7 @@ import 'package:tindatrack/core/errors/result.dart';
 import 'package:tindatrack/features/products/domain/entities/create_product_input.dart';
 import 'package:tindatrack/features/products/domain/entities/product.dart';
 import 'package:tindatrack/features/products/domain/entities/product_list_query.dart';
+import 'package:tindatrack/features/products/domain/failures/product_failure.dart';
 import 'package:tindatrack/features/products/domain/repositories/products_repository.dart';
 import 'package:tindatrack/features/products/domain/usecases/add_product.dart';
 import 'package:tindatrack/features/products/presentation/providers/product_providers.dart';
@@ -33,10 +34,13 @@ void main() {
       find.byKey(const Key('low-stock-threshold-field')),
       findsOneWidget,
     );
+    expect(find.byKey(const Key('barcode-field')), findsOneWidget);
+    expect(find.text('Barcode (optional)'), findsOneWidget);
     expect(_field(tester, 'unit-field').controller?.text, 'pcs');
     expect(_field(tester, 'selling-price-field').controller?.text, '');
     expect(_field(tester, 'starting-quantity-field').controller?.text, '0');
     expect(_field(tester, 'low-stock-threshold-field').controller?.text, '0');
+    expect(_field(tester, 'barcode-field').controller?.text, '');
     expect(
       _editable(tester, 'selling-price-field').keyboardType,
       const TextInputType.numberWithOptions(decimal: true),
@@ -46,7 +50,6 @@ void main() {
       TextInputType.number,
     );
     expect(find.textContaining('Cost price'), findsNothing);
-    expect(find.textContaining('Barcode'), findsNothing);
     expect(find.textContaining('Stock In'), findsNothing);
     expect(find.textContaining('Stock Out'), findsNothing);
   });
@@ -63,6 +66,7 @@ void main() {
     );
     await tester.enterText(find.byKey(const Key('unit-field')), ' ');
     await tester.enterText(find.byKey(const Key('selling-price-field')), '-1');
+    await tester.ensureVisible(find.byKey(const Key('save-product-button')));
     await tester.tap(find.byKey(const Key('save-product-button')));
     await tester.pump();
 
@@ -88,6 +92,7 @@ void main() {
       ' Rice ',
     );
     await tester.enterText(find.byKey(const Key('category-field')), ' ');
+    await tester.ensureVisible(find.byKey(const Key('save-product-button')));
     await tester.tap(find.byKey(const Key('save-product-button')));
     await tester.pumpAndSettle();
 
@@ -111,7 +116,9 @@ void main() {
       find.byKey(const Key('product-name-field')),
       'Rice',
     );
+    await tester.ensureVisible(find.byKey(const Key('save-product-button')));
     await tester.tap(find.byKey(const Key('save-product-button')));
+    await tester.ensureVisible(find.byKey(const Key('save-product-button')));
     await tester.tap(find.byKey(const Key('save-product-button')));
     await tester.pump();
 
@@ -123,6 +130,7 @@ void main() {
     expect(_field(tester, 'selling-price-field').enabled, isFalse);
     expect(_field(tester, 'starting-quantity-field').enabled, isFalse);
     expect(_field(tester, 'low-stock-threshold-field').enabled, isFalse);
+    expect(_field(tester, 'barcode-field').enabled, isFalse);
     expect(
       tester
           .widget<FilledButton>(
@@ -166,6 +174,7 @@ void main() {
       find.byKey(const Key('product-name-field')),
       'Rice',
     );
+    await tester.ensureVisible(find.byKey(const Key('save-product-button')));
     await tester.tap(find.byKey(const Key('save-product-button')));
     await tester.pump();
     await tester.pageBack();
@@ -216,6 +225,7 @@ void main() {
       'Rice',
     );
     await tester.ensureVisible(find.byKey(const Key('save-product-button')));
+    await tester.ensureVisible(find.byKey(const Key('save-product-button')));
     await tester.tap(find.byKey(const Key('save-product-button')));
     await tester.pump();
     await tester.tap(find.byIcon(Icons.dashboard_outlined));
@@ -253,6 +263,7 @@ void main() {
       '1000000',
     );
     await tester.ensureVisible(find.byKey(const Key('save-product-button')));
+    await tester.ensureVisible(find.byKey(const Key('save-product-button')));
     await tester.tap(find.byKey(const Key('save-product-button')));
     await tester.pump();
 
@@ -279,6 +290,7 @@ void main() {
       'Rice',
     );
     await tester.ensureVisible(find.byKey(const Key('save-product-button')));
+    await tester.ensureVisible(find.byKey(const Key('save-product-button')));
     await tester.tap(find.byKey(const Key('save-product-button')));
     await tester.pumpAndSettle();
 
@@ -289,6 +301,35 @@ void main() {
     expect(find.textContaining('RAW_DART_ERROR'), findsNothing);
   });
 
+  testWidgets('manual barcode is submitted and duplicate copy is safe', (
+    tester,
+  ) async {
+    final repository = _ControlledRepository(
+      onCreate: (_) async => const FailureResult<Product>(
+        DuplicateBarcodeFailure(debugMessage: 'UNIQUE products.barcode'),
+      ),
+    );
+    await _pumpForm(tester, repository);
+
+    await tester.enterText(
+      find.byKey(const Key('product-name-field')),
+      'Rice',
+    );
+    await tester.enterText(find.byKey(const Key('barcode-field')), ' 12345 ');
+    await tester.ensureVisible(find.byKey(const Key('save-product-button')));
+    await tester.ensureVisible(find.byKey(const Key('save-product-button')));
+    await tester.tap(find.byKey(const Key('save-product-button')));
+    await tester.pumpAndSettle();
+
+    expect(repository.calls, 1);
+    expect(repository.lastInput?.barcode, ' 12345 ');
+    expect(
+      find.text('Barcode already used by another product.'),
+      findsOneWidget,
+    );
+    expect(find.textContaining('UNIQUE'), findsNothing);
+    expect(_field(tester, 'barcode-field').controller?.text, ' 12345 ');
+  });
   testWidgets('fits a small phone with enlarged text and accessible controls', (
     tester,
   ) async {
@@ -308,6 +349,7 @@ void main() {
       ' ',
     );
     await tester.enterText(find.byKey(const Key('unit-field')), ' ');
+    await tester.ensureVisible(find.byKey(const Key('save-product-button')));
     await tester.ensureVisible(find.byKey(const Key('save-product-button')));
     await tester.tap(find.byKey(const Key('save-product-button')));
     await tester.pumpAndSettle();

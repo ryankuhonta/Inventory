@@ -319,10 +319,18 @@ final class _EditProductFormState extends ConsumerState<_EditProductForm> {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('Product updated.')),
       );
-      context.goNamed(AppRoute.products.name);
+      _returnToProducts();
       return;
     }
     await _focusFirstInvalid();
+  }
+
+  void _returnToProducts() {
+    if (context.canPop()) {
+      context.pop();
+      return;
+    }
+    context.goNamed(AppRoute.products.name);
   }
 
   Future<void> _confirmArchive() async {
@@ -365,7 +373,7 @@ final class _EditProductFormState extends ConsumerState<_EditProductForm> {
     ScaffoldMessenger.of(context).showSnackBar(
       const SnackBar(content: Text('Product archived.')),
     );
-    context.goNamed(AppRoute.products.name);
+    _returnToProducts();
   }
 
   Future<void> _focusFirstInvalid() async {

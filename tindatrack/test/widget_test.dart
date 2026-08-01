@@ -461,7 +461,7 @@ void main() {
       await tester.binding.handlePopRoute();
       await tester.pumpAndSettle();
 
-      expect(router.routeInformationProvider.value.uri.path, '/products');
+      expect(router.routeInformationProvider.value.uri.path, '/dashboard');
       expect(identical(router, routerBeforeBack), isTrue);
       expect(bootstrapAttempts, 1);
       expect(databaseCreations, 1);

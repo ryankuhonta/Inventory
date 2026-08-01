@@ -41,6 +41,8 @@
 
 **Severity:** Important product-flow fix
 
+**Status:** Implemented on 2026-07-27 in the barcode-fix local changes. Add Product now exposes manual barcode entry and reuses the same duplicate-barcode safe copy as Edit Product. Follow-up fix added after APK retest: Edit Product save/archive now returns by popping the pushed edit route so row action icons re-enable immediately. Latest 2026-07-28 retest build also replaces root PopScope-only handling with an explicit BackButtonListener so Dashboard shows exit confirmation and Products/History/Settings return to Dashboard instead of falling through to app exit.
+
 **Suggested change:** Add the barcode field to Add Product, reusing the same validation and duplicate-barcode behavior already available in Edit Product.
 
 ### 3. Reuse previous same-field values as autocomplete suggestions
@@ -131,3 +133,39 @@
 **Severity:** Nice-to-have display polish
 
 **Suggested change:** Parse the Flutter version string into version name and build number before displaying it in the UI.
+
+## 2026-08-01 Router-level Back Fix Candidate
+
+**Do not use:** `_bmad-output/implementation-artifacts/apk/tindatrack-0.1.0+1-debug-backlistenerfix-20260728.apk` - tester reported it made Android Back worse.
+
+**New APK to test:** `_bmad-output/implementation-artifacts/apk/tindatrack-0.1.0+1-debug-routerbackfix-20260801.apk`
+
+**Verification before handoff:**
+- `dart analyze` passed with no issues from the Windows test mirror.
+- `flutter test` passed: 368 tests.
+- `flutter build apk --debug` succeeded.
+- `git diff --check` passed.
+
+**Expected behavior to verify on device:**
+1. From Products, Android Back returns to Dashboard instead of exiting.
+2. From History, Android Back returns to Dashboard instead of exiting.
+3. From Dashboard, Android Back shows `Exit TindaTrack?` confirmation.
+4. After saving Edit Product, product row action icons remain enabled and Android Back from Products returns to Dashboard.
+
+## 2026-08-01 Shell + Router Back Fix Candidate
+
+**Tester follow-up:** Router-only APK still behaved the same on device.
+
+**New APK to test:** `_bmad-output/implementation-artifacts/apk/tindatrack-0.1.0+1-debug-shellrouterbackfix-20260801.apk`
+
+**Install recommendation:** Fresh uninstall/install is recommended for this candidate because debug APK metadata is still `0.1.0+1`, and this rules out a stale update install.
+
+**Additional change:** AppShell now uses a direct `PopScope(canPop: false)` guard in addition to the app-level router back dispatcher. This is intended to catch the Android route-pop path on real devices.
+
+**Verification before handoff:**
+- Focused app shell back tests passed.
+- Product edit navigation flow tests passed.
+- `dart analyze` passed with no issues.
+- `flutter test` passed: 368 tests.
+- `flutter build apk --debug` succeeded.
+- `git diff --check` passed.

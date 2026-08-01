@@ -23,6 +23,7 @@ final class _AddProductScreenState extends ConsumerState<AddProductScreen> {
   final _sellingPriceController = TextEditingController();
   final _quantityController = TextEditingController(text: '0');
   final _thresholdController = TextEditingController(text: '0');
+  final _barcodeController = TextEditingController();
 
   final _nameFocus = FocusNode();
   final _categoryFocus = FocusNode();
@@ -30,6 +31,7 @@ final class _AddProductScreenState extends ConsumerState<AddProductScreen> {
   final _sellingPriceFocus = FocusNode();
   final _quantityFocus = FocusNode();
   final _thresholdFocus = FocusNode();
+  final _barcodeFocus = FocusNode();
 
   @override
   void dispose() {
@@ -39,12 +41,14 @@ final class _AddProductScreenState extends ConsumerState<AddProductScreen> {
     _sellingPriceController.dispose();
     _quantityController.dispose();
     _thresholdController.dispose();
+    _barcodeController.dispose();
     _nameFocus.dispose();
     _categoryFocus.dispose();
     _unitFocus.dispose();
     _sellingPriceFocus.dispose();
     _quantityFocus.dispose();
     _thresholdFocus.dispose();
+    _barcodeFocus.dispose();
     super.dispose();
   }
 
@@ -135,6 +139,16 @@ final class _AddProductScreenState extends ConsumerState<AddProductScreen> {
                     enabled: fieldsEnabled,
                     error: state.errorFor(ProductField.lowStockThreshold),
                     keyboardType: TextInputType.number,
+                    textInputAction: TextInputAction.next,
+                    onSubmitted: (_) => _barcodeFocus.requestFocus(),
+                  ),
+                  SizedBox(height: spacing.md),
+                  _field(
+                    key: const Key('barcode-field'),
+                    controller: _barcodeController,
+                    focusNode: _barcodeFocus,
+                    label: 'Barcode (optional)',
+                    enabled: fieldsEnabled,
                     textInputAction: TextInputAction.done,
                     onSubmitted: (_) => _submit(),
                   ),
@@ -190,6 +204,7 @@ final class _AddProductScreenState extends ConsumerState<AddProductScreen> {
             sellingPrice: _sellingPriceController.text,
             quantity: _quantityController.text,
             lowStockThreshold: _thresholdController.text,
+            barcode: _barcodeController.text,
           ),
         );
     if (!mounted) return;

@@ -1,9 +1,12 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:go_router/go_router.dart';
+import 'package:tindatrack/app/router/app_routes.dart';
 
 /// Persistent shell for the four primary application sections.
-class AppShell extends StatelessWidget {
+class AppShell extends StatefulWidget {
   /// Creates the primary application shell.
   const AppShell({required this.navigationShell, super.key});
 
@@ -11,42 +14,29 @@ class AppShell extends StatelessWidget {
   final StatefulNavigationShell navigationShell;
 
   @override
+  State<AppShell> createState() => _AppShellState();
+}
+
+class _AppShellState extends State<AppShell> {
+  bool _exitDialogOpen = false;
+
+  @override
   Widget build(BuildContext context) {
-    final activeBranchCanPop =
-        navigationShell
-            .route
-            .branches[navigationShell.currentIndex]
-            .navigatorKey
-            .currentState
-            ?.canPop() ??
-        false;
-
     return PopScope(
-      canPop: activeBranchCanPop,
-      onPopInvokedWithResult: (didPop, result) async {
-        if (didPop) {
-          return;
-        }
-
-        if (navigationShell.currentIndex != 0) {
-          navigationShell.goBranch(0);
-          return;
-        }
-
-        final shouldExit = await _confirmExit(context);
-        if (shouldExit && context.mounted) {
-          await SystemNavigator.pop();
-        }
+      canPop: false,
+      onPopInvokedWithResult: (didPop, result) {
+        if (didPop) return;
+        _handleBack();
       },
       child: Scaffold(
-        body: navigationShell,
+        body: widget.navigationShell,
         bottomNavigationBar: NavigationBar(
-          selectedIndex: navigationShell.currentIndex,
+          selectedIndex: widget.navigationShell.currentIndex,
           labelBehavior: NavigationDestinationLabelBehavior.alwaysShow,
           onDestinationSelected: (index) {
-            navigationShell.goBranch(
+            widget.navigationShell.goBranch(
               index,
-              initialLocation: index == navigationShell.currentIndex,
+              initialLocation: index == widget.navigationShell.currentIndex,
             );
           },
           destinations: const [
@@ -76,8 +66,32 @@ class AppShell extends StatelessWidget {
     );
   }
 
-  Future<bool> _confirmExit(BuildContext context) async {
-    final result = await showDialog<bool>(
+  void _handleBack() {
+    final router = GoRouter.of(context);
+    final path = router.routeInformationProvider.value.uri.path;
+
+    if (path.startsWith('${AppRoute.products.path}/')) {
+      if (router.canPop()) {
+        router.pop();
+        return;
+      }
+      router.go(AppRoute.products.path);
+      return;
+    }
+
+    if (path != AppRoute.dashboard.path) {
+      router.go(AppRoute.dashboard.path);
+      return;
+    }
+
+    unawaited(_confirmExit());
+  }
+
+  Future<void> _confirmExit() async {
+    if (_exitDialogOpen || !mounted) return;
+
+    _exitDialogOpen = true;
+    final shouldExit = await showDialog<bool>(
       context: context,
       builder: (dialogContext) {
         return AlertDialog(
@@ -85,21 +99,21 @@ class AppShell extends StatelessWidget {
           content: const Text('Are you sure you want to close the app?'),
           actions: [
             TextButton(
-              onPressed: () {
-                Navigator.of(dialogContext).pop(false);
-              },
+              onPressed: () => Navigator.of(dialogContext).pop(false),
               child: const Text('Cancel'),
             ),
             FilledButton(
-              onPressed: () {
-                Navigator.of(dialogContext).pop(true);
-              },
+              onPressed: () => Navigator.of(dialogContext).pop(true),
               child: const Text('Exit'),
             ),
           ],
         );
       },
     );
-    return result ?? false;
+    _exitDialogOpen = false;
+
+    if ((shouldExit ?? false) && mounted) {
+      await SystemNavigator.pop();
+    }
   }
 }

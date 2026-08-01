@@ -27,6 +27,7 @@ void main() {
         sellingPrice: '-1',
         quantity: 'not-an-int',
         lowStockThreshold: '1000000',
+        barcode: '',
       ),
     );
 
@@ -62,6 +63,7 @@ void main() {
     expect(repository.lastInput?.category, isNull);
     expect(repository.lastInput?.unit, 'pcs');
     expect(repository.lastInput?.sellingPrice, 0);
+    expect(repository.lastInput?.barcode, ' 12345 ');
     expect(harness.state.wasSaved, isTrue);
     expect(harness.state.isSaving, isFalse);
   });
@@ -149,6 +151,7 @@ ProductFormValues _validValues() {
     sellingPrice: '',
     quantity: '0',
     lowStockThreshold: '0',
+    barcode: ' 12345 ',
   );
 }
 

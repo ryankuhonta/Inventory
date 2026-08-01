@@ -12,6 +12,11 @@ import 'package:tindatrack/features/settings/presentation/screens/settings_scree
 import 'package:tindatrack/features/stock/presentation/screens/stock_in_screen.dart';
 import 'package:tindatrack/features/stock/presentation/screens/stock_out_screen.dart';
 
+/// Root app navigator used by the app-level back dispatcher.
+final appRootNavigatorKey = GlobalKey<NavigatorState>(
+  debugLabel: 'appRootNavigator',
+);
+
 /// Builder used to supply a branch root screen.
 typedef AppRouteBuilder =
     Widget Function(
@@ -46,6 +51,7 @@ GoRouter createAppRouter({
   );
 
   return GoRouter(
+    navigatorKey: appRootNavigatorKey,
     initialLocation: initialLocation ?? AppRoute.dashboard.path,
     routes: [
       StatefulShellRoute.indexedStack(

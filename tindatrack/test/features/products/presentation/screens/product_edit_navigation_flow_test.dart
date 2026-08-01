@@ -1,6 +1,9 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:tindatrack/app/navigation/app_back_button_dispatcher.dart';
 import 'package:tindatrack/app/router/app_router.dart';
 import 'package:tindatrack/app/router/app_routes.dart';
 import 'package:tindatrack/app/theme/app_theme.dart';
@@ -19,6 +22,7 @@ void main() {
       tester,
     ) async {
       final repository = _Repository();
+      addTearDown(repository.dispose);
       String? openedProductId;
       String? openedRoutePath;
       final router = createAppRouter(
@@ -44,7 +48,13 @@ void main() {
           ],
           child: MaterialApp.router(
             theme: AppTheme.light,
-            routerConfig: router,
+            routeInformationProvider: router.routeInformationProvider,
+            routeInformationParser: router.routeInformationParser,
+            routerDelegate: router.routerDelegate,
+            backButtonDispatcher: AppBackButtonDispatcher(
+              router: router,
+              navigatorKey: appRootNavigatorKey,
+            ),
           ),
         ),
       );
@@ -89,10 +99,93 @@ void main() {
       expect(find.byKey(actionKey), findsOneWidget);
     },
   );
+
+  testWidgets(
+    'successful edit returns with row actions enabled '
+    'and root back policy intact',
+    (tester) async {
+      final repository = _Repository();
+      addTearDown(repository.dispose);
+      final router = createAppRouter(
+        initialLocation: AppRoute.products.path,
+        dashboardBuilder: (_, _) => const Scaffold(
+          key: Key('dashboard-test-screen'),
+        ),
+        historyBuilder: (_, _) => const Scaffold(),
+        settingsBuilder: (_, _) => const Scaffold(),
+      );
+      addTearDown(router.dispose);
+
+      await tester.pumpWidget(
+        ProviderScope(
+          overrides: [
+            productRepositoryProvider.overrideWithValue(repository),
+          ],
+          child: MaterialApp.router(
+            theme: AppTheme.light,
+            routeInformationProvider: router.routeInformationProvider,
+            routeInformationParser: router.routeInformationParser,
+            routerDelegate: router.routerDelegate,
+            backButtonDispatcher: AppBackButtonDispatcher(
+              router: router,
+              navigatorKey: appRootNavigatorKey,
+            ),
+          ),
+        ),
+      );
+      await tester.pump();
+      await tester.pump(const Duration(milliseconds: 500));
+
+      const editActionKey = ValueKey('product-edit-action-product-1');
+      await tester.tap(find.byKey(editActionKey));
+      await tester.pump();
+      await tester.pump(const Duration(milliseconds: 500));
+
+      await tester.enterText(
+        find.byKey(const Key('edit-product-name-field')),
+        'Updated Rice',
+      );
+      await tester.ensureVisible(
+        find.byKey(const Key('save-product-changes-button')),
+      );
+      await tester.tap(find.byKey(const Key('save-product-changes-button')));
+      await tester.pumpAndSettle();
+
+      expect(router.routeInformationProvider.value.uri.path, '/products');
+      expect(find.byKey(const Key('products-screen')), findsOneWidget);
+      expect(find.text('Product updated.'), findsOneWidget);
+      expect(_rowAction(tester, editActionKey).onPressed, isNotNull);
+      expect(
+        _rowAction(
+          tester,
+          const ValueKey('product-stock-in-action-product-1'),
+        ).onPressed,
+        isNotNull,
+      );
+      expect(
+        _rowAction(
+          tester,
+          const ValueKey('product-stock-out-action-product-1'),
+        ).onPressed,
+        isNotNull,
+      );
+
+      await tester.binding.handlePopRoute();
+      await tester.pumpAndSettle();
+
+      expect(router.routeInformationProvider.value.uri.path, '/dashboard');
+      expect(find.byKey(const Key('dashboard-test-screen')), findsOneWidget);
+    },
+  );
 }
 
 final class _Repository implements ProductRepository {
   Product product = _product();
+  final _products = StreamController<List<Product>>.broadcast();
+
+  void dispose() {
+    unawaited(_products.close());
+  }
 
   @override
   Future<Result<void>> archiveProduct(String id) async {
@@ -115,13 +208,24 @@ final class _Repository implements ProductRepository {
     UpdateProductInput input,
   ) async {
     product = _product(name: input.name);
+    _products.add(<Product>[product]);
     return Success<Product>(product);
   }
 
   @override
-  Stream<List<Product>> watchActiveProducts(ProductListQuery query) {
-    return Stream.value(<Product>[product]);
+  Stream<List<Product>> watchActiveProducts(ProductListQuery query) async* {
+    yield <Product>[product];
+    yield* _products.stream;
   }
+}
+
+IconButton _rowAction(WidgetTester tester, ValueKey<String> key) {
+  return tester.widget<IconButton>(
+    find.descendant(
+      of: find.byKey(key),
+      matching: find.byType(IconButton),
+    ),
+  );
 }
 
 Product _product({String name = 'Rice'}) {

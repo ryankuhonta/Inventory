@@ -49,6 +49,7 @@ final class ProductFormValues {
     required this.sellingPrice,
     required this.quantity,
     required this.lowStockThreshold,
+    required this.barcode,
   });
 
   /// Raw product name.
@@ -68,6 +69,9 @@ final class ProductFormValues {
 
   /// Raw low-stock threshold.
   final String lowStockThreshold;
+
+  /// Raw optional manual barcode.
+  final String barcode;
 }
 
 /// Presentation-safe Add Product submission state.
@@ -247,7 +251,7 @@ _ParsedForm _parse(ProductFormValues values) {
       unit: values.unit,
       sellingPrice: values.sellingPrice,
       lowStockThreshold: values.lowStockThreshold,
-      barcode: '',
+      barcode: values.barcode,
     ),
   );
   final errors = Map<ProductField, String>.of(details.errors);
@@ -277,6 +281,7 @@ _ParsedForm _parse(ProductFormValues values) {
       sellingPrice: input.sellingPrice,
       quantity: quantity!,
       lowStockThreshold: input.lowStockThreshold,
+      barcode: input.barcode,
     ),
     errors: const <ProductField, String>{},
   );
