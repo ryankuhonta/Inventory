@@ -109,12 +109,21 @@ String versionFromPubspec(String pubspec) {
   if (versionLine.isEmpty) {
     return 'Unavailable';
   }
-  final version = versionLine
+  final rawVersion = versionLine
       .substring('version:'.length)
       .split('#')
       .first
       .trim();
-  return version.isEmpty ? 'Unavailable' : version;
+  if (rawVersion.isEmpty) {
+    return 'Unavailable';
+  }
+
+  final parts = rawVersion.split('+');
+  if (parts.length == 2 && parts.first.isNotEmpty && parts.last.isNotEmpty) {
+    return 'Version ${parts.first} (Build ${parts.last})';
+  }
+
+  return 'Version $rawVersion';
 }
 
 class _SettingsSection extends StatelessWidget {

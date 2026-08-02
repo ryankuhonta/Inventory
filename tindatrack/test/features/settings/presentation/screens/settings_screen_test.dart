@@ -42,7 +42,7 @@ void main() {
       findsOneWidget,
     );
     final pubspecVersion = _pubspecVersion();
-    expect(find.text(pubspecVersion), findsOneWidget);
+    expect(find.text(_displayVersion(pubspecVersion)), findsOneWidget);
     expect(find.text('MVP preview'), findsNothing);
     expect(
       find.text('Inventory data is stored on this device for the MVP.'),
@@ -57,8 +57,9 @@ void main() {
         '  version: nested\n'
         'version: 0.1.0+1 # release\n',
       ),
-      '0.1.0+1',
+      'Version 0.1.0 (Build 1)',
     );
+    expect(versionFromPubspec('version: 0.1.0\n'), 'Version 0.1.0');
     expect(versionFromPubspec('name: app\n'), 'Unavailable');
   });
 
@@ -153,6 +154,14 @@ void main() {
       findsNothing,
     );
   });
+}
+
+String _displayVersion(String rawVersion) {
+  final parts = rawVersion.split('+');
+  if (parts.length == 2 && parts.first.isNotEmpty && parts.last.isNotEmpty) {
+    return 'Version ${parts.first} (Build ${parts.last})';
+  }
+  return 'Version $rawVersion';
 }
 
 String _pubspecVersion() {
