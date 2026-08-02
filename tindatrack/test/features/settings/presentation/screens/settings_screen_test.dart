@@ -12,7 +12,7 @@ void main() {
     await _pumpSettings(tester);
 
     expect(find.byKey(const Key('settings-screen')), findsOneWidget);
-    expect(find.text('Settings'), findsOneWidget);
+    expect(find.text('App Info'), findsOneWidget);
     expect(find.byKey(const Key('settings-currency-section')), findsOneWidget);
     expect(
       find.byKey(const Key('settings-backup-export-section')),

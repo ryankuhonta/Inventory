@@ -87,7 +87,7 @@ void main() {
           stockRepositoryProvider.overrideWithValue(_StockRepository()),
         ],
       ),
-      const _MvpScreenScenario(name: 'Settings', child: SettingsScreen()),
+      const _MvpScreenScenario(name: 'App Info', child: SettingsScreen()),
     ];
 
     for (final scenario in scenarios) {

@@ -115,6 +115,8 @@
 
 **Severity:** UX/content architecture polish
 
+**Status:** Implemented on 2026-08-02 in the App Info local changes. The visible bottom tab, selected icon, and screen heading now use `App Info` because the MVP screen is read-only app/support information. The internal `/settings` route, `SettingsScreen` class, and `settings-*` keys remain stable to avoid unnecessary route/test churn.
+
 **Suggested change:** Decide whether to rename the tab/screen to About or App Info for MVP, or add at least one real configurable setting if it should remain Settings. Keep backup/export clearly marked as future/not available until implemented.
 
 ### 7. App version displays raw Flutter plus-build format
@@ -169,3 +171,24 @@
 - `flutter test` passed: 368 tests.
 - `flutter build apk --debug` succeeded.
 - `git diff --check` passed.
+
+## 2026-08-02 Initial Feedback Closure Summary
+
+**Latest APK to test:** `_bmad-output/implementation-artifacts/apk/tindatrack-0.1.0+1-debug-appinfo-20260802.apk`
+
+**Closed feedback items:**
+1. App exit/back confirmation: closed. Root back shows `Exit TindaTrack?` before app exit.
+2. Add Product barcode consistency: closed. Add Product now includes manual barcode entry and duplicate-barcode safe copy.
+3. Same-field autocomplete: closed for the approved initial scope. Stock In and Stock Out notes suggest prior same-context notes only.
+4. Android launcher icon: closed. Debug builds now use the custom TindaTrack launcher icon.
+5. History/secondary-tab back behavior: closed. Secondary tabs return to Dashboard before exit confirmation.
+6. Settings vs app information naming: closed. Visible UI now uses `App Info` while keeping `/settings` internals stable.
+7. Raw Flutter version display: closed. `0.1.0+1` displays as `Version 0.1.0 (Build 1)`.
+
+**Verification before handoff:**
+- Focused Settings, AppShell, and root widget tests passed from `C:\tmp\Inventory-app-info-verify-0802a`.
+- `dart analyze` passed with no issues from `C:\tmp\Inventory-app-info-verify-0802a`.
+- `flutter build apk --debug` succeeded from `C:\tmp\Inventory-app-info-verify-0802a`.
+- `git diff --check` passed.
+
+**Remaining decision:** None for the initial private APK feedback list. Future editable preferences can reintroduce a full Settings surface later if needed.
