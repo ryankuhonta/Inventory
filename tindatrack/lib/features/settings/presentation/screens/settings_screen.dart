@@ -4,9 +4,9 @@ import 'package:tindatrack/core/formatters/currency_formatter.dart';
 import 'package:tindatrack/core/ui/app_dimensions.dart';
 import 'package:tindatrack/core/ui/app_spacing.dart';
 
-/// Root screen for local-only app settings.
+/// Root screen for local-only app information.
 class SettingsScreen extends StatefulWidget {
-  /// Creates the Settings screen.
+  /// Creates the App Info screen.
   const SettingsScreen({super.key});
 
   @override
@@ -29,7 +29,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
           padding: EdgeInsets.all(spacing.md),
           children: [
             Text(
-              'Settings',
+              'App Info',
               style: theme.textTheme.headlineSmall?.copyWith(
                 color: theme.colorScheme.onSurface,
                 fontWeight: FontWeight.w700,

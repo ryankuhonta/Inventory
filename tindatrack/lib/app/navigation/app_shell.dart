@@ -56,9 +56,9 @@ class _AppShellState extends State<AppShell> {
               label: 'History',
             ),
             NavigationDestination(
-              icon: Icon(Icons.settings_outlined),
-              selectedIcon: Icon(Icons.settings),
-              label: 'Settings',
+              icon: Icon(Icons.info_outline),
+              selectedIcon: Icon(Icons.info),
+              label: 'App Info',
             ),
           ],
         ),

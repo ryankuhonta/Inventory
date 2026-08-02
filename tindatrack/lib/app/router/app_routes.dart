@@ -9,8 +9,8 @@ enum AppRoute {
   /// Inventory history branch root.
   history(path: '/history', label: 'History'),
 
-  /// Settings branch root.
-  settings(path: '/settings', label: 'Settings');
+  /// App info branch root.
+  settings(path: '/settings', label: 'App Info');
 
   const AppRoute({required this.path, required this.label});
 

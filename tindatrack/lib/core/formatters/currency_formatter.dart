@@ -11,7 +11,7 @@ class CurrencyFormatter {
     : currencyCode = 'PHP',
       currencySymbol = '\u20B1';
 
-  /// ISO-style currency code shown in Settings.
+  /// ISO-style currency code shown in App Info.
   final String currencyCode;
 
   /// Currency symbol used for compact price displays.
