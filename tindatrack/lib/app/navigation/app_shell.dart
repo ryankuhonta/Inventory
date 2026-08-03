@@ -3,15 +3,23 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:go_router/go_router.dart';
+import 'package:tindatrack/app/navigation/product_child_back_handler.dart';
 import 'package:tindatrack/app/router/app_routes.dart';
 
 /// Persistent shell for the four primary application sections.
 class AppShell extends StatefulWidget {
   /// Creates the primary application shell.
-  const AppShell({required this.navigationShell, super.key});
+  const AppShell({
+    required this.navigationShell,
+    required this.productsNavigatorKey,
+    super.key,
+  });
 
   /// Router-owned stateful branch shell.
   final StatefulNavigationShell navigationShell;
+
+  /// Navigator for the Products branch and its child flows.
+  final GlobalKey<NavigatorState> productsNavigatorKey;
 
   @override
   State<AppShell> createState() => _AppShellState();
@@ -26,7 +34,7 @@ class _AppShellState extends State<AppShell> {
       canPop: false,
       onPopInvokedWithResult: (didPop, result) {
         if (didPop) return;
-        _handleBack();
+        unawaited(_handleBack());
       },
       child: Scaffold(
         body: widget.navigationShell,
@@ -66,16 +74,18 @@ class _AppShellState extends State<AppShell> {
     );
   }
 
-  void _handleBack() {
+  Future<void> _handleBack() async {
+    final childBackHandler = productChildBackRegistry.handler;
+    if (childBackHandler != null) {
+      unawaited(childBackHandler());
+      return;
+    }
+
     final router = GoRouter.of(context);
     final path = router.routeInformationProvider.value.uri.path;
 
     if (path.startsWith('${AppRoute.products.path}/')) {
-      if (router.canPop()) {
-        router.pop();
-        return;
-      }
-      router.go(AppRoute.products.path);
+      await widget.productsNavigatorKey.currentState?.maybePop();
       return;
     }
 

@@ -1,7 +1,11 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:tindatrack/app/navigation/product_child_back_handler.dart';
+import 'package:tindatrack/app/router/app_routes.dart';
 import 'package:tindatrack/core/errors/result.dart';
 import 'package:tindatrack/core/ui/app_spacing.dart';
 import 'package:tindatrack/core/widgets/app_error_view.dart';
@@ -91,16 +95,23 @@ final class _StockOutFormState extends ConsumerState<_StockOutForm> {
   late final TextEditingController _noteController;
   final _quantityFocus = FocusNode();
   final _noteFocus = FocusNode();
+  late final ProductChildBackHandler _backHandler;
 
   @override
   void initState() {
     super.initState();
     _quantityController = TextEditingController();
     _noteController = TextEditingController();
+    _backHandler = _handleHardwareBack;
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) return;
+      productChildBackRegistry.handler = _backHandler;
+    });
   }
 
   @override
   void dispose() {
+    productChildBackRegistry.unregister(_backHandler);
     _quantityController.dispose();
     _noteController.dispose();
     _quantityFocus.dispose();
@@ -122,7 +133,11 @@ final class _StockOutFormState extends ConsumerState<_StockOutForm> {
     };
 
     return PopScope(
-      canPop: !state.isSaving,
+      canPop: false,
+      onPopInvokedWithResult: (didPop, result) {
+        if (didPop) return;
+        unawaited(_handleBack(isSaving: state.isSaving));
+      },
       child: Scaffold(
         key: const Key('stock-out-screen'),
         appBar: AppBar(title: const Text('Stock Out')),
@@ -194,6 +209,54 @@ final class _StockOutFormState extends ConsumerState<_StockOutForm> {
         ),
       ),
     );
+  }
+
+  Future<void> _handleHardwareBack() async {
+    final state = ref.read(stockOutControllerProvider(widget.product.id));
+    await _handleBack(isSaving: state.isSaving);
+  }
+
+  Future<void> _handleBack({required bool isSaving}) async {
+    if (isSaving) return;
+    FocusScope.of(context).unfocus();
+    if (!_hasDraftInput) {
+      _returnToProducts();
+      return;
+    }
+
+    final discard = await showDialog<bool>(
+      context: context,
+      builder: (dialogContext) => AlertDialog(
+        title: const Text('Cancel stock out?'),
+        content: const Text(
+          'This stock out has not been recorded. Discard it and go back?',
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(dialogContext, false),
+            child: const Text('Keep editing'),
+          ),
+          FilledButton(
+            onPressed: () => Navigator.pop(dialogContext, true),
+            child: const Text('Discard'),
+          ),
+        ],
+      ),
+    );
+    if (!mounted || discard != true) return;
+    _returnToProducts();
+  }
+
+  bool get _hasDraftInput =>
+      _quantityController.text.trim().isNotEmpty ||
+      _noteController.text.trim().isNotEmpty;
+
+  void _returnToProducts() {
+    if (context.canPop()) {
+      context.pop();
+      return;
+    }
+    context.goNamed(AppRoute.products.name);
   }
 
   Future<void> _submit() async {

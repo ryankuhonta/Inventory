@@ -192,3 +192,33 @@
 - `git diff --check` passed.
 
 **Remaining decision:** None for the initial private APK feedback list. Future editable preferences can reintroduce a full Settings surface later if needed.
+
+## 2026-08-03 Additional Finding: Back From Product Child Screens
+
+**APK under test:** `_bmad-output/implementation-artifacts/apk/current/tindatrack-0.1.0+1-debug-main-merged-appinfo-20260803.apk`
+
+**Screen/area:** Products child flows: Stock In, Stock Out, and Edit Product.
+
+**What happened:** From Products, opening a row action such as Stock In, Stock Out, or Edit Product and pressing Android Back could return to Dashboard instead of treating the child flow as the active screen.
+
+**Expected:** Android Back on product child flows should not jump straight to Dashboard. If the child screen has no draft work, it should return to Products. If there is typed stock movement input or unsaved product edits, it should ask whether to discard/cancel before returning.
+
+**Status:** The first, v2, v3, and v4 candidate APKs still behaved the same on device. A deeper v5 fix was implemented on 2026-08-03 in `codex/product-child-back-confirm` after confirming app-bar Back worked but physical phone Back still bypassed the child prompts. Stock In, Stock Out, and Edit Product now register their own active child Back handler while mounted. The shell and router back dispatcher call that handler directly for Products child routes, so physical Android Back uses the same cancel/discard logic as the child screen instead of falling through to Dashboard.
+
+**Do not use:** `_bmad-output/implementation-artifacts/apk/archive-tested/tindatrack-0.1.0+1-debug-childback-20260803.apk`, `_bmad-output/implementation-artifacts/apk/archive-tested/tindatrack-0.1.0+1-debug-childback-v2-20260803.apk`, `_bmad-output/implementation-artifacts/apk/archive-tested/tindatrack-0.1.0+1-debug-childback-v3-20260803.apk`, and `_bmad-output/implementation-artifacts/apk/archive-tested/tindatrack-0.1.0+1-debug-childback-v4-20260803.apk` - tester reported these still jumped back to Dashboard from physical phone Back.
+
+**New APK to test:** `_bmad-output/implementation-artifacts/apk/current/tindatrack-0.1.0+1-debug-childback-v5-20260803.apk`
+
+**Verification before handoff:**
+- Focused Stock In, Stock Out, and Edit Product widget tests passed from `C:\tmp\Inventory-child-back-verify-0803c`.
+- Product edit navigation, including barcode-edit hardware Back and Android Back regression, passed from `C:\tmp\Inventory-child-back-verify-0803c`.
+- AppShell regression tests passed from `C:\tmp\Inventory-child-back-verify-0803c`.
+- `dart analyze` passed with no issues from `C:\tmp\Inventory-child-back-verify-0803c`.
+- `flutter build apk --debug` succeeded from `C:\tmp\Inventory-child-back-verify-0803c`.
+
+**Expected behavior to verify on device:**
+1. From Products, open Stock In and press Back with empty fields: returns to Products.
+2. From Products, open Stock In, type quantity or note, then press Back: shows `Cancel stock in?`; `Keep editing` stays, `Discard` returns to Products.
+3. From Products, open Stock Out, type quantity or note, then press Back: shows `Cancel stock out?`; `Keep editing` stays, `Discard` returns to Products.
+4. From Products, open Edit Product, change a field, then press Back: shows `Discard changes?`; `Keep editing` stays, `Discard` returns to Products.
+5. From the Products main screen, Android Back still returns to Dashboard.

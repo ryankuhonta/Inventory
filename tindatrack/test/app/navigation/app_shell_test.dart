@@ -217,6 +217,7 @@ final class _RouterTestApp extends StatelessWidget {
         backButtonDispatcher: AppBackButtonDispatcher(
           router: router,
           navigatorKey: appRootNavigatorKey,
+          productsNavigatorKey: appProductsNavigatorKey,
         ),
       ),
     );

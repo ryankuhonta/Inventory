@@ -1,9 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:go_router/go_router.dart';
 import 'package:tindatrack/app/bootstrap.dart';
 import 'package:tindatrack/app/navigation/app_back_button_dispatcher.dart';
-import 'package:tindatrack/app/navigation/app_native_back_channel.dart';
 import 'package:tindatrack/app/providers.dart';
 import 'package:tindatrack/app/router/app_router.dart';
 import 'package:tindatrack/app/theme/app_theme.dart';
@@ -23,19 +21,9 @@ class MainApp extends ConsumerStatefulWidget {
 }
 
 final class _MainAppState extends ConsumerState<MainApp> {
-  AppNativeBackChannel? _nativeBackChannel;
-
-  @override
-  void dispose() {
-    _nativeBackChannel?.detach();
-    super.dispose();
-  }
-
   @override
   Widget build(BuildContext context) {
     final router = ref.watch(appRouterProvider);
-    _attachNativeBackChannel(router);
-
     return MaterialApp.router(
       debugShowCheckedModeBanner: false,
       title: 'TindaTrack',
@@ -46,21 +34,12 @@ final class _MainAppState extends ConsumerState<MainApp> {
       backButtonDispatcher: AppBackButtonDispatcher(
         router: router,
         navigatorKey: appRootNavigatorKey,
+        productsNavigatorKey: appProductsNavigatorKey,
       ),
       builder: (context, child) {
         return _LaunchGate(child: child ?? const SizedBox.shrink());
       },
     );
-  }
-
-  void _attachNativeBackChannel(GoRouter router) {
-    if (_nativeBackChannel?.router == router) return;
-
-    _nativeBackChannel?.detach();
-    _nativeBackChannel = AppNativeBackChannel(
-      router: router,
-      navigatorKey: appRootNavigatorKey,
-    )..attach();
   }
 }
 

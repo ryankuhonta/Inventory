@@ -54,6 +54,7 @@ void main() {
             backButtonDispatcher: AppBackButtonDispatcher(
               router: router,
               navigatorKey: appRootNavigatorKey,
+              productsNavigatorKey: appProductsNavigatorKey,
             ),
           ),
         ),
@@ -101,6 +102,94 @@ void main() {
   );
 
   testWidgets(
+    'hardware back from barcode edit asks before leaving product child route',
+    (tester) async {
+      final repository = _Repository();
+      addTearDown(repository.dispose);
+      final router = createAppRouter(
+        initialLocation: AppRoute.products.path,
+        dashboardBuilder: (_, _) => const Scaffold(
+          key: Key('dashboard-test-screen'),
+        ),
+        historyBuilder: (_, _) => const Scaffold(),
+        settingsBuilder: (_, _) => const Scaffold(),
+      );
+      addTearDown(router.dispose);
+
+      await tester.pumpWidget(
+        ProviderScope(
+          overrides: [
+            productRepositoryProvider.overrideWithValue(repository),
+          ],
+          child: MaterialApp.router(
+            theme: AppTheme.light,
+            routeInformationProvider: router.routeInformationProvider,
+            routeInformationParser: router.routeInformationParser,
+            routerDelegate: router.routerDelegate,
+            backButtonDispatcher: AppBackButtonDispatcher(
+              router: router,
+              navigatorKey: appRootNavigatorKey,
+              productsNavigatorKey: appProductsNavigatorKey,
+            ),
+          ),
+        ),
+      );
+      await tester.pump();
+      await tester.pump(const Duration(milliseconds: 500));
+
+      router.goNamed(
+        ProductRoute.editProduct.name,
+        pathParameters: <String, String>{'productId': 'product-1'},
+      );
+      await tester.pumpAndSettle();
+      expect(
+        router.routeInformationProvider.value.uri.path,
+        '/products/product-1/edit',
+      );
+      expect(
+        router.routerDelegate.currentConfiguration.uri.path,
+        '/products/product-1/edit',
+      );
+      await tester.enterText(
+        find.byKey(const Key('edit-barcode-field')),
+        '4801234567890',
+      );
+
+      await tester.binding.handlePopRoute();
+      await tester.pumpAndSettle();
+
+      expect(
+        router.routeInformationProvider.value.uri.path,
+        '/products/product-1/edit',
+      );
+      expect(find.text('Discard changes?'), findsOneWidget);
+      expect(find.byKey(const Key('dashboard-test-screen')), findsNothing);
+
+      await tester.tap(find.text('Keep editing'));
+      await tester.pumpAndSettle();
+
+      expect(
+        router.routeInformationProvider.value.uri.path,
+        '/products/product-1/edit',
+      );
+      expect(
+        tester
+            .widget<TextFormField>(find.byKey(const Key('edit-barcode-field')))
+            .controller
+            ?.text,
+        '4801234567890',
+      );
+
+      await tester.binding.handlePopRoute();
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('Discard'));
+      await tester.pumpAndSettle();
+
+      expect(router.routeInformationProvider.value.uri.path, '/products');
+      expect(find.byKey(const Key('products-screen')), findsOneWidget);
+    },
+  );
+  testWidgets(
     'successful edit returns with row actions enabled '
     'and root back policy intact',
     (tester) async {
@@ -129,6 +218,7 @@ void main() {
             backButtonDispatcher: AppBackButtonDispatcher(
               router: router,
               navigatorKey: appRootNavigatorKey,
+              productsNavigatorKey: appProductsNavigatorKey,
             ),
           ),
         ),
