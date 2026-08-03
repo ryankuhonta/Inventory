@@ -42,6 +42,40 @@ void main() {
     expect(find.byKey(const Key('add-product-test-screen')), findsOneWidget);
   });
 
+  testWidgets('rapid FAB taps open one Add Product route', (tester) async {
+    await _pumpProducts(tester, () => Stream.value(const <Product>[]));
+
+    await tester.tap(find.byKey(const Key('add-product-action')));
+    await tester.tap(find.byKey(const Key('add-product-action')));
+    await tester.pumpAndSettle();
+
+    expect(find.byKey(const Key('add-product-test-screen')), findsOneWidget);
+
+    await tester.pageBack();
+    await tester.pumpAndSettle();
+
+    expect(find.text('No products yet'), findsOneWidget);
+    expect(find.byKey(const Key('add-product-test-screen')), findsNothing);
+  });
+
+  testWidgets('rapid empty-state action taps open one Add Product route', (
+    tester,
+  ) async {
+    await _pumpProducts(tester, () => Stream.value(const <Product>[]));
+
+    final action = find.widgetWithText(FilledButton, 'Add Product');
+    await tester.tap(action);
+    await tester.tap(action);
+    await tester.pumpAndSettle();
+
+    expect(find.byKey(const Key('add-product-test-screen')), findsOneWidget);
+
+    await tester.pageBack();
+    await tester.pumpAndSettle();
+
+    expect(find.text('No products yet'), findsOneWidget);
+    expect(find.byKey(const Key('add-product-test-screen')), findsNothing);
+  });
   testWidgets('safe error state retries without exposing diagnostics', (
     tester,
   ) async {

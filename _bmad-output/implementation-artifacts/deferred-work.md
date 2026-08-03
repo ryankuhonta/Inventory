@@ -20,20 +20,20 @@
 - A rejected cached close future blocks later retries (	indatrack/lib/app/providers.dart:40).
 - Provider disposal can surface an unhandled asynchronous close error (	indatrack/lib/app/providers.dart:34).
 
-## Deferred from: code review of 2-3-view-active-product-list-with-empty-state.md (2026-06-30)
+## Closed from: code review of 2-3-view-active-product-list-with-empty-state.md - 2026-08-03
 
-- Guard against duplicate Add Product routes from rapid repeated taps. The existing Story 2.2 FAB navigation behavior predates Story 2.3; address route de-duplication as a focused navigation hardening change.
+- Duplicate Add Product routes from rapid repeated taps are now guarded in `ProductListScreen` and covered for both the FAB and empty-state action paths.
 
 ## Deferred from: code review of 2-8-prepare-product-row-action-pattern.md (2026-07-07)
 
 - Harden `_openEditProduct` so `_openingProductId` is cleared if `context.pushNamed(ProductRoute.editProduct.name, ...)` throws. The guard predates Story 2.8 and should be handled as focused navigation hardening.
 
-## Deferred From Private APK Feedback Split - 2026-07-27
+## Closed from private APK feedback split - 2026-08-03
 
-The user chose to split the feedback implementation batch and start with navigation/back behavior only. Deferred items:
+The private APK feedback items deferred on 2026-07-27 have since been closed and should no longer be treated as active deferred work.
 
-- Add barcode field to Add Product, matching Edit Product validation and duplicate behavior.
-- Format app version display as `Version 0.1.0 (Build 1)` instead of raw `0.1.0+1`.
-- Create and configure a custom TindaTrack Android launcher icon.
-- Revisit Settings naming/content because the current screen is mostly app info, not editable settings.
-- Add local-only same-field autocomplete suggestions for repeated text-entry values.
+- Add Product now includes the optional barcode field with duplicate-barcode handling.
+- App version now displays as `Version 0.1.0 (Build 1)` instead of raw `0.1.0+1`.
+- Android launcher icon assets now use the custom TindaTrack launcher icon.
+- The visible Settings tab and screen heading now use `App Info` while keeping internal `/settings` route names stable.
+- Stock In and Stock Out notes now support local-only same-context autocomplete suggestions.

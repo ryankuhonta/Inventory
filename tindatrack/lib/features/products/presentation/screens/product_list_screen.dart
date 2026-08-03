@@ -29,6 +29,7 @@ class ProductListScreen extends ConsumerStatefulWidget {
 final class _ProductListScreenState extends ConsumerState<ProductListScreen> {
   late final TextEditingController _searchController;
   late final FocusNode _searchFocusNode;
+  bool _openingAddProduct = false;
 
   @override
   void initState() {
@@ -60,7 +61,7 @@ final class _ProductListScreenState extends ConsumerState<ProductListScreen> {
       appBar: AppBar(title: const Text('Products')),
       floatingActionButton: FloatingActionButton.extended(
         key: const Key('add-product-action'),
-        onPressed: () => _openAddProduct(context),
+        onPressed: () => unawaited(_openAddProduct(context)),
         icon: const Icon(Icons.add),
         label: const Text('Add Product'),
       ),
@@ -154,7 +155,7 @@ final class _ProductListScreenState extends ConsumerState<ProductListScreen> {
           message: 'Add your first product to start tracking stock.',
           icon: Icons.inventory_2_outlined,
           actionLabel: 'Add Product',
-          onAction: () => _openAddProduct(context),
+          onAction: () => unawaited(_openAddProduct(context)),
         ),
       AsyncData<List<Product>>(:final value) when value.isEmpty =>
         AppEmptyState(
@@ -232,8 +233,22 @@ final class _ProductListScreenState extends ConsumerState<ProductListScreen> {
     ref.read(productListControllerProvider.notifier).reset();
   }
 
-  void _openAddProduct(BuildContext context) {
-    unawaited(context.pushNamed(ProductRoute.addProduct.name));
+  Future<void> _openAddProduct(BuildContext context) async {
+    if (_openingAddProduct) return;
+
+    setState(() {
+      _openingAddProduct = true;
+    });
+
+    try {
+      await context.pushNamed(ProductRoute.addProduct.name);
+    } finally {
+      if (mounted) {
+        setState(() {
+          _openingAddProduct = false;
+        });
+      }
+    }
   }
 }
 
