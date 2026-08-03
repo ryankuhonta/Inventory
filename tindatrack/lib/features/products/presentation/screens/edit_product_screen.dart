@@ -1,6 +1,9 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:tindatrack/app/navigation/product_child_back_handler.dart';
 import 'package:tindatrack/app/router/app_routes.dart';
 import 'package:tindatrack/core/errors/result.dart';
 import 'package:tindatrack/core/ui/app_spacing.dart';
@@ -99,6 +102,7 @@ final class _EditProductFormState extends ConsumerState<_EditProductForm> {
   final _sellingPriceFocus = FocusNode();
   final _thresholdFocus = FocusNode();
   final _barcodeFocus = FocusNode();
+  late final ProductChildBackHandler _backHandler;
 
   @override
   void initState() {
@@ -114,10 +118,16 @@ final class _EditProductFormState extends ConsumerState<_EditProductForm> {
       text: product.lowStockThreshold.toString(),
     );
     _barcodeController = TextEditingController(text: product.barcode ?? '');
+    _backHandler = _handleHardwareBack;
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) return;
+      productChildBackRegistry.handler = _backHandler;
+    });
   }
 
   @override
   void dispose() {
+    productChildBackRegistry.unregister(_backHandler);
     _nameController.dispose();
     _categoryController.dispose();
     _unitController.dispose();
@@ -143,7 +153,11 @@ final class _EditProductFormState extends ConsumerState<_EditProductForm> {
     final fieldsEnabled = !interactionsDisabled;
 
     return PopScope(
-      canPop: !busy,
+      canPop: false,
+      onPopInvokedWithResult: (didPop, result) {
+        if (didPop) return;
+        unawaited(_handleBack(isBusy: busy));
+      },
       child: Scaffold(
         key: const Key('edit-product-screen'),
         appBar: AppBar(title: const Text('Edit Product')),
@@ -297,6 +311,52 @@ final class _EditProductFormState extends ConsumerState<_EditProductForm> {
       textInputAction: textInputAction,
       onFieldSubmitted: onSubmitted,
     );
+  }
+
+  Future<void> _handleHardwareBack() async {
+    final state = ref.read(editProductControllerProvider(widget.product.id));
+    await _handleBack(isBusy: state.isSaving || state.isArchiving);
+  }
+
+  Future<void> _handleBack({required bool isBusy}) async {
+    if (isBusy) return;
+    FocusScope.of(context).unfocus();
+    if (!_hasUnsavedChanges) {
+      _returnToProducts();
+      return;
+    }
+
+    final discard = await showDialog<bool>(
+      context: context,
+      builder: (dialogContext) => AlertDialog(
+        title: const Text('Discard changes?'),
+        content: const Text(
+          'Your product changes have not been saved. Discard them and go back?',
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(dialogContext, false),
+            child: const Text('Keep editing'),
+          ),
+          FilledButton(
+            onPressed: () => Navigator.pop(dialogContext, true),
+            child: const Text('Discard'),
+          ),
+        ],
+      ),
+    );
+    if (!mounted || discard != true) return;
+    _returnToProducts();
+  }
+
+  bool get _hasUnsavedChanges {
+    final product = widget.product;
+    return _nameController.text != product.name ||
+        _categoryController.text != (product.category ?? '') ||
+        _unitController.text != product.unit ||
+        _sellingPriceController.text != product.sellingPrice.toString() ||
+        _thresholdController.text != product.lowStockThreshold.toString() ||
+        _barcodeController.text != (product.barcode ?? '');
   }
 
   Future<void> _submit() async {

@@ -68,6 +68,39 @@ void main() {
     expect(find.text('Product updated.'), findsOneWidget);
   });
 
+  testWidgets('back with unsaved product edits asks before discarding', (
+    tester,
+  ) async {
+    await _pumpEdit(tester, _Repository());
+
+    await tester.enterText(
+      find.byKey(const Key('edit-product-name-field')),
+      'Updated Rice',
+    );
+    await tester.pageBack();
+    await tester.pumpAndSettle();
+
+    expect(find.text('Discard changes?'), findsOneWidget);
+    expect(
+      find.text(
+        'Your product changes have not been saved. Discard them and go back?',
+      ),
+      findsOneWidget,
+    );
+
+    await tester.tap(find.text('Keep editing'));
+    await tester.pumpAndSettle();
+
+    expect(find.byKey(const Key('edit-product-screen')), findsOneWidget);
+    expect(_text(tester, 'edit-product-name-field'), 'Updated Rice');
+
+    await tester.pageBack();
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Discard'));
+    await tester.pumpAndSettle();
+
+    expect(find.byKey(const Key('products-return-screen')), findsOneWidget);
+  });
   testWidgets('pending save disables form and blocks back navigation', (
     tester,
   ) async {

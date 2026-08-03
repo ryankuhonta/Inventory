@@ -71,6 +71,39 @@ void main() {
     expect(_noteText(tester, 'stock-out-note-field'), 'consumed');
   });
 
+  testWidgets('back with draft stock-out input asks before discarding', (
+    tester,
+  ) async {
+    await _pumpStockOut(tester, productRepository: _ProductRepository());
+
+    await tester.enterText(
+      find.byKey(const Key('stock-out-quantity-field')),
+      '3',
+    );
+    await tester.pageBack();
+    await tester.pumpAndSettle();
+
+    expect(find.text('Cancel stock out?'), findsOneWidget);
+    expect(
+      find.text(
+        'This stock out has not been recorded. Discard it and go back?',
+      ),
+      findsOneWidget,
+    );
+
+    await tester.tap(find.text('Keep editing'));
+    await tester.pumpAndSettle();
+
+    expect(find.byKey(const Key('stock-out-screen')), findsOneWidget);
+    expect(_text(tester, 'stock-out-quantity-field'), '3');
+
+    await tester.pageBack();
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Discard'));
+    await tester.pumpAndSettle();
+
+    expect(find.byKey(const Key('products-return-screen')), findsOneWidget);
+  });
   testWidgets('invalid quantity shows inline validation and does not save', (
     tester,
   ) async {
@@ -412,6 +445,18 @@ Product _product({int quantity = 5}) {
 }
 
 Product _productFixture() => _product();
+
+String _text(WidgetTester tester, String key) {
+  return tester
+      .widget<EditableText>(
+        find.descendant(
+          of: find.byKey(Key(key)),
+          matching: find.byType(EditableText),
+        ),
+      )
+      .controller
+      .text;
+}
 
 String _noteText(WidgetTester tester, String key) {
   return tester

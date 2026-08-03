@@ -17,6 +17,11 @@ final appRootNavigatorKey = GlobalKey<NavigatorState>(
   debugLabel: 'appRootNavigator',
 );
 
+/// Products branch navigator used to delegate child-flow Back handling.
+final appProductsNavigatorKey = GlobalKey<NavigatorState>(
+  debugLabel: 'productsBranchNavigator',
+);
+
 /// Builder used to supply a branch root screen.
 typedef AppRouteBuilder =
     Widget Function(
@@ -43,12 +48,12 @@ GoRouter createAppRouter({
   AppRouteBuilder historyBuilder = _buildHistory,
   AppRouteBuilder settingsBuilder = _buildSettings,
 }) {
-  final branchNavigatorKeys = List.generate(
-    AppRoute.values.length,
-    (index) => GlobalKey<NavigatorState>(
-      debugLabel: '${AppRoute.values[index].name}BranchNavigator',
-    ),
-  );
+  final branchNavigatorKeys = [
+    GlobalKey<NavigatorState>(debugLabel: 'dashboardBranchNavigator'),
+    appProductsNavigatorKey,
+    GlobalKey<NavigatorState>(debugLabel: 'historyBranchNavigator'),
+    GlobalKey<NavigatorState>(debugLabel: 'settingsBranchNavigator'),
+  ];
 
   return GoRouter(
     navigatorKey: appRootNavigatorKey,
@@ -56,7 +61,10 @@ GoRouter createAppRouter({
     routes: [
       StatefulShellRoute.indexedStack(
         builder: (context, state, navigationShell) {
-          return AppShell(navigationShell: navigationShell);
+          return AppShell(
+            navigationShell: navigationShell,
+            productsNavigatorKey: appProductsNavigatorKey,
+          );
         },
         branches: [
           _branch(

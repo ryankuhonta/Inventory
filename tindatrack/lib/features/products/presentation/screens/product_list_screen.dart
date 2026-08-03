@@ -247,8 +247,6 @@ final class _ProductList extends StatefulWidget {
 }
 
 final class _ProductListState extends State<_ProductList> {
-  String? _openingProductId;
-
   @override
   Widget build(BuildContext context) {
     final spacing = AppSpacing.of(context);
@@ -267,25 +265,15 @@ final class _ProductListState extends State<_ProductList> {
         return ProductListItem(
           key: ValueKey('product-row-${product.id}'),
           product: product,
-          onStockIn: _openingProductId == null
-              ? () => unawaited(
-                  _openProductRoute(context, ProductRoute.stockIn, product.id),
-                )
-              : null,
-          onStockOut: _openingProductId == null
-              ? () => unawaited(
-                  _openProductRoute(context, ProductRoute.stockOut, product.id),
-                )
-              : null,
-          onEdit: _openingProductId == null
-              ? () => unawaited(
-                  _openProductRoute(
-                    context,
-                    ProductRoute.editProduct,
-                    product.id,
-                  ),
-                )
-              : null,
+          onStockIn: () => unawaited(
+            _openProductRoute(context, ProductRoute.stockIn, product.id),
+          ),
+          onStockOut: () => unawaited(
+            _openProductRoute(context, ProductRoute.stockOut, product.id),
+          ),
+          onEdit: () => unawaited(
+            _openProductRoute(context, ProductRoute.editProduct, product.id),
+          ),
         );
       },
       separatorBuilder: (_, _) => const Divider(height: 1),
@@ -297,16 +285,10 @@ final class _ProductListState extends State<_ProductList> {
     ProductRoute route,
     String productId,
   ) async {
-    if (_openingProductId != null) return;
     FocusManager.instance.primaryFocus?.unfocus();
-    setState(() => _openingProductId = productId);
-    try {
-      await context.pushNamed(
-        route.name,
-        pathParameters: <String, String>{'productId': productId},
-      );
-    } finally {
-      if (mounted) setState(() => _openingProductId = null);
-    }
+    await context.pushNamed(
+      route.name,
+      pathParameters: <String, String>{'productId': productId},
+    );
   }
 }
