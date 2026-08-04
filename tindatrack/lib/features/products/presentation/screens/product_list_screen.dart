@@ -262,6 +262,8 @@ final class _ProductList extends StatefulWidget {
 }
 
 final class _ProductListState extends State<_ProductList> {
+  String? _openingProductRouteName;
+
   @override
   Widget build(BuildContext context) {
     final spacing = AppSpacing.of(context);
@@ -300,10 +302,25 @@ final class _ProductListState extends State<_ProductList> {
     ProductRoute route,
     String productId,
   ) async {
+    final routeName = route.name;
+    if (_openingProductRouteName == routeName) return;
+
     FocusManager.instance.primaryFocus?.unfocus();
-    await context.pushNamed(
-      route.name,
-      pathParameters: <String, String>{'productId': productId},
-    );
+    setState(() {
+      _openingProductRouteName = routeName;
+    });
+
+    try {
+      await context.pushNamed(
+        route.name,
+        pathParameters: <String, String>{'productId': productId},
+      );
+    } finally {
+      if (mounted && _openingProductRouteName == routeName) {
+        setState(() {
+          _openingProductRouteName = null;
+        });
+      }
+    }
   }
 }

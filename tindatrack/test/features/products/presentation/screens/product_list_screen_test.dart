@@ -176,6 +176,61 @@ void main() {
     },
   );
 
+  testWidgets('rapid Edit taps across rows open one Edit Product route', (
+    tester,
+  ) async {
+    await _pumpProducts(
+      tester,
+      () => Stream.value([
+        _product('1', 'Rice', quantity: 4),
+        _product('2', 'Soap', quantity: 9),
+      ]),
+    );
+    await tester.pump();
+
+    await tester.tap(find.byKey(const ValueKey('product-edit-action-1')));
+    await tester.tap(find.byKey(const ValueKey('product-edit-action-2')));
+    await tester.pumpAndSettle();
+
+    expect(find.byKey(const Key('edit-product-test-screen')), findsOneWidget);
+    expect(find.text('Edit product 1'), findsOneWidget);
+    expect(find.text('Edit product 2'), findsNothing);
+
+    await tester.pageBack();
+    await tester.pumpAndSettle();
+
+    expect(find.byKey(const Key('products-list')), findsOneWidget);
+    expect(find.byKey(const Key('edit-product-test-screen')), findsNothing);
+  });
+
+  testWidgets('Edit route failure clears the in-flight guard', (tester) async {
+    await _pumpProducts(
+      tester,
+      () => Stream.value([_product('1', 'Rice', quantity: 4)]),
+      includeEditRoute: false,
+    );
+    await tester.pump();
+
+    final action = find.byKey(const ValueKey('product-edit-action-1'));
+
+    Future<Object?> collectFailure() async {
+      Object? failure;
+      await runZonedGuarded(
+        () async {
+          await tester.tap(action);
+          await tester.pump();
+        },
+        (error, _) {
+          failure = error;
+        },
+      );
+      return failure;
+    }
+
+    expect(await collectFailure(), isAssertionError);
+    expect(await collectFailure(), isAssertionError);
+  });
+
   testWidgets('active list exposes no row actions for archived products', (
     tester,
   ) async {
@@ -414,8 +469,9 @@ void main() {
 
 Future<void> _pumpProducts(
   WidgetTester tester,
-  Stream<List<Product>> Function() products,
-) async {
+  Stream<List<Product>> Function() products, {
+  bool includeEditRoute = true,
+}) async {
   final router = GoRouter(
     initialLocation: AppRoute.products.path,
     routes: [
@@ -434,18 +490,19 @@ Future<void> _pumpProducts(
               );
             },
           ),
-          GoRoute(
-            path: ProductRoute.editProduct.segment,
-            name: ProductRoute.editProduct.name,
-            builder: (_, state) {
-              final productId = state.pathParameters['productId']!;
-              return Scaffold(
-                key: const Key('edit-product-test-screen'),
-                appBar: AppBar(title: const Text('Edit Product')),
-                body: Text('Edit product $productId'),
-              );
-            },
-          ),
+          if (includeEditRoute)
+            GoRoute(
+              path: ProductRoute.editProduct.segment,
+              name: ProductRoute.editProduct.name,
+              builder: (_, state) {
+                final productId = state.pathParameters['productId']!;
+                return Scaffold(
+                  key: const Key('edit-product-test-screen'),
+                  appBar: AppBar(title: const Text('Edit Product')),
+                  body: Text('Edit product $productId'),
+                );
+              },
+            ),
           GoRoute(
             path: ProductRoute.stockIn.segment,
             name: ProductRoute.stockIn.name,

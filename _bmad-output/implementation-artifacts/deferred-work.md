@@ -24,9 +24,9 @@
 
 - Duplicate Add Product routes from rapid repeated taps are now guarded in `ProductListScreen` and covered for both the FAB and empty-state action paths.
 
-## Deferred from: code review of 2-8-prepare-product-row-action-pattern.md (2026-07-07)
+## Closed from: code review of 2-8-prepare-product-row-action-pattern.md - 2026-08-05
 
-- Harden `_openEditProduct` so `_openingProductId` is cleared if `context.pushNamed(ProductRoute.editProduct.name, ...)` throws. The guard predates Story 2.8 and should be handled as focused navigation hardening.
+- Edit Product row navigation now uses an in-flight route guard that clears in `finally`, so rapid repeated Edit taps cannot stack duplicate edit routes and navigation failures do not leave later Edit attempts blocked.
 
 ## Closed from private APK feedback split - 2026-08-03
 
