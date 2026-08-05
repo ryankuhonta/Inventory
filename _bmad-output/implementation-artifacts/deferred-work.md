@@ -6,19 +6,24 @@
 
 ## Deferred from: code review of 1-3-provide-offline-app-launch-and-splash-initialization (2026-06-21)
 
-- Handle errors from the asynchronous database `close()` registered in `createManagedDatabase` so disposal failures do not surface as uncaught zone errors. This lifecycle helper predates Story 1.3 and should be addressed as a focused shared-infrastructure change.
+No active items.
 
 ## Deferred from: code review of 1-4-add-main-navigation-shell (2026-06-22)
 
-- Harden the pre-existing Story 1.3 retry lifecycle so a database close that hangs, throws an `Exception`, or completes with a Dart `Error` cannot leave Retry permanently disabled.
-- Allow the shared `closeManagedDatabase` helper to recover after a rejected close future instead of permanently caching and replaying the same failure.
+No active items.
 
 ## Deferred from: code review of 1-5-apply-mvp-theme-and-base-ui-states (2026-06-28)
 
-- Retry can throw while reading a failed database provider (	indatrack/lib/app/app.dart:78).
-- A database close that never completes can strand Retry (	indatrack/lib/app/app.dart:79).
-- A rejected cached close future blocks later retries (	indatrack/lib/app/providers.dart:40).
-- Provider disposal can surface an unhandled asynchronous close error (	indatrack/lib/app/providers.dart:34).
+No active items.
+
+## Closed from database close/retry lifecycle hardening - 2026-08-06
+
+- Retry now recovers when reading `databaseProvider` throws before a database can be closed.
+- Retry now re-enables after close failures, including Dart `Error`s and controlled close timeouts.
+- `closeManagedDatabase` now evicts rejected close attempts so later calls can retry instead of replaying a cached failure.
+- A timed-out close wait no longer starts overlapping closes while the underlying close is still pending.
+- Provider disposal now observes synchronous and asynchronous close failures so teardown does not emit uncaught zone errors.
+- Trace: `_bmad-output/implementation-artifacts/spec-database-close-retry-hardening.md`.
 
 ## Closed from: code review of 2-3-view-active-product-list-with-empty-state.md - 2026-08-03
 
