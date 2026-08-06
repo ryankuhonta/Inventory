@@ -2,7 +2,14 @@
 
 ## Deferred from: code review of 1-2-establish-app-architecture-and-local-core-services (2026-06-20)
 
-- Review the transitive end-of-life SQLite compatibility packages currently resolved through the pre-existing Drift/drift_flutter dependency set when the persistence stack is next upgraded. Story 1.2 intentionally preserves the versions established by Story 1.1.
+No active items.
+
+## Closed from SQLite compatibility package audit - 2026-08-06
+
+- Reviewed the transitive `sqlite3_flutter_libs` and `sqlcipher_flutter_libs` `+eol` packages resolved through `drift_flutter`.
+- Current lockfile uses `sqlite3` 3.x with the `+eol` compatibility placeholders, which are documented as no-op packages after the `sqlite3` 3.x migration.
+- No immediate dependency change is recommended from this audit alone.
+- Trace: `_bmad-output/implementation-artifacts/spec-sqlite-compatibility-package-audit.md`.
 
 ## Deferred from: code review of 1-3-provide-offline-app-launch-and-splash-initialization (2026-06-21)
 
