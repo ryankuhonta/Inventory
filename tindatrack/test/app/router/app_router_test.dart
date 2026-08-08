@@ -18,8 +18,6 @@ const _forbiddenReleaseRouteTerms = [
   'supplier',
   'accounting',
   'profit',
-  'barcode',
-  'scanner',
   'staff',
   'branch',
   'remote',
@@ -39,12 +37,12 @@ void main() {
     );
   });
 
-  test('release route registry exposes only MVP routes', () {
+  test('release route registry exposes expected app routes', () {
     final router = createAppRouter();
     addTearDown(router.dispose);
 
     expect(AppRoute.values, hasLength(4));
-    expect(ProductRoute.values, hasLength(4));
+    expect(ProductRoute.values, hasLength(5));
 
     final registeredRoutes = _releaseRoutesFrom(router);
 
@@ -55,6 +53,7 @@ void main() {
         'products',
         'addProduct',
         'editProduct',
+        'scanBarcode',
         'stockIn',
         'stockOut',
         'history',
@@ -68,6 +67,7 @@ void main() {
         '/products',
         '/products/add',
         '/products/:productId/edit',
+        '/products/scan-barcode',
         '/products/:productId/stock-in',
         '/products/:productId/stock-out',
         '/history',
@@ -92,6 +92,10 @@ void main() {
     expect(
       router.namedLocation(ProductRoute.addProduct.name),
       ProductRoute.addProduct.path,
+    );
+    expect(
+      router.namedLocation(ProductRoute.scanBarcode.name),
+      ProductRoute.scanBarcode.path,
     );
     for (final route in [
       ProductRoute.editProduct,
@@ -118,6 +122,12 @@ void main() {
     expect(ProductRoute.editProduct.name, 'editProduct');
     expect(ProductRoute.editProduct.path, '/products/:productId/edit');
     expect(ProductRoute.editProduct.segment, ':productId/edit');
+  });
+
+  test('declares Barcode Scanner as a secondary Products route', () {
+    expect(ProductRoute.scanBarcode.name, 'scanBarcode');
+    expect(ProductRoute.scanBarcode.path, '/products/scan-barcode');
+    expect(ProductRoute.scanBarcode.segment, 'scan-barcode');
   });
 
   test('declares Stock In with a stable ID path parameter', () {
@@ -155,6 +165,10 @@ void main() {
     expect(
       router.namedLocation(ProductRoute.addProduct.name),
       ProductRoute.addProduct.path,
+    );
+    expect(
+      router.namedLocation(ProductRoute.scanBarcode.name),
+      ProductRoute.scanBarcode.path,
     );
     for (final route in [
       ProductRoute.editProduct,
@@ -256,6 +270,33 @@ void main() {
         pathParameters: const <String, String>{'productId': 'product 1'},
       ),
       '/products/product%201/edit',
+    );
+    expect(
+      tester.widget<NavigationBar>(find.byType(NavigationBar)).selectedIndex,
+      1,
+    );
+  });
+
+  testWidgets('maps Barcode Scanner under the Products branch', (tester) async {
+    final router = createAppRouter(
+      initialLocation: ProductRoute.scanBarcode.path,
+      productsBuilder: (_, _) => const Scaffold(key: Key('products-screen')),
+      barcodeScannerBuilder: (_, _) {
+        return const Scaffold(key: Key('barcode-scanner-test-screen'));
+      },
+    );
+    addTearDown(router.dispose);
+
+    await tester.pumpWidget(_RouterTestApp(router: router));
+    await tester.pumpAndSettle();
+
+    expect(
+      find.byKey(const Key('barcode-scanner-test-screen')),
+      findsOneWidget,
+    );
+    expect(
+      router.namedLocation(ProductRoute.scanBarcode.name),
+      ProductRoute.scanBarcode.path,
     );
     expect(
       tester.widget<NavigationBar>(find.byType(NavigationBar)).selectedIndex,

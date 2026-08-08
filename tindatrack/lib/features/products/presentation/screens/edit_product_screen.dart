@@ -14,6 +14,7 @@ import 'package:tindatrack/features/products/domain/failures/product_failure.dar
 import 'package:tindatrack/features/products/presentation/controllers/edit_product_controller.dart';
 import 'package:tindatrack/features/products/presentation/controllers/product_form_controller.dart';
 import 'package:tindatrack/features/products/presentation/providers/product_providers.dart';
+import 'package:tindatrack/features/products/presentation/widgets/barcode_input_field.dart';
 
 /// Loads and edits one active product by stable route identity.
 final class EditProductScreen extends ConsumerWidget {
@@ -103,6 +104,7 @@ final class _EditProductFormState extends ConsumerState<_EditProductForm> {
   final _thresholdFocus = FocusNode();
   final _barcodeFocus = FocusNode();
   late final ProductChildBackHandler _backHandler;
+  bool _isScanningBarcode = false;
 
   @override
   void initState() {
@@ -229,14 +231,17 @@ final class _EditProductFormState extends ConsumerState<_EditProductForm> {
                     onSubmitted: (_) => _barcodeFocus.requestFocus(),
                   ),
                   SizedBox(height: spacing.md),
-                  _field(
-                    key: const Key('edit-barcode-field'),
+                  BarcodeInputField(
+                    fieldKey: const Key('edit-barcode-field'),
+                    scanButtonKey: const Key('edit-scan-barcode-action'),
                     controller: _barcodeController,
                     focusNode: _barcodeFocus,
                     label: 'Barcode (optional)',
                     enabled: fieldsEnabled,
+                    scanEnabled: fieldsEnabled && !_isScanningBarcode,
                     textInputAction: TextInputAction.done,
                     onSubmitted: (_) => _submit(),
+                    onScan: _scanBarcode,
                   ),
                   SizedBox(height: spacing.md),
                   Semantics(
@@ -310,6 +315,50 @@ final class _EditProductFormState extends ConsumerState<_EditProductForm> {
       keyboardType: keyboardType,
       textInputAction: textInputAction,
       onFieldSubmitted: onSubmitted,
+    );
+  }
+
+  Future<void> _scanBarcode() async {
+    if (_isScanningBarcode) return;
+
+    FocusScope.of(context).unfocus();
+    setState(() {
+      _isScanningBarcode = true;
+    });
+
+    Object? result;
+    try {
+      result = await context.pushNamed<Object?>(ProductRoute.scanBarcode.name);
+    } on Object {
+      if (mounted) _showScannerUnavailable();
+      return;
+    } finally {
+      if (mounted) {
+        setState(() {
+          _isScanningBarcode = false;
+        });
+      }
+    }
+    if (!mounted) return;
+
+    if (result is String && result.trim().isNotEmpty) {
+      _barcodeController.value = TextEditingValue(
+        text: result,
+        selection: TextSelection.collapsed(offset: result.length),
+      );
+      return;
+    }
+
+    if (result == false) {
+      _showScannerUnavailable();
+    }
+  }
+
+  void _showScannerUnavailable() {
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(
+        content: Text('Barcode scanning is unavailable. You can type it.'),
+      ),
     );
   }
 

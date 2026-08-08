@@ -237,6 +237,108 @@ void main() {
     semantics.dispose();
   });
 
+  testWidgets('scan barcode fills Edit Product and counts as unsaved edit', (
+    tester,
+  ) async {
+    final repository = _Repository();
+    await _pumpEdit(tester, repository, scanResult: '012345678905');
+
+    await tester.ensureVisible(
+      find.byKey(const Key('edit-scan-barcode-action')),
+    );
+    await tester.tap(find.byKey(const Key('edit-scan-barcode-action')));
+    await tester.pumpAndSettle();
+
+    expect(_text(tester, 'edit-barcode-field'), '012345678905');
+
+    await tester.pageBack();
+    await tester.pumpAndSettle();
+
+    expect(find.text('Discard changes?'), findsOneWidget);
+    await tester.tap(find.text('Keep editing'));
+    await tester.pumpAndSettle();
+
+    await tester.tap(find.byKey(const Key('save-product-changes-button')));
+    await tester.pumpAndSettle();
+
+    expect(repository.updateCalls, 1);
+    expect(repository.lastUpdate?.barcode, '012345678905');
+  });
+
+  testWidgets('cancelled Edit Product barcode scan preserves current value', (
+    tester,
+  ) async {
+    await _pumpEdit(tester, _Repository());
+
+    await tester.ensureVisible(
+      find.byKey(const Key('edit-scan-barcode-action')),
+    );
+    await tester.tap(find.byKey(const Key('edit-scan-barcode-action')));
+    await tester.pumpAndSettle();
+
+    expect(_text(tester, 'edit-barcode-field'), '123');
+    expect(
+      find.text('Barcode scanning is unavailable. You can type it.'),
+      findsNothing,
+    );
+
+    await tester.pageBack();
+    await tester.pumpAndSettle();
+
+    expect(find.text('Discard changes?'), findsNothing);
+    expect(find.byKey(const Key('products-return-screen')), findsOneWidget);
+  });
+
+  testWidgets('Edit Product scanner failure preserves current value', (
+    tester,
+  ) async {
+    await _pumpEdit(tester, _Repository(), scanResult: false);
+
+    await tester.ensureVisible(
+      find.byKey(const Key('edit-scan-barcode-action')),
+    );
+    await tester.tap(find.byKey(const Key('edit-scan-barcode-action')));
+    await tester.pumpAndSettle();
+
+    expect(_text(tester, 'edit-barcode-field'), '123');
+    expect(
+      find.text('Barcode scanning is unavailable. You can type it.'),
+      findsOneWidget,
+    );
+
+    await tester.pageBack();
+    await tester.pumpAndSettle();
+
+    expect(find.text('Discard changes?'), findsNothing);
+    expect(find.byKey(const Key('products-return-screen')), findsOneWidget);
+  });
+
+  testWidgets('rapid Edit Product scan taps open one scanner route', (
+    tester,
+  ) async {
+    final scanResult = Completer<Object?>();
+    var scannerBuilds = 0;
+    await _pumpEdit(
+      tester,
+      _Repository(),
+      scanResultCompleter: scanResult,
+      onScanRouteBuilt: () => scannerBuilds++,
+    );
+
+    final action = find.byKey(const Key('edit-scan-barcode-action'));
+    await tester.ensureVisible(action);
+    await tester.tap(action);
+    await tester.tap(action);
+    await tester.pump();
+
+    expect(scannerBuilds, 1);
+
+    scanResult.complete('012345678905');
+    await tester.pumpAndSettle();
+
+    expect(_text(tester, 'edit-barcode-field'), '012345678905');
+  });
+
   testWidgets('fits a small phone with enlarged text', (tester) async {
     tester.view
       ..physicalSize = const Size(360, 640)
@@ -269,6 +371,9 @@ Future<void> _pumpEdit(
   WidgetTester tester,
   _Repository repository, {
   bool settle = true,
+  Object? scanResult,
+  Completer<Object?>? scanResultCompleter,
+  VoidCallback? onScanRouteBuilt,
 }) async {
   final router = GoRouter(
     initialLocation: '/products/product-1/edit',
@@ -283,6 +388,15 @@ Future<void> _pumpEdit(
             name: ProductRoute.editProduct.name,
             builder: (_, state) => EditProductScreen(
               productId: state.pathParameters['productId']!,
+            ),
+          ),
+          GoRoute(
+            path: 'scan-barcode',
+            name: ProductRoute.scanBarcode.name,
+            builder: (_, _) => _BarcodeScannerStub(
+              result: scanResult,
+              resultCompleter: scanResultCompleter,
+              onBuilt: onScanRouteBuilt,
             ),
           ),
         ],
@@ -307,6 +421,40 @@ Future<void> _pumpEdit(
     await tester.pumpAndSettle();
   } else {
     await tester.pump();
+  }
+}
+
+final class _BarcodeScannerStub extends StatefulWidget {
+  const _BarcodeScannerStub({
+    required this.result,
+    required this.resultCompleter,
+    required this.onBuilt,
+  });
+
+  final Object? result;
+  final Completer<Object?>? resultCompleter;
+  final VoidCallback? onBuilt;
+
+  @override
+  State<_BarcodeScannerStub> createState() => _BarcodeScannerStubState();
+}
+
+final class _BarcodeScannerStubState extends State<_BarcodeScannerStub> {
+  @override
+  void initState() {
+    super.initState();
+    widget.onBuilt?.call();
+    WidgetsBinding.instance.addPostFrameCallback((_) async {
+      final result = widget.resultCompleter == null
+          ? widget.result
+          : await widget.resultCompleter!.future;
+      if (mounted) Navigator.of(context).pop(result);
+    });
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return const Scaffold(key: Key('barcode-scanner-test-screen'));
   }
 }
 

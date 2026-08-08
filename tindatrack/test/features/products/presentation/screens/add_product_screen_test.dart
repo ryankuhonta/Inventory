@@ -330,6 +330,146 @@ void main() {
     expect(find.textContaining('UNIQUE'), findsNothing);
     expect(_field(tester, 'barcode-field').controller?.text, ' 12345 ');
   });
+  testWidgets('scan barcode fills Add Product barcode and preserves fields', (
+    tester,
+  ) async {
+    final repository = _ControlledRepository();
+    await _pumpForm(tester, repository, scanResult: '4801234567890');
+
+    await tester.enterText(
+      find.byKey(const Key('product-name-field')),
+      'Rice',
+    );
+    await tester.enterText(find.byKey(const Key('category-field')), 'Staples');
+    await tester.ensureVisible(find.byKey(const Key('scan-barcode-action')));
+    await tester.tap(find.byKey(const Key('scan-barcode-action')));
+    await tester.pumpAndSettle();
+
+    expect(_field(tester, 'barcode-field').controller?.text, '4801234567890');
+    expect(_field(tester, 'product-name-field').controller?.text, 'Rice');
+    expect(_field(tester, 'category-field').controller?.text, 'Staples');
+
+    await tester.ensureVisible(find.byKey(const Key('save-product-button')));
+    await tester.tap(find.byKey(const Key('save-product-button')));
+    await tester.pumpAndSettle();
+
+    expect(repository.calls, 1);
+    expect(repository.lastInput?.barcode, '4801234567890');
+  });
+
+  testWidgets('cancelled Add Product barcode scan preserves typed value', (
+    tester,
+  ) async {
+    final repository = _ControlledRepository();
+    await _pumpForm(tester, repository);
+
+    await tester.enterText(find.byKey(const Key('barcode-field')), 'typed-123');
+    await tester.ensureVisible(find.byKey(const Key('scan-barcode-action')));
+    await tester.tap(find.byKey(const Key('scan-barcode-action')));
+    await tester.pumpAndSettle();
+
+    expect(_field(tester, 'barcode-field').controller?.text, 'typed-123');
+    expect(
+      find.text('Barcode scanning is unavailable. You can type it.'),
+      findsNothing,
+    );
+  });
+
+  testWidgets('Add Product scanner failure preserves manual barcode entry', (
+    tester,
+  ) async {
+    final repository = _ControlledRepository();
+    await _pumpForm(tester, repository, scanResult: false);
+
+    await tester.enterText(find.byKey(const Key('barcode-field')), 'typed-123');
+    await tester.ensureVisible(find.byKey(const Key('scan-barcode-action')));
+    await tester.tap(find.byKey(const Key('scan-barcode-action')));
+    await tester.pumpAndSettle();
+
+    expect(_field(tester, 'barcode-field').controller?.text, 'typed-123');
+    expect(
+      find.text('Barcode scanning is unavailable. You can type it.'),
+      findsOneWidget,
+    );
+  });
+
+  testWidgets('rapid Add Product scan taps open one scanner route', (
+    tester,
+  ) async {
+    final repository = _ControlledRepository();
+    final scanResult = Completer<Object?>();
+    var scannerBuilds = 0;
+    await _pumpForm(
+      tester,
+      repository,
+      scanResultCompleter: scanResult,
+      onScanRouteBuilt: () => scannerBuilds++,
+    );
+
+    final action = find.byKey(const Key('scan-barcode-action'));
+    await tester.ensureVisible(action);
+    await tester.tap(action);
+    await tester.tap(action);
+    await tester.pump();
+
+    expect(scannerBuilds, 1);
+
+    scanResult.complete('4801234567890');
+    await tester.pumpAndSettle();
+
+    expect(_field(tester, 'barcode-field').controller?.text, '4801234567890');
+  });
+
+  testWidgets('Add Product scanner route failure preserves manual entry', (
+    tester,
+  ) async {
+    final repository = _ControlledRepository();
+    await _pumpForm(tester, repository, includeScanRoute: false);
+
+    await tester.enterText(find.byKey(const Key('barcode-field')), 'typed-123');
+    await tester.ensureVisible(find.byKey(const Key('scan-barcode-action')));
+    await tester.tap(find.byKey(const Key('scan-barcode-action')));
+    await tester.pumpAndSettle();
+
+    expect(_field(tester, 'barcode-field').controller?.text, 'typed-123');
+    expect(_field(tester, 'barcode-field').enabled, isTrue);
+    expect(
+      find.text('Barcode scanning is unavailable. You can type it.'),
+      findsOneWidget,
+    );
+  });
+
+  testWidgets('scanned duplicate barcode uses existing validation copy', (
+    tester,
+  ) async {
+    final repository = _ControlledRepository(
+      onCreate: (_) async => const FailureResult<Product>(
+        DuplicateBarcodeFailure(debugMessage: 'UNIQUE products.barcode'),
+      ),
+    );
+    await _pumpForm(tester, repository, scanResult: '4801234567890');
+
+    await tester.enterText(
+      find.byKey(const Key('product-name-field')),
+      'Rice',
+    );
+    await tester.ensureVisible(find.byKey(const Key('scan-barcode-action')));
+    await tester.tap(find.byKey(const Key('scan-barcode-action')));
+    await tester.pumpAndSettle();
+    await tester.ensureVisible(find.byKey(const Key('save-product-button')));
+    await tester.tap(find.byKey(const Key('save-product-button')));
+    await tester.pumpAndSettle();
+
+    expect(repository.calls, 1);
+    expect(repository.lastInput?.barcode, '4801234567890');
+    expect(
+      find.text('Barcode already used by another product.'),
+      findsOneWidget,
+    );
+    expect(find.textContaining('UNIQUE'), findsNothing);
+    expect(_field(tester, 'barcode-field').controller?.text, '4801234567890');
+  });
+
   testWidgets('fits a small phone with enlarged text and accessible controls', (
     tester,
   ) async {
@@ -391,8 +531,12 @@ EditableText _editable(WidgetTester tester, String key) {
 
 Future<void> _pumpForm(
   WidgetTester tester,
-  ProductRepository repository,
-) async {
+  ProductRepository repository, {
+  Object? scanResult,
+  Completer<Object?>? scanResultCompleter,
+  VoidCallback? onScanRouteBuilt,
+  bool includeScanRoute = true,
+}) async {
   final router = GoRouter(
     initialLocation: '/products/add',
     routes: [
@@ -408,6 +552,16 @@ Future<void> _pumpForm(
             name: ProductRoute.addProduct.name,
             builder: (_, _) => const AddProductScreen(),
           ),
+          if (includeScanRoute)
+            GoRoute(
+              path: 'scan-barcode',
+              name: ProductRoute.scanBarcode.name,
+              builder: (_, _) => _BarcodeScannerStub(
+                result: scanResult,
+                resultCompleter: scanResultCompleter,
+                onBuilt: onScanRouteBuilt,
+              ),
+            ),
         ],
       ),
     ],
@@ -426,6 +580,40 @@ Future<void> _pumpForm(
     ),
   );
   await tester.pumpAndSettle();
+}
+
+final class _BarcodeScannerStub extends StatefulWidget {
+  const _BarcodeScannerStub({
+    required this.result,
+    required this.resultCompleter,
+    required this.onBuilt,
+  });
+
+  final Object? result;
+  final Completer<Object?>? resultCompleter;
+  final VoidCallback? onBuilt;
+
+  @override
+  State<_BarcodeScannerStub> createState() => _BarcodeScannerStubState();
+}
+
+final class _BarcodeScannerStubState extends State<_BarcodeScannerStub> {
+  @override
+  void initState() {
+    super.initState();
+    widget.onBuilt?.call();
+    WidgetsBinding.instance.addPostFrameCallback((_) async {
+      final result = widget.resultCompleter == null
+          ? widget.result
+          : await widget.resultCompleter!.future;
+      if (mounted) Navigator.of(context).pop(result);
+    });
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return const Scaffold(key: Key('barcode-scanner-test-screen'));
+  }
 }
 
 final class _ControlledRepository implements ProductRepository {

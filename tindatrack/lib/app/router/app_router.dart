@@ -6,6 +6,7 @@ import 'package:tindatrack/app/router/app_routes.dart';
 import 'package:tindatrack/features/dashboard/presentation/screens/dashboard_screen.dart';
 import 'package:tindatrack/features/history/presentation/screens/movement_history_screen.dart';
 import 'package:tindatrack/features/products/presentation/screens/add_product_screen.dart';
+import 'package:tindatrack/features/products/presentation/screens/barcode_scanner_screen.dart';
 import 'package:tindatrack/features/products/presentation/screens/edit_product_screen.dart';
 import 'package:tindatrack/features/products/presentation/screens/product_list_screen.dart';
 import 'package:tindatrack/features/settings/presentation/screens/settings_screen.dart';
@@ -43,6 +44,7 @@ GoRouter createAppRouter({
   AppRouteBuilder productsBuilder = _buildProducts,
   AppRouteBuilder addProductBuilder = _buildAddProduct,
   AppRouteBuilder editProductBuilder = _buildEditProduct,
+  AppRouteBuilder barcodeScannerBuilder = _buildBarcodeScanner,
   AppRouteBuilder stockInBuilder = _buildStockIn,
   AppRouteBuilder stockOutBuilder = _buildStockOut,
   AppRouteBuilder historyBuilder = _buildHistory,
@@ -86,6 +88,11 @@ GoRouter createAppRouter({
                 path: ProductRoute.editProduct.segment,
                 name: ProductRoute.editProduct.name,
                 builder: editProductBuilder,
+              ),
+              GoRoute(
+                path: ProductRoute.scanBarcode.segment,
+                name: ProductRoute.scanBarcode.name,
+                builder: barcodeScannerBuilder,
               ),
               GoRoute(
                 path: ProductRoute.stockIn.segment,
@@ -150,6 +157,10 @@ Widget _buildEditProduct(BuildContext context, GoRouterState state) {
   return EditProductScreen(
     productId: state.pathParameters['productId']!,
   );
+}
+
+Widget _buildBarcodeScanner(BuildContext context, GoRouterState state) {
+  return const BarcodeScannerScreen();
 }
 
 Widget _buildStockIn(BuildContext context, GoRouterState state) {

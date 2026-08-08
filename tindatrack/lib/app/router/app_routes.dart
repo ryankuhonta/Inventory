@@ -37,6 +37,13 @@ enum ProductRoute {
     label: 'Edit Product',
   ),
 
+  /// Camera barcode scanner for product forms.
+  scanBarcode(
+    path: '/products/scan-barcode',
+    segment: 'scan-barcode',
+    label: 'Scan Barcode',
+  ),
+
   /// Stock In form for one stable product identity.
   stockIn(
     path: '/products/:productId/stock-in',
