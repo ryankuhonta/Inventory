@@ -239,6 +239,7 @@ final class _ProductListScreenState extends ConsumerState<ProductListScreen> {
     setState(() {
       _openingAddProduct = true;
     });
+    _releaseAddProductGuardAfterFrame();
 
     try {
       await context.pushNamed(ProductRoute.addProduct.name);
@@ -249,6 +250,16 @@ final class _ProductListScreenState extends ConsumerState<ProductListScreen> {
         });
       }
     }
+  }
+
+  void _releaseAddProductGuardAfterFrame() {
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted || !_openingAddProduct) return;
+
+      setState(() {
+        _openingAddProduct = false;
+      });
+    });
   }
 }
 
@@ -309,6 +320,7 @@ final class _ProductListState extends State<_ProductList> {
     setState(() {
       _openingProductRouteName = routeName;
     });
+    _releaseProductRouteGuardAfterFrame(routeName);
 
     try {
       await context.pushNamed(
@@ -322,5 +334,15 @@ final class _ProductListState extends State<_ProductList> {
         });
       }
     }
+  }
+
+  void _releaseProductRouteGuardAfterFrame(String routeName) {
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted || _openingProductRouteName != routeName) return;
+
+      setState(() {
+        _openingProductRouteName = null;
+      });
+    });
   }
 }

@@ -42,6 +42,43 @@ void main() {
     expect(find.byKey(const Key('add-product-test-screen')), findsOneWidget);
   });
 
+  testWidgets('Add Product reopens after save returns with goNamed products', (
+    tester,
+  ) async {
+    var openings = 0;
+    await _pumpProducts(
+      tester,
+      () => Stream.value(const <Product>[]),
+      addProductBuilder: (context, _) {
+        openings++;
+        return Scaffold(
+          key: const Key('add-product-test-screen'),
+          appBar: AppBar(title: const Text('Add Product')),
+          body: FilledButton(
+            key: const Key('save-product-test-action'),
+            onPressed: () => context.goNamed(AppRoute.products.name),
+            child: const Text('Save'),
+          ),
+        );
+      },
+    );
+
+    await tester.tap(find.byKey(const Key('add-product-action')));
+    await tester.pumpAndSettle();
+    expect(openings, 1);
+    expect(find.byKey(const Key('add-product-test-screen')), findsOneWidget);
+
+    await tester.tap(find.byKey(const Key('save-product-test-action')));
+    await tester.pumpAndSettle();
+    expect(find.byKey(const Key('add-product-test-screen')), findsNothing);
+
+    await tester.tap(find.byKey(const Key('add-product-action')));
+    await tester.pumpAndSettle();
+
+    expect(openings, 2);
+    expect(find.byKey(const Key('add-product-test-screen')), findsOneWidget);
+  });
+
   testWidgets('rapid FAB taps open one Add Product route', (tester) async {
     await _pumpProducts(tester, () => Stream.value(const <Product>[]));
 
@@ -471,6 +508,7 @@ Future<void> _pumpProducts(
   WidgetTester tester,
   Stream<List<Product>> Function() products, {
   bool includeEditRoute = true,
+  Widget Function(BuildContext, GoRouterState)? addProductBuilder,
 }) async {
   final router = GoRouter(
     initialLocation: AppRoute.products.path,
@@ -483,12 +521,14 @@ Future<void> _pumpProducts(
           GoRoute(
             path: ProductRoute.addProduct.segment,
             name: ProductRoute.addProduct.name,
-            builder: (_, _) {
-              return Scaffold(
-                key: const Key('add-product-test-screen'),
-                appBar: AppBar(title: const Text('Add Product')),
-              );
-            },
+            builder:
+                addProductBuilder ??
+                (_, _) {
+                  return Scaffold(
+                    key: const Key('add-product-test-screen'),
+                    appBar: AppBar(title: const Text('Add Product')),
+                  );
+                },
           ),
           if (includeEditRoute)
             GoRoute(
