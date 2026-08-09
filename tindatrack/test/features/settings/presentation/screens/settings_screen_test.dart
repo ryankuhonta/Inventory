@@ -1,3 +1,6 @@
+// CSV fixtures are easier to read as adjacent string literals.
+// ignore_for_file: missing_whitespace_between_adjacent_strings
+
 import 'dart:io';
 
 import 'package:flutter/material.dart';
@@ -7,8 +10,11 @@ import 'package:tindatrack/app/router/app_router.dart';
 import 'package:tindatrack/app/router/app_routes.dart';
 import 'package:tindatrack/app/theme/app_theme.dart';
 import 'package:tindatrack/core/errors/result.dart';
+import 'package:tindatrack/features/settings/domain/entities/csv_import_preview.dart';
 import 'package:tindatrack/features/settings/domain/services/csv_export_builder.dart';
+import 'package:tindatrack/features/settings/domain/services/csv_import_parser.dart';
 import 'package:tindatrack/features/settings/presentation/providers/csv_export_providers.dart';
+import 'package:tindatrack/features/settings/presentation/providers/csv_import_providers.dart';
 import 'package:tindatrack/features/settings/presentation/screens/settings_screen.dart';
 
 void main() {
@@ -47,6 +53,10 @@ void main() {
     );
     expect(
       find.byKey(const Key('settings-share-export-action')),
+      findsOneWidget,
+    );
+    expect(
+      find.byKey(const Key('settings-import-products-action')),
       findsOneWidget,
     );
     expect(
@@ -126,6 +136,86 @@ void main() {
     expect(find.text('CSV export ready.'), findsOneWidget);
   });
 
+  testWidgets('Import Products CSV shows a blocking preview for bad files', (
+    tester,
+  ) async {
+    await _pumpSettings(
+      tester,
+      importController: CsvImportController(
+        pickCsv: () async => 'Date,Type,Quantity\n2026,Stock In,1\n',
+        parser: const CsvImportParser(),
+        findExistingBarcodes: (_) async => const Success<Set<String>>({}),
+        importRows: (_) async => const Success<void>(null),
+      ),
+    );
+
+    await tester.tap(find.byKey(const Key('settings-import-products-action')));
+    await tester.pumpAndSettle();
+
+    expect(
+      find.byKey(const Key('settings-import-preview-dialog')),
+      findsOneWidget,
+    );
+    expect(find.text('Import Preview'), findsOneWidget);
+    expect(find.textContaining('TindaTrack Products CSV file'), findsOneWidget);
+    final importButton = tester.widget<FilledButton>(
+      find.byKey(const Key('settings-confirm-import-action')),
+    );
+    expect(importButton.onPressed, isNull);
+  });
+
+  testWidgets('Import Products CSV imports after a clean preview', (
+    tester,
+  ) async {
+    final importedRows = <CsvImportProductRow>[];
+    await _pumpSettings(
+      tester,
+      importController: CsvImportController(
+        pickCsv: () async => _validProductsCsv(),
+        parser: const CsvImportParser(),
+        findExistingBarcodes: (_) async => const Success<Set<String>>({}),
+        importRows: (rows) async {
+          importedRows.addAll(rows);
+          return const Success<void>(null);
+        },
+      ),
+    );
+
+    await tester.tap(find.byKey(const Key('settings-import-products-action')));
+    await tester.pumpAndSettle();
+    expect(
+      find.text('2 products found: 1 active, 1 archived.'),
+      findsOneWidget,
+    );
+
+    await tester.tap(find.byKey(const Key('settings-confirm-import-action')));
+    await tester.pumpAndSettle();
+
+    expect(importedRows.map((row) => row.name), ['Rice', 'Old Soap']);
+    expect(importedRows.map((row) => row.isArchived), [false, true]);
+    expect(find.text('Imported 2 products.'), findsOneWidget);
+  });
+
+  testWidgets('Import Products CSV cancel returns quietly', (tester) async {
+    await _pumpSettings(
+      tester,
+      importController: CsvImportController(
+        pickCsv: () async => null,
+        parser: const CsvImportParser(),
+        findExistingBarcodes: (_) async => const Success<Set<String>>({}),
+        importRows: (_) async => const Success<void>(null),
+      ),
+    );
+
+    await tester.tap(find.byKey(const Key('settings-import-products-action')));
+    await tester.pumpAndSettle();
+
+    expect(
+      find.byKey(const Key('settings-import-preview-dialog')),
+      findsNothing,
+    );
+    expect(find.byType(SnackBar), findsNothing);
+  });
   testWidgets('Export Data action shows friendly failure snackbar', (
     tester,
   ) async {
@@ -275,12 +365,15 @@ String _pubspecVersion() {
 Future<void> _pumpSettings(
   WidgetTester tester, {
   CsvExportController? controller,
+  CsvImportController? importController,
 }) async {
   await tester.pumpWidget(
     ProviderScope(
       overrides: [
         if (controller != null)
           csvExportControllerProvider.overrideWithValue(controller),
+        if (importController != null)
+          csvImportControllerProvider.overrideWithValue(importController),
       ],
       child: MaterialApp(
         theme: AppTheme.light,
@@ -289,4 +382,11 @@ Future<void> _pumpSettings(
     ),
   );
   await tester.pumpAndSettle();
+}
+
+String _validProductsCsv() {
+  return 'Product Name,Category,Unit,Selling Price,Current Quantity,'
+      'Low Stock Threshold,Barcode,Status,Created At,Updated At\n'
+      'Rice,Staples,kg,55.50,12,3,111,Active,,\n'
+      'Old Soap,,pcs,18.00,0,2,,Archived,,\n';
 }

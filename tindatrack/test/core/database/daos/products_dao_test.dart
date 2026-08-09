@@ -68,12 +68,45 @@ void main() {
     expect(row?.isArchived, isFalse);
     expect(row?.updatedAt.toUtc(), updatedAt);
   });
+  test(
+    'findExistingBarcodes returns matches across active and archived rows',
+    () async {
+      await dao.insertProduct(
+        _product('1', 'Rice', isArchived: false, barcode: '111'),
+      );
+      await dao.insertProduct(
+        _product('2', 'Old', isArchived: true, barcode: '222'),
+      );
+
+      final barcodes = await dao.findExistingBarcodes({'111', '222', '333'});
+
+      expect(barcodes, {'111', '222'});
+    },
+  );
+
+  test('importProducts inserts the whole batch in one transaction', () async {
+    await dao.insertProduct(
+      _product('existing', 'Existing', isArchived: false, barcode: '111'),
+    );
+
+    await expectLater(
+      dao.importProducts([
+        _product('valid', 'Valid', isArchived: false, barcode: '222'),
+        _product('duplicate', 'Duplicate', isArchived: true, barcode: '111'),
+      ]),
+      throwsA(isA<Exception>()),
+    );
+
+    final rows = await dao.listAllProducts();
+    expect(rows.map((row) => row.id), ['existing']);
+  });
 }
 
 ProductsCompanion _product(
   String id,
   String name, {
   required bool isArchived,
+  String? barcode,
 }) {
   final instant = DateTime.utc(2026, 6, 28);
   return ProductsCompanion.insert(
@@ -83,6 +116,7 @@ ProductsCompanion _product(
     sellingPrice: 1,
     quantity: 0,
     lowStockThreshold: 0,
+    barcode: Value(barcode),
     isArchived: Value(isArchived),
     createdAt: instant,
     updatedAt: instant,

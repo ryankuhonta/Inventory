@@ -43,6 +43,17 @@ class ProductsDao extends DatabaseAccessor<AppDatabase>
     return into(products).insertReturning(product);
   }
 
+  /// Inserts imported products in one transaction and returns persisted rows.
+  Future<List<Product>> importProducts(List<ProductsCompanion> imports) {
+    return transaction(() async {
+      final inserted = <Product>[];
+      for (final product in imports) {
+        inserted.add(await insertProduct(product));
+      }
+      return inserted;
+    });
+  }
+
   /// Loads one product by stable ID, including archived rows.
   Future<Product?> getProductById(String id) {
     return (select(
@@ -145,6 +156,15 @@ class ProductsDao extends DatabaseAccessor<AppDatabase>
         (product) => OrderingTerm.asc(product.id),
       ]);
     return query.get();
+  }
+
+  /// Returns existing non-null barcodes matching [barcodes].
+  Future<Set<String>> findExistingBarcodes(Set<String> barcodes) async {
+    if (barcodes.isEmpty) return const <String>{};
+    final rows = await (select(
+      products,
+    )..where((product) => product.barcode.isIn(barcodes))).get();
+    return rows.map((row) => row.barcode).whereType<String>().toSet();
   }
 
   /// Watches archived products ordered by SQLite for restore workflows.
