@@ -118,6 +118,16 @@ class ProductsDao extends DatabaseAccessor<AppDatabase>
     return rows.isEmpty ? null : rows.single;
   }
 
+  /// Lists every product, including archived rows, ordered for export.
+  Future<List<Product>> listAllProducts() {
+    final query = select(products)
+      ..orderBy([
+        (product) => OrderingTerm.asc(product.name),
+        (product) => OrderingTerm.asc(product.id),
+      ]);
+    return query.get();
+  }
+
   /// Watches active products filtered and ordered by SQLite.
   Stream<List<Product>> watchActiveProducts([
     ProductsQueryParameters parameters = const ProductsQueryParameters(),

@@ -1,10 +1,14 @@
 import 'dart:io';
 
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:tindatrack/app/router/app_router.dart';
 import 'package:tindatrack/app/router/app_routes.dart';
 import 'package:tindatrack/app/theme/app_theme.dart';
+import 'package:tindatrack/core/errors/result.dart';
+import 'package:tindatrack/features/settings/domain/services/csv_export_builder.dart';
+import 'package:tindatrack/features/settings/presentation/providers/csv_export_providers.dart';
 import 'package:tindatrack/features/settings/presentation/screens/settings_screen.dart';
 
 void main() {
@@ -22,6 +26,10 @@ void main() {
       find.byKey(const Key('settings-app-version-section')),
       findsOneWidget,
     );
+    await tester.scrollUntilVisible(
+      find.byKey(const Key('settings-local-data-section')),
+      120,
+    );
     expect(
       find.byKey(const Key('settings-local-data-section')),
       findsOneWidget,
@@ -32,12 +40,19 @@ void main() {
     expect(find.text('Local Data'), findsOneWidget);
     expect(find.text('PHP'), findsOneWidget);
     expect(find.textContaining('Philippine Peso'), findsOneWidget);
-    expect(find.text('Coming soon'), findsOneWidget);
+    expect(find.text('CSV files'), findsOneWidget);
+    expect(
+      find.byKey(const Key('settings-save-export-action')),
+      findsOneWidget,
+    );
+    expect(
+      find.byKey(const Key('settings-share-export-action')),
+      findsOneWidget,
+    );
     expect(
       find.text(
-        'For now, inventory data stays on this device. '
-        'No account or internet connection is needed to view this '
-        'placeholder. Backup and export will be added in a future update.',
+        'Create readable Products and Stock History CSV files from '
+        'this device. Active and archived products are included.',
       ),
       findsOneWidget,
     );
@@ -48,6 +63,89 @@ void main() {
       find.text('Inventory data is stored on this device for the MVP.'),
       findsOneWidget,
     );
+  });
+
+  testWidgets('Save to Downloads action shows saved location snackbar', (
+    tester,
+  ) async {
+    var saveCalls = 0;
+    var shareCalls = 0;
+    await _pumpSettings(
+      tester,
+      controller: CsvExportController(
+        readProducts: () async => const Success([]),
+        readMovements: () async => const Success([]),
+        builder: const CsvExportBuilder(),
+        shareBundle: (_) async {
+          shareCalls++;
+        },
+        saveBundle: (_) async {
+          saveCalls++;
+        },
+        exportedAt: () => DateTime.utc(2026, 8, 9, 10, 15),
+      ),
+    );
+
+    await tester.tap(find.byKey(const Key('settings-save-export-action')));
+    await tester.pumpAndSettle();
+
+    expect(saveCalls, 1);
+    expect(shareCalls, 0);
+    expect(
+      find.text('CSV files saved to Downloads/TindaTrack.'),
+      findsOneWidget,
+    );
+  });
+
+  testWidgets('Share CSV files action shows share-ready snackbar', (
+    tester,
+  ) async {
+    var saveCalls = 0;
+    var shareCalls = 0;
+    await _pumpSettings(
+      tester,
+      controller: CsvExportController(
+        readProducts: () async => const Success([]),
+        readMovements: () async => const Success([]),
+        builder: const CsvExportBuilder(),
+        shareBundle: (_) async {
+          shareCalls++;
+        },
+        saveBundle: (_) async {
+          saveCalls++;
+        },
+        exportedAt: () => DateTime.utc(2026, 8, 9, 10, 15),
+      ),
+    );
+
+    await tester.tap(find.byKey(const Key('settings-share-export-action')));
+    await tester.pumpAndSettle();
+
+    expect(shareCalls, 1);
+    expect(saveCalls, 0);
+    expect(find.text('CSV export ready.'), findsOneWidget);
+  });
+
+  testWidgets('Export Data action shows friendly failure snackbar', (
+    tester,
+  ) async {
+    await _pumpSettings(
+      tester,
+      controller: CsvExportController(
+        readProducts: () async => const Success([]),
+        readMovements: () async => const Success([]),
+        builder: const CsvExportBuilder(),
+        shareBundle: (_) async {},
+        saveBundle: (_) async => throw StateError('raw save failure'),
+        exportedAt: () => DateTime.utc(2026, 8, 9, 10, 15),
+      ),
+    );
+
+    await tester.tap(find.byKey(const Key('settings-save-export-action')));
+    await tester.pumpAndSettle();
+
+    expect(find.text('Export failed. Please try again.'), findsOneWidget);
+    expect(find.textContaining('raw save failure'), findsNothing);
   });
 
   test('extracts only the top-level pubspec version scalar', () {
@@ -132,9 +230,11 @@ void main() {
     addTearDown(router.dispose);
 
     await tester.pumpWidget(
-      MaterialApp.router(
-        theme: AppTheme.light,
-        routerConfig: router,
+      ProviderScope(
+        child: MaterialApp.router(
+          theme: AppTheme.light,
+          routerConfig: router,
+        ),
       ),
     );
     await tester.pumpAndSettle();
@@ -172,11 +272,20 @@ String _pubspecVersion() {
   return versionLine.split(':').last.trim();
 }
 
-Future<void> _pumpSettings(WidgetTester tester) async {
+Future<void> _pumpSettings(
+  WidgetTester tester, {
+  CsvExportController? controller,
+}) async {
   await tester.pumpWidget(
-    MaterialApp(
-      theme: AppTheme.light,
-      home: const SettingsScreen(),
+    ProviderScope(
+      overrides: [
+        if (controller != null)
+          csvExportControllerProvider.overrideWithValue(controller),
+      ],
+      child: MaterialApp(
+        theme: AppTheme.light,
+        home: const SettingsScreen(),
+      ),
     ),
   );
   await tester.pumpAndSettle();

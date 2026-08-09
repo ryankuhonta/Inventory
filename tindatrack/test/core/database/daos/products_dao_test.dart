@@ -25,6 +25,20 @@ void main() {
     expect(rows.map((row) => row.name), ['Apple', 'Zinc']);
     expect(rows.every((row) => !row.isArchived), isTrue);
   });
+
+  test(
+    'all-products export query includes archived rows ordered by name',
+    () async {
+      await dao.insertProduct(_product('3', 'Zinc', isArchived: false));
+      await dao.insertProduct(_product('2', 'Hidden', isArchived: true));
+      await dao.insertProduct(_product('1', 'Apple', isArchived: false));
+
+      final rows = await dao.listAllProducts();
+
+      expect(rows.map((row) => row.name), ['Apple', 'Hidden', 'Zinc']);
+      expect(rows.map((row) => row.isArchived), [false, true, false]);
+    },
+  );
 }
 
 ProductsCompanion _product(

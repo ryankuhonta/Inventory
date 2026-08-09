@@ -1,20 +1,25 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:tindatrack/core/errors/result.dart';
 import 'package:tindatrack/core/formatters/currency_formatter.dart';
 import 'package:tindatrack/core/ui/app_dimensions.dart';
 import 'package:tindatrack/core/ui/app_spacing.dart';
+import 'package:tindatrack/features/settings/domain/entities/csv_export_bundle.dart';
+import 'package:tindatrack/features/settings/presentation/providers/csv_export_providers.dart';
 
 /// Root screen for local-only app information.
-class SettingsScreen extends StatefulWidget {
+class SettingsScreen extends ConsumerStatefulWidget {
   /// Creates the App Info screen.
   const SettingsScreen({super.key});
 
   @override
-  State<SettingsScreen> createState() => _SettingsScreenState();
+  ConsumerState<SettingsScreen> createState() => _SettingsScreenState();
 }
 
-class _SettingsScreenState extends State<SettingsScreen> {
+class _SettingsScreenState extends ConsumerState<SettingsScreen> {
   late final Future<String> _appVersion = _loadAppVersion();
+  _ExportAction? _exportAction;
 
   @override
   Widget build(BuildContext context) {
@@ -45,16 +50,54 @@ class _SettingsScreenState extends State<SettingsScreen> {
                   'Philippine Peso is the MVP currency for product prices.',
             ),
             SizedBox(height: spacing.md),
-            const _SettingsSection(
-              key: Key('settings-backup-export-section'),
+            _SettingsSection(
+              key: const Key('settings-backup-export-section'),
               icon: Icons.file_upload_outlined,
               title: 'Backup / Export',
-              value: 'Coming soon',
+              value: 'CSV files',
               description:
-                  'For now, inventory data stays on this device. '
-                  'No account or internet connection is needed to view this '
-                  'placeholder. Backup and export will be added in a future '
-                  'update.',
+                  'Create readable Products and Stock History CSV files from '
+                  'this device. Active and archived products are included.',
+              action: Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  FilledButton.icon(
+                    key: const Key('settings-save-export-action'),
+                    onPressed: _exportAction == null
+                        ? () => _exportData(_ExportAction.saveToDownloads)
+                        : null,
+                    icon: _exportAction == _ExportAction.saveToDownloads
+                        ? const SizedBox.square(
+                            dimension: 18,
+                            child: CircularProgressIndicator(strokeWidth: 2),
+                          )
+                        : const Icon(Icons.download_outlined),
+                    label: Text(
+                      _exportAction == _ExportAction.saveToDownloads
+                          ? 'Saving...'
+                          : 'Save to Downloads',
+                    ),
+                  ),
+                  SizedBox(height: spacing.xs),
+                  OutlinedButton.icon(
+                    key: const Key('settings-share-export-action'),
+                    onPressed: _exportAction == null
+                        ? () => _exportData(_ExportAction.share)
+                        : null,
+                    icon: _exportAction == _ExportAction.share
+                        ? const SizedBox.square(
+                            dimension: 18,
+                            child: CircularProgressIndicator(strokeWidth: 2),
+                          )
+                        : const Icon(Icons.ios_share_outlined),
+                    label: Text(
+                      _exportAction == _ExportAction.share
+                          ? 'Preparing...'
+                          : 'Share CSV files',
+                    ),
+                  ),
+                ],
+              ),
             ),
             SizedBox(height: spacing.md),
             FutureBuilder<String>(
@@ -90,6 +133,48 @@ class _SettingsScreenState extends State<SettingsScreen> {
       ),
     );
   }
+
+  Future<void> _exportData(_ExportAction action) async {
+    setState(() {
+      _exportAction = action;
+    });
+
+    final controller = ref.read(csvExportControllerProvider);
+    final result = switch (action) {
+      _ExportAction.saveToDownloads => await controller.saveCsvToDownloads(),
+      _ExportAction.share => await controller.shareCsv(),
+    };
+    if (!mounted) return;
+
+    setState(() {
+      _exportAction = null;
+    });
+
+    final messenger = ScaffoldMessenger.of(context);
+    switch (result) {
+      case Success<CsvExportSummary>():
+        messenger.showSnackBar(
+          SnackBar(content: Text(_successMessage(action))),
+        );
+      case FailureResult<CsvExportSummary>():
+        messenger.showSnackBar(
+          const SnackBar(content: Text('Export failed. Please try again.')),
+        );
+    }
+  }
+
+  String _successMessage(_ExportAction action) {
+    return switch (action) {
+      _ExportAction.saveToDownloads =>
+        'CSV files saved to Downloads/TindaTrack.',
+      _ExportAction.share => 'CSV export ready.',
+    };
+  }
+}
+
+enum _ExportAction {
+  saveToDownloads,
+  share,
 }
 
 Future<String> _loadAppVersion() async {
@@ -132,6 +217,7 @@ class _SettingsSection extends StatelessWidget {
     required this.title,
     required this.value,
     required this.description,
+    this.action,
     super.key,
   });
 
@@ -139,6 +225,7 @@ class _SettingsSection extends StatelessWidget {
   final String title;
   final String value;
   final String description;
+  final Widget? action;
 
   @override
   Widget build(BuildContext context) {
@@ -185,6 +272,10 @@ class _SettingsSection extends StatelessWidget {
                       color: colorScheme.onSurfaceVariant,
                     ),
                   ),
+                  if (action != null) ...[
+                    SizedBox(height: spacing.sm),
+                    action!,
+                  ],
                 ],
               ),
             ),
