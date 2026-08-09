@@ -6,6 +6,7 @@ import 'package:tindatrack/app/router/app_routes.dart';
 import 'package:tindatrack/features/dashboard/presentation/screens/dashboard_screen.dart';
 import 'package:tindatrack/features/history/presentation/screens/movement_history_screen.dart';
 import 'package:tindatrack/features/products/presentation/screens/add_product_screen.dart';
+import 'package:tindatrack/features/products/presentation/screens/archived_products_screen.dart';
 import 'package:tindatrack/features/products/presentation/screens/barcode_scanner_screen.dart';
 import 'package:tindatrack/features/products/presentation/screens/edit_product_screen.dart';
 import 'package:tindatrack/features/products/presentation/screens/product_list_screen.dart';
@@ -42,6 +43,7 @@ GoRouter createAppRouter({
   String? initialLocation,
   AppRouteBuilder dashboardBuilder = _buildDashboard,
   AppRouteBuilder productsBuilder = _buildProducts,
+  AppRouteBuilder archivedProductsBuilder = _buildArchivedProducts,
   AppRouteBuilder addProductBuilder = _buildAddProduct,
   AppRouteBuilder editProductBuilder = _buildEditProduct,
   AppRouteBuilder barcodeScannerBuilder = _buildBarcodeScanner,
@@ -79,6 +81,11 @@ GoRouter createAppRouter({
             navigatorKey: branchNavigatorKeys[1],
             builder: productsBuilder,
             childRoutes: [
+              GoRoute(
+                path: ProductRoute.archivedProducts.segment,
+                name: ProductRoute.archivedProducts.name,
+                builder: archivedProductsBuilder,
+              ),
               GoRoute(
                 path: ProductRoute.addProduct.segment,
                 name: ProductRoute.addProduct.name,
@@ -147,6 +154,10 @@ Widget _buildDashboard(BuildContext context, GoRouterState state) {
 
 Widget _buildProducts(BuildContext context, GoRouterState state) {
   return const ProductListScreen();
+}
+
+Widget _buildArchivedProducts(BuildContext context, GoRouterState state) {
+  return const ArchivedProductsScreen();
 }
 
 Widget _buildAddProduct(BuildContext context, GoRouterState state) {

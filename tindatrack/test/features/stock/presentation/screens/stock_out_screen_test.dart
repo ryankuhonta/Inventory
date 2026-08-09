@@ -380,6 +380,16 @@ final class _ProductRepository implements ProductRepository {
   @override
   Stream<List<Product>> watchActiveProducts(ProductListQuery query) =>
       const Stream.empty();
+
+  @override
+  Future<Result<void>> restoreProduct(String id) {
+    throw UnimplementedError();
+  }
+
+  @override
+  Stream<List<Product>> watchArchivedProducts() {
+    throw UnimplementedError();
+  }
 }
 
 final class _StockRepository implements StockRepository {

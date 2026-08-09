@@ -113,6 +113,18 @@ void main() {
     expect(find.text('No products yet'), findsOneWidget);
     expect(find.byKey(const Key('add-product-test-screen')), findsNothing);
   });
+  testWidgets('app bar action opens Archived Products', (tester) async {
+    await _pumpProducts(tester, () => Stream.value(const <Product>[]));
+
+    await tester.tap(find.byKey(const Key('open-archived-products-action')));
+    await tester.pumpAndSettle();
+
+    expect(
+      find.byKey(const Key('archived-products-test-screen')),
+      findsOneWidget,
+    );
+  });
+
   testWidgets('safe error state retries without exposing diagnostics', (
     tester,
   ) async {
@@ -509,6 +521,7 @@ Future<void> _pumpProducts(
   Stream<List<Product>> Function() products, {
   bool includeEditRoute = true,
   Widget Function(BuildContext, GoRouterState)? addProductBuilder,
+  Widget Function(BuildContext, GoRouterState)? archivedProductsBuilder,
 }) async {
   final router = GoRouter(
     initialLocation: AppRoute.products.path,
@@ -518,6 +531,18 @@ Future<void> _pumpProducts(
         name: AppRoute.products.name,
         builder: (_, _) => const ProductListScreen(),
         routes: [
+          GoRoute(
+            path: ProductRoute.archivedProducts.segment,
+            name: ProductRoute.archivedProducts.name,
+            builder:
+                archivedProductsBuilder ??
+                (_, _) {
+                  return Scaffold(
+                    key: const Key('archived-products-test-screen'),
+                    appBar: AppBar(title: const Text('Archived Products')),
+                  );
+                },
+          ),
           GoRoute(
             path: ProductRoute.addProduct.segment,
             name: ProductRoute.addProduct.name,

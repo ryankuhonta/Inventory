@@ -23,6 +23,13 @@ enum AppRoute {
 
 /// Secondary routes owned by the Products branch.
 enum ProductRoute {
+  /// Archived Products list and restore workflow.
+  archivedProducts(
+    path: '/products/archived',
+    segment: 'archived',
+    label: 'Archived Products',
+  ),
+
   /// Add Product form.
   addProduct(
     path: '/products/add',

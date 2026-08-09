@@ -58,7 +58,19 @@ final class _ProductListScreenState extends ConsumerState<ProductListScreen> {
 
     return Scaffold(
       key: const Key('products-screen'),
-      appBar: AppBar(title: const Text('Products')),
+      appBar: AppBar(
+        title: const Text('Products'),
+        actions: [
+          IconButton(
+            key: const Key('open-archived-products-action'),
+            tooltip: 'Archived Products',
+            onPressed: () => context.pushNamed(
+              ProductRoute.archivedProducts.name,
+            ),
+            icon: const Icon(Icons.archive_outlined),
+          ),
+        ],
+      ),
       floatingActionButton: FloatingActionButton.extended(
         key: const Key('add-product-action'),
         onPressed: () => unawaited(_openAddProduct(context)),

@@ -75,4 +75,14 @@ final class _RecordingRepository implements ProductRepository {
   Stream<List<Product>> watchActiveProducts(ProductListQuery query) {
     return const Stream<List<Product>>.empty();
   }
+
+  @override
+  Future<Result<void>> restoreProduct(String id) {
+    throw UnimplementedError();
+  }
+
+  @override
+  Stream<List<Product>> watchArchivedProducts() {
+    throw UnimplementedError();
+  }
 }

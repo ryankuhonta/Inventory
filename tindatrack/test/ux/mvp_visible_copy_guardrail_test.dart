@@ -225,6 +225,16 @@ final class _ProductRepository implements ProductRepository {
   Stream<List<Product>> watchActiveProducts(ProductListQuery query) {
     return Stream.value([_product()]);
   }
+
+  @override
+  Future<Result<void>> restoreProduct(String id) {
+    throw UnimplementedError();
+  }
+
+  @override
+  Stream<List<Product>> watchArchivedProducts() {
+    throw UnimplementedError();
+  }
 }
 
 final class _StockRepository implements StockRepository {

@@ -128,6 +128,59 @@ void main() {
     final row = await throwingDao.getProductById('product-1');
     expect(row?.isArchived, isFalse);
   });
+
+  test('restore changes only archive state and UTC update time', () async {
+    await _insert(dao, createdAt: createdAt, archived: true);
+
+    final result = await repository.restoreProduct('product-1');
+
+    expect(result, isA<Success<void>>());
+    final row = await dao.getProductById('product-1');
+    expect(row, isNotNull);
+    expect(row?.isArchived, isFalse);
+    expect(row?.updatedAt.toUtc(), clockValue.toUtc());
+    expect(row?.quantity, 9);
+    expect(row?.barcode, 'reserved');
+  });
+
+  test('archived watch re-emits without the restored row', () async {
+    await _insert(dao, createdAt: createdAt, archived: true);
+    final emissions = StreamIterator(repository.watchArchivedProducts());
+    addTearDown(emissions.cancel);
+    expect(
+      await emissions.moveNext().timeout(const Duration(seconds: 1)),
+      isTrue,
+    );
+    expect(emissions.current.single.id, 'product-1');
+
+    await repository.restoreProduct('product-1');
+
+    expect(
+      await emissions.moveNext().timeout(const Duration(seconds: 1)),
+      isTrue,
+    );
+    expect(emissions.current, isEmpty);
+  });
+
+  test(
+    'restore missing and already active targets return typed failures',
+    () async {
+      final missing = await repository.restoreProduct('missing');
+      expect(
+        (missing as FailureResult<void>).failure,
+        isA<ProductNotFoundFailure>(),
+      );
+
+      await _insert(dao, createdAt: createdAt);
+      final active = await repository.restoreProduct('product-1');
+      expect(
+        (active as FailureResult<void>).failure,
+        isA<ActiveProductFailure>(),
+      );
+      final row = await dao.getProductById('product-1');
+      expect(row?.updatedAt.toUtc(), createdAt);
+    },
+  );
 }
 
 Future<void> _insert(
@@ -157,6 +210,14 @@ final class _ThrowingProductsDao extends ProductsDao {
 
   @override
   Future<bool> archiveProduct({
+    required String id,
+    required DateTime updatedAt,
+  }) {
+    throw StateError('write failed');
+  }
+
+  @override
+  Future<bool> restoreProduct({
     required String id,
     required DateTime updatedAt,
   }) {

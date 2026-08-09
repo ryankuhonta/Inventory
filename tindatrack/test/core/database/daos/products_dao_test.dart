@@ -39,6 +39,35 @@ void main() {
       expect(rows.map((row) => row.isArchived), [false, true, false]);
     },
   );
+
+  test('archived query lists archived rows ordered by name', () async {
+    await dao.insertProduct(_product('3', 'Zinc', isArchived: true));
+    await dao.insertProduct(_product('2', 'Active', isArchived: false));
+    await dao.insertProduct(_product('1', 'Apple', isArchived: true));
+
+    final rows = await dao.watchArchivedProducts().first;
+
+    expect(rows.map((row) => row.name), ['Apple', 'Zinc']);
+    expect(rows.every((row) => row.isArchived), isTrue);
+  });
+
+  test('restore flips only archived target back to active', () async {
+    final updatedAt = DateTime.utc(2026, 8, 10);
+    await dao.insertProduct(_product('1', 'Rice', isArchived: true));
+    await dao.insertProduct(_product('2', 'Soap', isArchived: false));
+
+    final restored = await dao.restoreProduct(id: '1', updatedAt: updatedAt);
+    final activeRestore = await dao.restoreProduct(
+      id: '2',
+      updatedAt: updatedAt,
+    );
+
+    expect(restored, isTrue);
+    expect(activeRestore, isFalse);
+    final row = await dao.getProductById('1');
+    expect(row?.isArchived, isFalse);
+    expect(row?.updatedAt.toUtc(), updatedAt);
+  });
 }
 
 ProductsCompanion _product(

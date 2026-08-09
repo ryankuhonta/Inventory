@@ -57,6 +57,28 @@ final class DriftProductsRepository implements ProductRepository {
   final Clock _clock;
 
   @override
+  Future<Result<void>> restoreProduct(String id) async {
+    try {
+      final updatedAt = _clock.now().toUtc();
+      final restored = await _dao.restoreProduct(
+        id: id,
+        updatedAt: updatedAt,
+      );
+      if (restored) return const Success<void>(null);
+
+      final row = await _dao.getProductById(id);
+      if (row == null) {
+        return const FailureResult<void>(ProductNotFoundFailure());
+      }
+      return const FailureResult<void>(ActiveProductFailure());
+    } on Object catch (error) {
+      return FailureResult<void>(
+        PersistenceFailure(debugMessage: error.toString()),
+      );
+    }
+  }
+
+  @override
   Future<Result<domain.Product>> createProduct(
     CreateProductInput input,
   ) async {
@@ -155,6 +177,13 @@ final class DriftProductsRepository implements ProductRepository {
         PersistenceFailure(debugMessage: error.toString()),
       );
     }
+  }
+
+  @override
+  Stream<List<domain.Product>> watchArchivedProducts() {
+    return _dao.watchArchivedProducts().map(
+      (rows) => rows.map(_toDomain).toList(growable: false),
+    );
   }
 
   @override

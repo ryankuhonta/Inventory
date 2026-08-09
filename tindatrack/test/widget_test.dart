@@ -636,6 +636,16 @@ final class _RecordingProductRepository implements ProductRepository {
     String id,
     UpdateProductInput input,
   ) => throw UnimplementedError();
+
+  @override
+  Future<Result<void>> restoreProduct(String id) {
+    throw UnimplementedError();
+  }
+
+  @override
+  Stream<List<product_entity.Product>> watchArchivedProducts() {
+    throw UnimplementedError();
+  }
 }
 
 Stream<DashboardSummary> _dashboardSummaryStream() {

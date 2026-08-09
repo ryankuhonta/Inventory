@@ -16,9 +16,15 @@ abstract interface class ProductRepository {
   /// failure.
   Future<Result<Product>> getProduct(String id);
 
+  /// Restores one archived product to the active catalog.
+  Future<Result<void>> restoreProduct(String id);
+
   /// Updates editable metadata without changing stock quantity.
   Future<Result<Product>> updateProduct(String id, UpdateProductInput input);
 
   /// Watches active products matching [query], ordered by name.
   Stream<List<Product>> watchActiveProducts(ProductListQuery query);
+
+  /// Watches archived products ordered by name.
+  Stream<List<Product>> watchArchivedProducts();
 }

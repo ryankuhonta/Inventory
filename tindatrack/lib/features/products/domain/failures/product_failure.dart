@@ -18,6 +18,12 @@ final class ArchivedProductFailure extends AppFailure {
   const ArchivedProductFailure({super.debugMessage});
 }
 
+/// The requested restore target is already active.
+final class ActiveProductFailure extends AppFailure {
+  /// Creates a typed active-product failure.
+  const ActiveProductFailure({super.debugMessage});
+}
+
 /// Product form field associated with a validation failure.
 enum ProductField {
   /// Product display name.

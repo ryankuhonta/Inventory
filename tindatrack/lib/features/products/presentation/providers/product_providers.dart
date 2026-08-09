@@ -9,6 +9,7 @@ import 'package:tindatrack/features/products/domain/repositories/products_reposi
 import 'package:tindatrack/features/products/domain/usecases/add_product.dart';
 import 'package:tindatrack/features/products/domain/usecases/archive_product.dart';
 import 'package:tindatrack/features/products/domain/usecases/get_product.dart';
+import 'package:tindatrack/features/products/domain/usecases/restore_product.dart';
 import 'package:tindatrack/features/products/domain/usecases/update_product.dart';
 import 'package:tindatrack/features/products/presentation/controllers/product_list_controller.dart';
 
@@ -36,6 +37,11 @@ final archiveProductProvider = Provider<ArchiveProduct>(
   (ref) => ArchiveProduct(ref.watch(productRepositoryProvider)),
 );
 
+/// Product restore boundary for archived products.
+final restoreProductProvider = Provider<RestoreProduct>(
+  (ref) => RestoreProduct(ref.watch(productRepositoryProvider)),
+);
+
 /// Product lookup boundary for edit screens.
 final getProductProvider = Provider<GetProduct>(
   (ref) => GetProduct(ref.watch(productRepositoryProvider)),
@@ -57,4 +63,9 @@ final activeProductsProvider = StreamProvider<List<Product>>(
   (ref) => ref
       .watch(productRepositoryProvider)
       .watchActiveProducts(ref.watch(productListControllerProvider)),
+);
+
+/// Reactive archived catalog for restore workflows.
+final archivedProductsProvider = StreamProvider<List<Product>>(
+  (ref) => ref.watch(productRepositoryProvider).watchArchivedProducts(),
 );

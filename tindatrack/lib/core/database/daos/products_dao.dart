@@ -89,6 +89,25 @@ class ProductsDao extends DatabaseAccessor<AppDatabase>
     return changed == 1;
   }
 
+  /// Restores one archived product to the active catalog.
+  Future<bool> restoreProduct({
+    required String id,
+    required DateTime updatedAt,
+  }) async {
+    final changed =
+        await (update(products)..where(
+              (product) =>
+                  product.id.equals(id) & product.isArchived.equals(true),
+            ))
+            .write(
+              ProductsCompanion(
+                isArchived: const Value(false),
+                updatedAt: Value(updatedAt),
+              ),
+            );
+    return changed == 1;
+  }
+
   /// Partially updates editable details for one active product.
   Future<Product?> updateProductDetails({
     required String id,
@@ -126,6 +145,17 @@ class ProductsDao extends DatabaseAccessor<AppDatabase>
         (product) => OrderingTerm.asc(product.id),
       ]);
     return query.get();
+  }
+
+  /// Watches archived products ordered by SQLite for restore workflows.
+  Stream<List<Product>> watchArchivedProducts() {
+    final query = select(products)
+      ..where((product) => product.isArchived.equals(true))
+      ..orderBy([
+        (product) => OrderingTerm.asc(product.name),
+        (product) => OrderingTerm.asc(product.id),
+      ]);
+    return query.watch();
   }
 
   /// Watches active products filtered and ordered by SQLite.

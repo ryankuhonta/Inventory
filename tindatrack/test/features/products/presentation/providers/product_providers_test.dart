@@ -27,6 +27,21 @@ void main() {
     expect(repository.archivedId, 'product-7');
   });
 
+  test('restore provider delegates through the canonical repository', () async {
+    final repository = _StreamingProductRepository(
+      const Stream<List<Product>>.empty(),
+    );
+    final container = ProviderContainer.test(
+      overrides: [productRepositoryProvider.overrideWithValue(repository)],
+    );
+    addTearDown(container.dispose);
+
+    final result = await container.read(restoreProductProvider)('product-9');
+
+    expect(result, isA<Success<void>>());
+    expect(repository.restoredId, 'product-9');
+  });
+
   test('active products provider exposes repository stream updates', () async {
     final stream = StreamController<List<Product>>();
     final repository = _StreamingProductRepository(stream.stream);
@@ -54,6 +69,38 @@ void main() {
       [isA<Product>().having((product) => product.name, 'name', 'Soap')],
     );
   });
+
+  test(
+    'archived products provider emits repository stream values',
+    () async {
+      final activeStream = StreamController<List<Product>>.broadcast();
+      final archivedStream = StreamController<List<Product>>.broadcast();
+      final repository = _StreamingProductRepository(
+        activeStream.stream,
+        archivedProducts: archivedStream.stream,
+      );
+      final container = ProviderContainer.test(
+        overrides: [productRepositoryProvider.overrideWithValue(repository)],
+      );
+      addTearDown(activeStream.close);
+      addTearDown(archivedStream.close);
+      addTearDown(container.dispose);
+
+      final subscription = container.listen(
+        archivedProductsProvider,
+        (_, _) {},
+      );
+      addTearDown(subscription.close);
+      await pumpEventQueue();
+
+      archivedStream.add([_product('archived', 'Old Rice', isArchived: true)]);
+      await pumpEventQueue();
+
+      expect(container.read(archivedProductsProvider).value, [
+        isA<Product>().having((product) => product.name, 'name', 'Old Rice'),
+      ]);
+    },
+  );
 
   test('active products provider contains repository stream errors', () async {
     final stream = StreamController<List<Product>>();
@@ -103,10 +150,16 @@ void main() {
 }
 
 final class _StreamingProductRepository implements ProductRepository {
-  _StreamingProductRepository(this.products);
+  _StreamingProductRepository(
+    this.products, {
+    Stream<List<Product>>? archivedProducts,
+  }) : archivedProducts =
+           archivedProducts ?? const Stream<List<Product>>.empty();
 
   final Stream<List<Product>> products;
+  final Stream<List<Product>> archivedProducts;
   String? archivedId;
+  String? restoredId;
 
   @override
   Future<Result<void>> archiveProduct(String id) async {
@@ -133,9 +186,20 @@ final class _StreamingProductRepository implements ProductRepository {
   Stream<List<Product>> watchActiveProducts(ProductListQuery query) {
     return products;
   }
+
+  @override
+  Future<Result<void>> restoreProduct(String id) async {
+    restoredId = id;
+    return const Success<void>(null);
+  }
+
+  @override
+  Stream<List<Product>> watchArchivedProducts() {
+    return archivedProducts;
+  }
 }
 
-Product _product(String id, String name) {
+Product _product(String id, String name, {bool isArchived = false}) {
   return Product(
     id: id,
     name: name,
@@ -145,7 +209,7 @@ Product _product(String id, String name) {
     quantity: 1,
     lowStockThreshold: 0,
     barcode: null,
-    isArchived: false,
+    isArchived: isArchived,
     createdAt: DateTime.utc(2026, 6, 30),
     updatedAt: DateTime.utc(2026, 6, 30),
   );

@@ -109,4 +109,14 @@ final class _RecordingRepository implements ProductRepository {
     }
     return Stream<List<Product>>.value(const <Product>[]);
   }
+
+  @override
+  Future<Result<void>> restoreProduct(String id) {
+    throw UnimplementedError();
+  }
+
+  @override
+  Stream<List<Product>> watchArchivedProducts() {
+    throw UnimplementedError();
+  }
 }

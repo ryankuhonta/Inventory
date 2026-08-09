@@ -307,6 +307,16 @@ final class _Repository implements ProductRepository {
     yield <Product>[product];
     yield* _products.stream;
   }
+
+  @override
+  Future<Result<void>> restoreProduct(String id) {
+    throw UnimplementedError();
+  }
+
+  @override
+  Stream<List<Product>> watchArchivedProducts() {
+    throw UnimplementedError();
+  }
 }
 
 IconButton _rowAction(WidgetTester tester, ValueKey<String> key) {
