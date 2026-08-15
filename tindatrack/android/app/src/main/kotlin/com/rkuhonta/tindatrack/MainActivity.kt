@@ -1,6 +1,9 @@
 package com.rkuhonta.tindatrack
 
+import android.app.Activity
 import android.content.ContentValues
+import android.content.Intent
+import android.net.Uri
 import android.os.Build
 import android.os.Environment
 import android.provider.MediaStore
@@ -13,6 +16,8 @@ import java.io.FileOutputStream
 import java.io.IOException
 
 class MainActivity : FlutterActivity() {
+    private var pendingCsvImportResult: MethodChannel.Result? = null
+
     override fun configureFlutterEngine(flutterEngine: FlutterEngine) {
         super.configureFlutterEngine(flutterEngine)
         MethodChannel(
@@ -35,6 +40,96 @@ class MainActivity : FlutterActivity() {
                 result.error("csv_export_permission", error.message, null)
             }
         }
+
+        MethodChannel(
+            flutterEngine.dartExecutor.binaryMessenger,
+            CSV_IMPORT_CHANNEL,
+        ).setMethodCallHandler { call, result ->
+            if (call.method != PICK_PRODUCTS_CSV_METHOD) {
+                result.notImplemented()
+                return@setMethodCallHandler
+            }
+            pickProductsCsv(result)
+        }
+    }
+
+    override fun onDestroy() {
+        pendingCsvImportResult?.error(
+            "csv_import_canceled",
+            "CSV import was canceled because the activity closed",
+            null,
+        )
+        pendingCsvImportResult = null
+        super.onDestroy()
+    }
+
+    override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
+        super.onActivityResult(requestCode, resultCode, data)
+        if (requestCode != PICK_PRODUCTS_CSV_REQUEST) return
+
+        val result = pendingCsvImportResult ?: return
+        pendingCsvImportResult = null
+        val uri = data?.data
+        if (resultCode != Activity.RESULT_OK || uri == null) {
+            result.success(null)
+            return
+        }
+
+        try {
+            result.success(readText(uri))
+        } catch (error: IOException) {
+            result.error("csv_import_io", error.message, null)
+        } catch (error: SecurityException) {
+            result.error("csv_import_permission", error.message, null)
+        }
+    }
+
+    private fun pickProductsCsv(result: MethodChannel.Result) {
+        if (pendingCsvImportResult != null) {
+            result.error("csv_import_busy", "CSV import picker is already open", null)
+            return
+        }
+
+        pendingCsvImportResult = result
+        val intent = Intent(Intent.ACTION_OPEN_DOCUMENT).apply {
+            addCategory(Intent.CATEGORY_OPENABLE)
+            type = "*/*"
+            putExtra(
+                Intent.EXTRA_MIME_TYPES,
+                arrayOf(
+                    "text/csv",
+                    "text/comma-separated-values",
+                    "application/csv",
+                    "application/vnd.ms-excel",
+                    "text/plain",
+                ),
+            )
+        }
+
+        try {
+            startActivityForResult(intent, PICK_PRODUCTS_CSV_REQUEST)
+        } catch (error: RuntimeException) {
+            pendingCsvImportResult = null
+            result.error("csv_import_picker", error.message, null)
+        }
+    }
+
+    private fun readText(uri: Uri): String {
+        return applicationContext.contentResolver.openInputStream(uri)?.use { input ->
+            val output = java.io.ByteArrayOutputStream()
+            val buffer = ByteArray(8192)
+            var totalBytes = 0
+            while (true) {
+                val bytesRead = input.read(buffer)
+                if (bytesRead == -1) break
+                totalBytes += bytesRead
+                if (totalBytes > MAX_CSV_IMPORT_BYTES) {
+                    throw IOException("Selected CSV file is too large")
+                }
+                output.write(buffer, 0, bytesRead)
+            }
+            output.toString(Charsets.UTF_8.name())
+        } ?: throw IOException("Could not open selected CSV file")
     }
 
     private fun saveCsvExport(call: MethodCall) {
@@ -110,5 +205,10 @@ class MainActivity : FlutterActivity() {
     companion object {
         private const val CSV_EXPORT_CHANNEL = "com.rkuhonta.tindatrack/csv_export"
         private const val SAVE_CSV_EXPORT_METHOD = "saveCsvExportToDownloads"
+        private const val CSV_IMPORT_CHANNEL = "com.rkuhonta.tindatrack/csv_import"
+        private const val PICK_PRODUCTS_CSV_METHOD = "pickProductsCsv"
+        private const val PICK_PRODUCTS_CSV_REQUEST = 5701
+        private const val MAX_CSV_IMPORT_BYTES = 5 * 1024 * 1024
     }
 }
+
