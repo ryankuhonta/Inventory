@@ -39,16 +39,17 @@ void main() {
     );
 
     final expectedMiloRow = [
-      '"Milo, 24g","Drinks ""Hot""",pcs,12.00,20,5,',
+      'p1,"Milo, 24g","Drinks ""Hot""",pcs,12.00,20,5,',
       '4801234567890,Active,2026-08-09 01:02:03 UTC,',
       '2026-08-09 04:05:06 UTC',
     ].join();
 
     expect(bundle.productsFileName, 'tindatrack-products-20260809-1015.csv');
+    expect(bundle.productsCsv, startsWith('Product ID,Product Name,Category'));
     expect(bundle.productsCsv, contains(expectedMiloRow));
     expect(
       bundle.productsCsv,
-      contains('Old Soap,,pcs,18.50,0,3,,Archived'),
+      contains('p2,Old Soap,,pcs,18.50,0,3,,Archived'),
     );
   });
 
@@ -74,13 +75,17 @@ void main() {
     );
 
     final expectedMovementRow = [
-      '2026-08-09 06:30:00 UTC,Stock Out,Coffee,2,10,8,sachet,',
+      'm1,p1,2026-08-09 06:30:00 UTC,Stock Out,Sold,Coffee,2,10,8,sachet,',
       '"Sold, morning\nrush"',
     ].join();
 
     expect(
       bundle.stockHistoryFileName,
       'tindatrack-stock-history-20260809-1015.csv',
+    );
+    expect(
+      bundle.stockHistoryCsv,
+      startsWith('Movement ID,Product ID,Date,Type,Reason'),
     );
     expect(bundle.stockHistoryCsv, contains(expectedMovementRow));
   });
