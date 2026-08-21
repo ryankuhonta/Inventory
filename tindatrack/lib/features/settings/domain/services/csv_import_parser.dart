@@ -3,7 +3,7 @@ import 'package:tindatrack/features/products/domain/failures/product_failure.dar
 import 'package:tindatrack/features/products/domain/validation/product_validator.dart';
 import 'package:tindatrack/features/settings/domain/entities/csv_import_preview.dart';
 
-const _headers = [
+const List<String> _legacyHeaders = [
   'Product Name',
   'Category',
   'Unit',
@@ -15,6 +15,8 @@ const _headers = [
   'Created At',
   'Updated At',
 ];
+
+const List<String> _headers = ['Product ID', ..._legacyHeaders];
 
 /// Parses and validates Products CSV text exported by TindaTrack.
 final class CsvImportParser {
@@ -40,7 +42,8 @@ final class CsvImportParser {
     }
 
     final header = table.first;
-    if (!_hasExpectedHeader(header)) {
+    final schema = _productCsvSchema(header);
+    if (schema == null) {
       return const CsvImportPreview(
         rows: [],
         errors: [
@@ -60,19 +63,19 @@ final class CsvImportParser {
       final sourceRowNumber = index + 1;
       final cells = table[index];
       if (cells.every((cell) => cell.trim().isEmpty)) continue;
-      if (cells.length != _headers.length) {
+      if (cells.length != schema.columnCount) {
         errors.add(
           CsvImportError(
             rowNumber: sourceRowNumber,
             message:
-                'Expected ${_headers.length} columns but found '
+                'Expected ${schema.columnCount} columns but found '
                 '${cells.length}.',
           ),
         );
         continue;
       }
 
-      final row = _parseProductRow(cells, sourceRowNumber, errors);
+      final row = _parseProductRow(cells, schema, sourceRowNumber, errors);
       if (row == null) continue;
       rows.add(row);
       final barcode = row.barcode;
@@ -107,17 +110,19 @@ final class CsvImportParser {
 
   CsvImportProductRow? _parseProductRow(
     List<String> cells,
+    _ProductCsvSchema schema,
     int sourceRowNumber,
     List<CsvImportError> errors,
   ) {
-    final name = cells[0].trim();
-    final category = _blankToNull(cells[1]);
-    final unit = cells[2].trim();
-    final sellingPrice = double.tryParse(cells[3].trim());
-    final quantity = int.tryParse(cells[4].trim());
-    final lowStockThreshold = int.tryParse(cells[5].trim());
-    final barcode = _blankToNull(cells[6]);
-    final status = cells[7].trim().toLowerCase();
+    final offset = schema.productFieldOffset;
+    final name = cells[offset].trim();
+    final category = _blankToNull(cells[offset + 1]);
+    final unit = cells[offset + 2].trim();
+    final sellingPrice = double.tryParse(cells[offset + 3].trim());
+    final quantity = int.tryParse(cells[offset + 4].trim());
+    final lowStockThreshold = int.tryParse(cells[offset + 5].trim());
+    final barcode = _blankToNull(cells[offset + 6]);
+    final status = cells[offset + 7].trim().toLowerCase();
 
     var hasError = false;
     if (sellingPrice == null) {
@@ -200,10 +205,16 @@ final class CsvImportParser {
     );
   }
 
-  bool _hasExpectedHeader(List<String> header) {
-    if (header.length != _headers.length) return false;
-    for (var index = 0; index < _headers.length; index++) {
-      if (header[index].trim() != _headers[index]) return false;
+  _ProductCsvSchema? _productCsvSchema(List<String> header) {
+    if (_hasHeader(header, _headers)) return _ProductCsvSchema.current;
+    if (_hasHeader(header, _legacyHeaders)) return _ProductCsvSchema.legacy;
+    return null;
+  }
+
+  bool _hasHeader(List<String> header, List<String> expected) {
+    if (header.length != expected.length) return false;
+    for (var index = 0; index < expected.length; index++) {
+      if (header[index].trim() != expected[index]) return false;
     }
     return true;
   }
@@ -314,4 +325,17 @@ final class _CsvParseResult {
 
   final List<List<String>> rows;
   final List<CsvImportError> errors;
+}
+
+enum _ProductCsvSchema {
+  current(columnCount: 11, productFieldOffset: 1),
+  legacy(columnCount: 10, productFieldOffset: 0);
+
+  const _ProductCsvSchema({
+    required this.columnCount,
+    required this.productFieldOffset,
+  });
+
+  final int columnCount;
+  final int productFieldOffset;
 }

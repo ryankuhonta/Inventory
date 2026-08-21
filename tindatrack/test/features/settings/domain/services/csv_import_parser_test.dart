@@ -26,6 +26,20 @@ void main() {
     expect(preview.canImport, isTrue);
   });
 
+  test('accepts restorable products export with product id column', () {
+    final preview = parser.parseProductsCsv(
+      'Product ID,Product Name,Category,Unit,Selling Price,Current Quantity,'
+      'Low Stock Threshold,Barcode,Status,Created At,Updated At\n'
+      'original-product-id,Rice,Staples,kg,55.50,12,3,123,Active,'
+      '2026-08-09 01:00:00 UTC,2026-08-09 01:00:00 UTC\n',
+    );
+
+    expect(preview.errors, isEmpty);
+    expect(preview.rows.single.name, 'Rice');
+    expect(preview.rows.single.barcode, '123');
+    expect(preview.canImport, isTrue);
+  });
+
   test('parses quoted commas and escaped quotes', () {
     final preview = parser.parseProductsCsv(
       'Product Name,Category,Unit,Selling Price,Current Quantity,'

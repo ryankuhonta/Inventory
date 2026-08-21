@@ -25,6 +25,7 @@ final class CsvExportBuilder {
   String _productsCsv(List<Product> products) {
     return _csv([
       [
+        'Product ID',
         'Product Name',
         'Category',
         'Unit',
@@ -38,6 +39,7 @@ final class CsvExportBuilder {
       ],
       for (final product in products)
         [
+          product.id,
           product.name,
           product.category ?? '',
           product.unit,
@@ -59,8 +61,11 @@ final class CsvExportBuilder {
   String _stockHistoryCsv(List<StockMovement> movements) {
     return _csv([
       [
+        'Movement ID',
+        'Product ID',
         'Date',
         'Type',
+        'Reason',
         'Product Name Snapshot',
         'Quantity',
         'Previous Quantity',
@@ -70,8 +75,11 @@ final class CsvExportBuilder {
       ],
       for (final movement in movements)
         [
+          movement.id,
+          movement.productId,
           _displayDateTime(movement.createdAt),
           _movementTypeLabel(movement.type),
+          _stockOutReasonLabel(movement.reason),
           movement.productNameSnapshot,
           movement.quantity.toString(),
           movement.previousQuantity.toString(),
@@ -97,6 +105,17 @@ final class CsvExportBuilder {
     return switch (type) {
       StockMovementType.stockIn => 'Stock In',
       StockMovementType.stockOut => 'Stock Out',
+    };
+  }
+
+  String _stockOutReasonLabel(StockOutReason? reason) {
+    return switch (reason) {
+      StockOutReason.sold => 'Sold',
+      StockOutReason.damaged => 'Damaged',
+      StockOutReason.lost => 'Lost',
+      StockOutReason.personalUse => 'Personal Use',
+      StockOutReason.correction => 'Correction',
+      null => '',
     };
   }
 
