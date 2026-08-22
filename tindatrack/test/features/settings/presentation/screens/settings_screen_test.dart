@@ -9,6 +9,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:tindatrack/app/router/app_router.dart';
 import 'package:tindatrack/app/router/app_routes.dart';
 import 'package:tindatrack/app/theme/app_theme.dart';
+import 'package:tindatrack/core/errors/app_failure.dart';
 import 'package:tindatrack/core/errors/result.dart';
 import 'package:tindatrack/features/settings/domain/entities/csv_import_preview.dart';
 import 'package:tindatrack/features/settings/domain/services/csv_export_builder.dart';
@@ -269,9 +270,76 @@ void main() {
     await tester.pumpAndSettle();
 
     expect(restored, isTrue);
-    expect(find.text('Restored 1 products and 1 movements.'), findsOneWidget);
+    expect(
+      find.text(
+        'Restored 1 product: 1 active, 0 archived. '
+        'Restored 1 stock movement.',
+      ),
+      findsOneWidget,
+    );
   });
 
+  testWidgets('Full Restore success summary includes archived products', (
+    tester,
+  ) async {
+    await _pumpSettings(
+      tester,
+      fullRestoreController: FullRestoreController(
+        pickCsvs: () async => FullRestoreCsvSelection(
+          productsCsv: _validRestorableProductsCsvWithArchived(),
+          stockHistoryCsv: _validStockHistoryCsv(),
+        ),
+        parser: const FullRestoreParser(),
+        isTargetEmpty: () async => const Success<bool>(true),
+        applyRestore: (_) async => const Success<void>(null),
+      ),
+    );
+
+    await tester.tap(find.byKey(const Key('settings-full-restore-action')));
+    await tester.pumpAndSettle();
+
+    await tester.tap(
+      find.byKey(const Key('settings-confirm-full-restore-action')),
+    );
+    await tester.pumpAndSettle();
+
+    expect(
+      find.text(
+        'Restored 2 products: 1 active, 1 archived. '
+        'Restored 1 stock movement.',
+      ),
+      findsOneWidget,
+    );
+  });
+  testWidgets('Full Restore failure does not show success summary', (
+    tester,
+  ) async {
+    await _pumpSettings(
+      tester,
+      fullRestoreController: FullRestoreController(
+        pickCsvs: () async => FullRestoreCsvSelection(
+          productsCsv: _validRestorableProductsCsv(),
+          stockHistoryCsv: _validStockHistoryCsv(),
+        ),
+        parser: const FullRestoreParser(),
+        isTargetEmpty: () async => const Success<bool>(true),
+        applyRestore: (_) async => const FailureResult<void>(
+          PersistenceFailure(debugMessage: 'boom'),
+        ),
+      ),
+    );
+
+    await tester.tap(find.byKey(const Key('settings-full-restore-action')));
+    await tester.pumpAndSettle();
+
+    await tester.tap(
+      find.byKey(const Key('settings-confirm-full-restore-action')),
+    );
+    await tester.pumpAndSettle();
+
+    expect(find.text('Restore failed. Please try again.'), findsOneWidget);
+    expect(find.textContaining('Restored 1 product:'), findsNothing);
+  });
   testWidgets('Full Restore cancel returns quietly', (tester) async {
     await _pumpSettings(
       tester,
@@ -504,5 +572,15 @@ String _validRestorableProductsCsv() {
       'Current Quantity,Low Stock Threshold,Barcode,Status,Created At,'
       'Updated At\n'
       'product-1,Rice,Staples,kg,55.50,9,3,480001,Active,'
+      '2026-08-01 01:00:00 UTC,2026-08-02 02:00:00 UTC\n';
+}
+
+String _validRestorableProductsCsvWithArchived() {
+  return 'Product ID,Product Name,Category,Unit,Selling Price,'
+      'Current Quantity,Low Stock Threshold,Barcode,Status,Created At,'
+      'Updated At\n'
+      'product-1,Rice,Staples,kg,55.50,9,3,480001,Active,'
+      '2026-08-01 01:00:00 UTC,2026-08-02 02:00:00 UTC\n'
+      'product-2,Old Soap,,pcs,18.00,0,2,,Archived,'
       '2026-08-01 01:00:00 UTC,2026-08-02 02:00:00 UTC\n';
 }

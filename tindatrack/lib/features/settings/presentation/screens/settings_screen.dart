@@ -367,8 +367,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                                 messenger.showSnackBar(
                                   SnackBar(
                                     content: Text(
-                                      'Restored ${value.productCount} products '
-                                      'and ${value.movementCount} movements.',
+                                      _fullRestoreSuccessMessage(value),
                                     ),
                                   ),
                                 );
@@ -402,6 +401,20 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
         );
       },
     );
+  }
+
+  String _fullRestoreSuccessMessage(FullRestoreSummary summary) {
+    return 'Restored ${_countLabel(summary.productCount, 'product')}: '
+        '${summary.activeProductCount} active, '
+        '${summary.archivedProductCount} archived. '
+        'Restored ${_countLabel(summary.movementCount, 'stock movement')}.';
+  }
+
+  String _countLabel(int count, String singular) {
+    final plural = singular == 'stock movement'
+        ? 'stock movements'
+        : '${singular}s';
+    return '$count ${count == 1 ? singular : plural}';
   }
 
   String _fullRestoreErrorText(FullRestoreError error) {
