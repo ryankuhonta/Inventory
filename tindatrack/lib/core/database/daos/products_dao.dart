@@ -43,6 +43,13 @@ class ProductsDao extends DatabaseAccessor<AppDatabase>
     return into(products).insertReturning(product);
   }
 
+  /// Counts every product row, including archived rows.
+  Future<int> countAllProducts() async {
+    final count = countAll();
+    final query = selectOnly(products)..addColumns([count]);
+    return query.map((row) => row.read(count)!).getSingle();
+  }
+
   /// Inserts imported products in one transaction and returns persisted rows.
   Future<List<Product>> importProducts(List<ProductsCompanion> imports) {
     return transaction(() async {

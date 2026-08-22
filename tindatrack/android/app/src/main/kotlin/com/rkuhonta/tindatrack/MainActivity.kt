@@ -45,11 +45,11 @@ class MainActivity : FlutterActivity() {
             flutterEngine.dartExecutor.binaryMessenger,
             CSV_IMPORT_CHANNEL,
         ).setMethodCallHandler { call, result ->
-            if (call.method != PICK_PRODUCTS_CSV_METHOD) {
+            if (call.method != PICK_PRODUCTS_CSV_METHOD && call.method != PICK_STOCK_HISTORY_CSV_METHOD) {
                 result.notImplemented()
                 return@setMethodCallHandler
             }
-            pickProductsCsv(result)
+            pickCsv(result)
         }
     }
 
@@ -84,7 +84,7 @@ class MainActivity : FlutterActivity() {
         }
     }
 
-    private fun pickProductsCsv(result: MethodChannel.Result) {
+    private fun pickCsv(result: MethodChannel.Result) {
         if (pendingCsvImportResult != null) {
             result.error("csv_import_busy", "CSV import picker is already open", null)
             return
@@ -207,6 +207,7 @@ class MainActivity : FlutterActivity() {
         private const val SAVE_CSV_EXPORT_METHOD = "saveCsvExportToDownloads"
         private const val CSV_IMPORT_CHANNEL = "com.rkuhonta.tindatrack/csv_import"
         private const val PICK_PRODUCTS_CSV_METHOD = "pickProductsCsv"
+        private const val PICK_STOCK_HISTORY_CSV_METHOD = "pickStockHistoryCsv"
         private const val PICK_PRODUCTS_CSV_REQUEST = 5701
         private const val MAX_CSV_IMPORT_BYTES = 5 * 1024 * 1024
     }

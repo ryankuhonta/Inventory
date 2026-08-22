@@ -13,8 +13,10 @@ import 'package:tindatrack/core/errors/result.dart';
 import 'package:tindatrack/features/settings/domain/entities/csv_import_preview.dart';
 import 'package:tindatrack/features/settings/domain/services/csv_export_builder.dart';
 import 'package:tindatrack/features/settings/domain/services/csv_import_parser.dart';
+import 'package:tindatrack/features/settings/domain/services/full_restore_parser.dart';
 import 'package:tindatrack/features/settings/presentation/providers/csv_export_providers.dart';
 import 'package:tindatrack/features/settings/presentation/providers/csv_import_providers.dart';
+import 'package:tindatrack/features/settings/presentation/providers/full_restore_providers.dart';
 import 'package:tindatrack/features/settings/presentation/screens/settings_screen.dart';
 
 void main() {
@@ -32,6 +34,9 @@ void main() {
       find.byKey(const Key('settings-app-version-section')),
       findsOneWidget,
     );
+    expect(find.text('Currency'), findsOneWidget);
+    expect(find.text('PHP'), findsOneWidget);
+    expect(find.textContaining('Philippine Peso'), findsOneWidget);
     await tester.scrollUntilVisible(
       find.byKey(const Key('settings-local-data-section')),
       120,
@@ -40,12 +45,9 @@ void main() {
       find.byKey(const Key('settings-local-data-section')),
       findsOneWidget,
     );
-    expect(find.text('Currency'), findsOneWidget);
     expect(find.text('Backup / Export'), findsOneWidget);
     expect(find.text('App Version'), findsOneWidget);
     expect(find.text('Local Data'), findsOneWidget);
-    expect(find.text('PHP'), findsOneWidget);
-    expect(find.textContaining('Philippine Peso'), findsOneWidget);
     expect(find.text('CSV files'), findsOneWidget);
     expect(
       find.byKey(const Key('settings-save-export-action')),
@@ -57,6 +59,10 @@ void main() {
     );
     expect(
       find.byKey(const Key('settings-import-products-action')),
+      findsOneWidget,
+    );
+    expect(
+      find.byKey(const Key('settings-full-restore-action')),
       findsOneWidget,
     );
     expect(
@@ -196,6 +202,96 @@ void main() {
     expect(find.text('Imported 2 products.'), findsOneWidget);
   });
 
+  testWidgets('Full Restore shows blocking preview for bad file pairs', (
+    tester,
+  ) async {
+    await _pumpSettings(
+      tester,
+      fullRestoreController: FullRestoreController(
+        pickCsvs: () async => FullRestoreCsvSelection(
+          productsCsv: _validRestorableProductsCsv(),
+          stockHistoryCsv: _validStockHistoryCsv(),
+        ),
+        parser: const FullRestoreParser(),
+        isTargetEmpty: () async => const Success<bool>(false),
+        applyRestore: (_) async => const Success<void>(null),
+      ),
+    );
+
+    await tester.tap(find.byKey(const Key('settings-full-restore-action')));
+    await tester.pumpAndSettle();
+
+    expect(
+      find.byKey(const Key('settings-full-restore-preview-dialog')),
+      findsOneWidget,
+    );
+    expect(find.text('Full Restore Preview'), findsOneWidget);
+    expect(
+      find.text('1 products found: 1 active, 0 archived.'),
+      findsOneWidget,
+    );
+    expect(find.text('1 stock movements found.'), findsOneWidget);
+    expect(find.textContaining('empty TindaTrack database'), findsWidgets);
+    final restoreButton = tester.widget<FilledButton>(
+      find.byKey(const Key('settings-confirm-full-restore-action')),
+    );
+    expect(restoreButton.onPressed, isNull);
+  });
+
+  testWidgets('Full Restore restores after a clean preview', (tester) async {
+    var restored = false;
+    await _pumpSettings(
+      tester,
+      fullRestoreController: FullRestoreController(
+        pickCsvs: () async => FullRestoreCsvSelection(
+          productsCsv: _validRestorableProductsCsv(),
+          stockHistoryCsv: _validStockHistoryCsv(),
+        ),
+        parser: const FullRestoreParser(),
+        isTargetEmpty: () async => const Success<bool>(true),
+        applyRestore: (_) async {
+          restored = true;
+          return const Success<void>(null);
+        },
+      ),
+    );
+
+    await tester.tap(find.byKey(const Key('settings-full-restore-action')));
+    await tester.pumpAndSettle();
+    expect(
+      find.text('1 products found: 1 active, 0 archived.'),
+      findsOneWidget,
+    );
+
+    await tester.tap(
+      find.byKey(const Key('settings-confirm-full-restore-action')),
+    );
+    await tester.pumpAndSettle();
+
+    expect(restored, isTrue);
+    expect(find.text('Restored 1 products and 1 movements.'), findsOneWidget);
+  });
+
+  testWidgets('Full Restore cancel returns quietly', (tester) async {
+    await _pumpSettings(
+      tester,
+      fullRestoreController: FullRestoreController(
+        pickCsvs: () async => null,
+        parser: const FullRestoreParser(),
+        isTargetEmpty: () async => const Success<bool>(true),
+        applyRestore: (_) async => const Success<void>(null),
+      ),
+    );
+
+    await tester.tap(find.byKey(const Key('settings-full-restore-action')));
+    await tester.pumpAndSettle();
+
+    expect(
+      find.byKey(const Key('settings-full-restore-preview-dialog')),
+      findsNothing,
+    );
+    expect(find.byType(SnackBar), findsNothing);
+  });
   testWidgets('Import Products CSV cancel returns quietly', (tester) async {
     await _pumpSettings(
       tester,
@@ -366,6 +462,7 @@ Future<void> _pumpSettings(
   WidgetTester tester, {
   CsvExportController? controller,
   CsvImportController? importController,
+  FullRestoreController? fullRestoreController,
 }) async {
   await tester.pumpWidget(
     ProviderScope(
@@ -374,6 +471,10 @@ Future<void> _pumpSettings(
           csvExportControllerProvider.overrideWithValue(controller),
         if (importController != null)
           csvImportControllerProvider.overrideWithValue(importController),
+        if (fullRestoreController != null)
+          fullRestoreControllerProvider.overrideWithValue(
+            fullRestoreController,
+          ),
       ],
       child: MaterialApp(
         theme: AppTheme.light,
@@ -389,4 +490,19 @@ String _validProductsCsv() {
       'Low Stock Threshold,Barcode,Status,Created At,Updated At\n'
       'Rice,Staples,kg,55.50,12,3,111,Active,,\n'
       'Old Soap,,pcs,18.00,0,2,,Archived,,\n';
+}
+
+String _validStockHistoryCsv() {
+  return 'Movement ID,Product ID,Date,Type,Reason,Product Name Snapshot,'
+      'Quantity,Previous Quantity,New Quantity,Unit Snapshot,Note\n'
+      'movement-1,product-1,2026-08-03 03:00:00 UTC,Stock Out,Sold,'
+      'Rice,3,12,9,kg,morning sale\n';
+}
+
+String _validRestorableProductsCsv() {
+  return 'Product ID,Product Name,Category,Unit,Selling Price,'
+      'Current Quantity,Low Stock Threshold,Barcode,Status,Created At,'
+      'Updated At\n'
+      'product-1,Rice,Staples,kg,55.50,9,3,480001,Active,'
+      '2026-08-01 01:00:00 UTC,2026-08-02 02:00:00 UTC\n';
 }

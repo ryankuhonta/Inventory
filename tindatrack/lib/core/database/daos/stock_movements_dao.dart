@@ -20,6 +20,13 @@ class StockMovementsDao extends DatabaseAccessor<AppDatabase>
   /// Creates a stock movements DAO attached to [attachedDatabase].
   StockMovementsDao(super.attachedDatabase);
 
+  /// Counts every stock movement row.
+  Future<int> countAllMovements() async {
+    final count = countAll();
+    final query = selectOnly(stockMovements)..addColumns([count]);
+    return query.map((row) => row.read(count)!).getSingle();
+  }
+
   /// Inserts one movement and returns the persisted row.
   Future<StockMovement> insertMovement(StockMovementsCompanion movement) {
     return into(stockMovements).insertReturning(movement);
